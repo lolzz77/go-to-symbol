@@ -11,6 +11,8 @@
 		"exactOptionalPropertyTypes": false,
 		"useUnknownInCatchVariables": false,
 		"forceConsistentCasingInFileNames": true,
+		"useDefineForClassFields": false,
+		
 		"baseUrl": "/workspace/go-to-symbol",
 		"paths": {
 			"vs/*": [
@@ -18,7 +20,6 @@
 			]
 		},
 		"target": "es2022",
-		"useDefineForClassFields": false,
 		"lib": [
 			"ES2022",
 			"DOM",
