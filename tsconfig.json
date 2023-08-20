@@ -3,6 +3,7 @@
 		"module": "amd",
 		"moduleResolution": "node",
 		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
 		"noImplicitReturns": true,
 		"noImplicitOverride": true,
 		"noUnusedLocals": true,
