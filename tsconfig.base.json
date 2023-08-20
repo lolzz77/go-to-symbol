@@ -12,7 +12,6 @@
 		"useUnknownInCatchVariables": false,
 		"forceConsistentCasingInFileNames": true,
 		"useDefineForClassFields": false,
-		
 		"baseUrl": "/workspace/go-to-symbol",
 		"paths": {
 			"vs/*": [

@@ -1,5 +1,16 @@
 {
 	"compilerOptions": {
+		"module": "amd",
+		"moduleResolution": "node",
+		"experimentalDecorators": true,
+		"noImplicitReturns": true,
+		"noImplicitOverride": true,
+		"noUnusedLocals": true,
+		"allowUnreachableCode": false,
+		"exactOptionalPropertyTypes": false,
+		"useUnknownInCatchVariables": false,
+		"forceConsistentCasingInFileNames": true,
+		"useDefineForClassFields": false,
 		"outDir": "out",
 		"target": "ES2022",
 		"lib": [
@@ -10,12 +21,7 @@
 		],
 		"sourceMap": true,
 		"rootDir": "src",
-		"strict": false,   /* enable all strict type-checking options */
-		/* Additional Checks */
-		// "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
-		// "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
-		// "noUnusedParameters": true,  /* Report errors on unused parameters. */
-		
+		"strict": true,
 		"baseUrl": "/workspace/go-to-symbol",
 		"paths": {
 			"vs/*": [
