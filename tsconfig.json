@@ -1,13 +1,13 @@
 {
 	"compilerOptions": {
 		"module": "commonjs",
-		"target": "ES2020",
+		"target": "es2022",
 		"outDir": "out",
 		"lib": [
-			"ESNext",
-			"es5", 
-			"es6", 
-			"dom"
+			"ES2022",
+			"DOM",
+			"DOM.Iterable",
+			"WebWorker.ImportScripts"
 		],
 		"sourceMap": true,
 		"rootDir": "src",
@@ -18,7 +18,9 @@
 		// "noUnusedParameters": true,  /* Report errors on unused parameters. */
 		"baseUrl": "/workspace/go-to-symbol",
 		"paths": {
-			"vs/*": ["src/vs/*"]
-		}
+			"vs/*": [
+				"./src/vs/*"
+			]
+		},
 	}
 }
