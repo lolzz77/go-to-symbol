@@ -16,6 +16,8 @@ import { ILanguageFeaturesService } from 'vs/editor/common/services/languageFeat
 import { IOutlineModelService } from 'vs/editor/contrib/documentSymbols/browser/outlineModel';
 import { IInstantiationService, ServicesAccessor } from 'vs/platform/instantiation/common/instantiation';
 import { createDecorator } from 'vs/platform/instantiation/common/instantiation';
+import { DefaultQuickAccessFilterValue, Extensions, IQuickAccessController, IQuickAccessOptions, IQuickAccessProvider, IQuickAccessProviderDescriptor, IQuickAccessProviderRunOptions, IQuickAccessRegistry } from 'vs/platform/quickinput/common/quickAccess';
+import { Registry } from 'vs/platform/registry/common/platform';
 
 
 export function activate(context: vscode.ExtensionContext) {
@@ -44,10 +46,14 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 class MyClass extends AbstractGotoSymbolQuickAccessProvider{
+
+	private readonly mapProviderToDescriptor = new Map<IQuickAccessProviderDescriptor, IQuickAccessProvider>();
+	private readonly registry = Registry.as<IQuickAccessRegistry>(Extensions.Quickaccess);
 	
 	constructor(
 		@ILanguageFeaturesService languageFeaturesService: ILanguageFeaturesService,
 		@IOutlineModelService outlineModelService: IOutlineModelService,
+		@IInstantiationService private readonly instantiationService: IInstantiationService
 	) {
 		super(languageFeaturesService, outlineModelService);
 	}
@@ -67,6 +73,22 @@ class MyClass extends AbstractGotoSymbolQuickAccessProvider{
 			}
 		}
 	}
+
+	private getOrInstantiateProvider(value: string): [IQuickAccessProvider | undefined, IQuickAccessProviderDescriptor | undefined] {
+		const providerDescriptor = this.registry.getQuickAccessProvider(value);
+		if (!providerDescriptor) {
+			return [undefined, undefined];
+		}
+
+		let provider = this.mapProviderToDescriptor.get(providerDescriptor);
+		if (!provider) {
+			provider = this.instantiationService.createInstance(providerDescriptor.ctor);
+			this.mapProviderToDescriptor.set(providerDescriptor, provider);
+		}
+
+		return [provider, providerDescriptor];
+	}
+
 	protected activeTextEditorControl: IEditor | undefined;
 	protected readonly onDidActiveTextEditorControlChange = Event.None;
 }
