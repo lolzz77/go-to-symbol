@@ -16,7 +16,7 @@ import { ILanguageFeaturesService } from 'vs/editor/common/services/languageFeat
 import { IOutlineModelService } from 'vs/editor/contrib/documentSymbols/browser/outlineModel';
 import { IInstantiationService, ServicesAccessor } from 'vs/platform/instantiation/common/instantiation';
 import { createDecorator } from 'vs/platform/instantiation/common/instantiation';
-
+import { IWorkbenchEditorConfiguration } from 'vs/workbench/common/editor';
 
 export function activate(context: vscode.ExtensionContext) {
 	// Create a tree data provider for the view
@@ -27,7 +27,8 @@ export function activate(context: vscode.ExtensionContext) {
 	// const languageFeaturesService = accessor.get(ILanguageFeaturesService);
 	// const aa = createDecorator<ILanguageFeaturesService>('ILanguageFeaturesService');
 	// const _languageFeaturesService: ILanguageFeaturesService = null;
-	const me = new MyClass(new ILanguageFeaturesService(), new IOutlineModelService());
+	// const me = new MyClass(new ILanguageFeaturesService(), new IOutlineModelService());
+	const me = new AnythingQuickAccessProvider();
 	console.log('Congratulations, your extension "go-to-symbol" is now active!');
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
@@ -43,14 +44,30 @@ export function activate(context: vscode.ExtensionContext) {
 
 }
 
-class MyClass extends AbstractGotoSymbolQuickAccessProvider{
-	
+class GotoSymbolQuickAccessProvider extends AbstractGotoSymbolQuickAccessProvider{
+	// protected readonly onDidActiveTextEditorControlChange = this.editorService.onDidActiveEditorChange;
 	constructor(
 		@ILanguageFeaturesService languageFeaturesService: ILanguageFeaturesService,
 		@IOutlineModelService outlineModelService: IOutlineModelService,
+		// @IInstantiationService private readonly instantiationService: IInstantiationService,
+
+		// @IEditorService private readonly editorService: IEditorService,
+		// @IEditorGroupsService private readonly editorGroupService: IEditorGroupsService,
+		// @IConfigurationService private readonly configurationService: IConfigurationService,
+		// @IOutlineService private readonly outlineService: IOutlineService,
+
 	) {
 		super(languageFeaturesService, outlineModelService);
 	}
+
+	// private get configuration() {
+	// 	const editorConfig = this.configurationService.getValue<IWorkbenchEditorConfiguration>().workbench?.editor;
+
+	// 	return {
+	// 		openEditorPinned: !editorConfig?.enablePreviewFromQuickOpen || !editorConfig?.enablePreview,
+	// 		openSideBySideDirection: editorConfig?.openSideBySideDirection
+	// 	};
+	// }
 
 	test(){
 		const source = new CancellationTokenSource();
@@ -68,7 +85,16 @@ class MyClass extends AbstractGotoSymbolQuickAccessProvider{
 		}
 	}
 	protected activeTextEditorControl: IEditor | undefined;
-	protected readonly onDidActiveTextEditorControlChange = Event.None;
+}
+
+class AnythingQuickAccessProvider {
+	
+	constructor(
+		@IInstantiationService private readonly instantiationService: IInstantiationService,
+	) {
+	}
+	private readonly editorSymbolsQuickAccess = this.instantiationService.createInstance(GotoSymbolQuickAccessProvider);
+
 }
 
 // Define a class for the tree data provider
