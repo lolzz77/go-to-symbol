@@ -16,7 +16,9 @@ import { ILanguageFeaturesService } from 'vs/editor/common/services/languageFeat
 import { IOutlineModelService } from 'vs/editor/contrib/documentSymbols/browser/outlineModel';
 import { IInstantiationService, ServicesAccessor } from 'vs/platform/instantiation/common/instantiation';
 import { createDecorator } from 'vs/platform/instantiation/common/instantiation';
+import { InstantiationService } from 'vs/platform/instantiation/common/instantiationService'
 import { IWorkbenchEditorConfiguration } from 'vs/workbench/common/editor';
+import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
 
 export function activate(context: vscode.ExtensionContext) {
 	// Create a tree data provider for the view
@@ -28,7 +30,9 @@ export function activate(context: vscode.ExtensionContext) {
 	// const aa = createDecorator<ILanguageFeaturesService>('ILanguageFeaturesService');
 	// const _languageFeaturesService: ILanguageFeaturesService = null;
 	// const me = new MyClass(new ILanguageFeaturesService(), new IOutlineModelService());
-	const me = new AnythingQuickAccessProvider();
+	const instantiationService = new InstantiationService();
+	const anythingQuickAccessProvider = new AnythingQuickAccessProvider(instantiationService);
+	anythingQuickAccessProvider.test();
 	console.log('Congratulations, your extension "go-to-symbol" is now active!');
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
@@ -36,7 +40,7 @@ export function activate(context: vscode.ExtensionContext) {
 	let disposable = vscode.commands.registerCommand('go-to-symbol.helloWorld', () => {
 		// The code you place here will be executed every time your command is executed
 		// Display a message box to the user
-		vscode.window.registerTreeDataProvider('my-view', treeDataProvider);
+		// vscode.window.registerTreeDataProvider('my-view', treeDataProvider);
 		vscode.window.showInformationMessage('Hello World from go to symbol!');
 	});
 
@@ -45,13 +49,13 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 class GotoSymbolQuickAccessProvider extends AbstractGotoSymbolQuickAccessProvider{
-	// protected readonly onDidActiveTextEditorControlChange = this.editorService.onDidActiveEditorChange;
+	protected readonly onDidActiveTextEditorControlChange = this.editorService.onDidActiveEditorChange;
 	constructor(
 		@ILanguageFeaturesService languageFeaturesService: ILanguageFeaturesService,
 		@IOutlineModelService outlineModelService: IOutlineModelService,
 		// @IInstantiationService private readonly instantiationService: IInstantiationService,
 
-		// @IEditorService private readonly editorService: IEditorService,
+		@IEditorService private readonly editorService: IEditorService,
 		// @IEditorGroupsService private readonly editorGroupService: IEditorGroupsService,
 		// @IConfigurationService private readonly configurationService: IConfigurationService,
 		// @IOutlineService private readonly outlineService: IOutlineService,
@@ -92,8 +96,14 @@ class AnythingQuickAccessProvider {
 	constructor(
 		@IInstantiationService private readonly instantiationService: IInstantiationService,
 	) {
+		// createChild(services: ServiceCollection): IInstantiationService {
+		// 	return new InstantiationService(services, this._strict, this, this._enableTracing);
+		// }
+		
 	}
-	private readonly editorSymbolsQuickAccess = this.instantiationService.createInstance(GotoSymbolQuickAccessProvider);
+	test(){
+		const editorSymbolsQuickAccess = this.instantiationService.createInstance(GotoSymbolQuickAccessProvider);
+	}
 
 }
 
