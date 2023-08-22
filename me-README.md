@@ -9,6 +9,7 @@
 3. `sudo git clean -xdf`
 4. `sudo npm install`
 5. Relaod VS code
+6. Repeat step 5 until solved.
 
 # Info
 1. if you still get `cannot find module` error after installing libraries thru `npm install`
