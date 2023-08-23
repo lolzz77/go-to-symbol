@@ -56,5 +56,8 @@
     "glob": "^8.1.0",
     "mocha": "^10.2.0",
     "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "amd-loader": "^0.0.8"
   }
 }
