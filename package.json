@@ -39,24 +39,5 @@
     "mocha": "^10.2.0",
     "typescript": "^5.1.3",
     "@vscode/test-electron": "^2.3.2"
-  },
-  "contributes": {
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "my-sidebar",
-          "title": "My Sidebar",
-          "icon": "resources/my-icon.svg"
-        }
-      ]
-    },
-    "views": {
-      "my-sidebar": [
-        {
-          "id": "my-view",
-          "name": "My View"
-        }
-      ]
-    }
   }
 }
