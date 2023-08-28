@@ -6,6 +6,7 @@ import * as fs from 'fs';
 export function activate(context: vscode.ExtensionContext) {
 	// Create a tree data provider for the view
 	const treeDataProvider = new MyTreeDataProvider();
+	var treeView = null;
 	// Register the view with the tree data provider
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
@@ -18,12 +19,23 @@ export function activate(context: vscode.ExtensionContext) {
 		// The code you place here will be executed every time your command is executed
 		// Display a message box to the user
 		vscode.window.registerTreeDataProvider('my-view', treeDataProvider);
+		treeView = treeDataProvider.getTreeItem();
 		
-
-
+		
 	});
 	context.subscriptions.push(disposable);
-
+	
+	if(treeView)
+	{
+		// Listen for selection changes
+		treeView.onDidChangeSelection(event => {
+			const selectedItems = event.selection as MyTreeItem[];
+			if (selectedItems.length > 0) {
+				const selectedLabel = selectedItems[0].label;
+				vscode.window.showInformationMessage(`Selected tree item: ${selectedLabel}`);
+			}
+		});
+	}
 
 }
   
@@ -53,24 +65,23 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<MyTreeItem> {
 			var text = document.getText();
 			var ranges: vscode.Range[] = [];
 			let objects = Object.keys(data);
+			const regexPattern = data.function;
 			for (let object of objects) {
-				console.log(object);
-				let regexs = data[object];
-				for (let regex of regexs) {
-					let match;
-					// a dynamic regex
-					// let _regex = new RegExp(regex, 'g');
-					let _regex = /function\s+[a-zA-Z_][a-zA-Z_0-9]*\s*\([^)]*\)\s*\{[\s\S]*?\}/g;
-					while (match = _regex.exec(text)) {
-						console.log(match);
+				let regex = data[object];
+				let match = null;
+				// a dynamic regex
+				let _regex = new RegExp(regex, 'g');
+				while (match = _regex.exec(text)) {
+					console.log(match);
 
-						const start = document.positionAt(match.index);
-						const end = document.positionAt(match.index + match[0].length);
-						const range = new vscode.Range(start, end);
-						// put these words into array
-						ranges.push(range);
-						matches.push(match)
-					}
+					const start = document.positionAt(match.index);
+					const end = document.positionAt(match.index + match[0].length);
+					const range = new vscode.Range(start, end);
+					// put these words into array
+					ranges.push(range);
+					matches.push(match)
+					editor.selection = new vscode.Selection(start, end);
+					editor.revealRange(range);
 				}
 			}
 		}
@@ -78,11 +89,11 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<MyTreeItem> {
 		{
 			vscode.window.showInformationMessage('No language detected');
 		}
-		let arr = []; // create an empty array
+		let arr = [];
 		for (let match of matches) {
-		  arr.push(new MyTreeItem(``+match, vscode.TreeItemCollapsibleState.None)); // add items to the array
+			// add items to the array
+			arr.push(new MyTreeItem(``+match, vscode.TreeItemCollapsibleState.None));
 		}
-
 		// Return an array of tree items
 		return Promise.resolve(arr);
 	}
@@ -97,13 +108,34 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<MyTreeItem> {
 // Define a class for the tree items
 class MyTreeItem extends vscode.TreeItem {
 	constructor(
+		// this is the string that appear on the tree list
 		public readonly label: string,
+		// whether they collapse or not, hold `CTRL`, hover over TreeItemCollapsibleState to see more
 		public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+		public readonly id?: string,
 		public readonly command?: vscode.Command
+		// public readonly iconPath: string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon;
 	) {
 		super(label, collapsibleState);
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
