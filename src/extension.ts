@@ -8,7 +8,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// for keeping track of decorations
 	const decorationTypes: vscode.TextEditorDecorationType[] = [];
 	
-	let disposable = vscode.commands.registerCommand('go-to-symbol.helloWorld', () => {
+	let disposable = vscode.commands.registerCommand('go-to-symbol.activate', () => {
 		// create the sidebar
 		treeView = vscode.window.createTreeView('my-view', {
 			treeDataProvider : treeDataProvider,
@@ -102,7 +102,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 		
 			language = getCurrentActiveEditorLanguage();
 			// for now, just make it to default.json first
-			JSONPath = getJSONPath(null);
+			JSONPath = getJSONPath(language);
 			let data = getJSONData(JSONPath);
 			var ranges: vscode.Range[] = [];
 			var document = editor.document;

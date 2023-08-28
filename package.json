@@ -14,8 +14,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "go-to-symbol.helloWorld",
-        "title": "Hello World"
+        "command": "go-to-symbol.activate",
+        "title": "Go to Symbols: activate"
       }
     ],
     "viewsContainers": {
