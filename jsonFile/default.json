@@ -1,3 +1,6 @@
 {
-    "function": "function\\s+[a-zA-Z_][a-zA-Z_0-9]*\\s*\\([^)]*\\)\\s*\\{[\\s\\S]*?\\}"
+    "function": {
+        "whole" : ["function\\s+[a-zA-Z_][a-zA-Z_0-9]*\\s*\\([^)]*\\)\\s*\\{[\\s\\S]*?\\}", "g"],
+        "name"  : ["function\\s+([a-zA-Z_][a-zA-Z_0-9]*)\\s*\\([^)]*\\)\\s*\\{", ""]
+    }
 }
