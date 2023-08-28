@@ -4,10 +4,12 @@
 2. from the JSON file, load the regex
 
 # How to
-1. open `CTRL + P` -> `Dev tools`
-2. trigger extension -> `CTRL + P` -> `go-to-symbol:activate`
-3. it will output on the console where it will find the JSON file
-4. create a JSON file at that location
+1. first, click the extension icon on the sidebar first
+2. if you didn't, the following step will not show the message on console
+3. open `CTRL + P` -> `Dev tools`
+4. trigger extension -> `CTRL + P` -> `go-to-symbol:activate`
+5. it will output on the console where it will find the JSON file
+6. create a JSON file at that location
 
 # JSON File
 1. content is as follow

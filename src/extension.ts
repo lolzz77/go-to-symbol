@@ -69,7 +69,7 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.window.onDidChangeActiveTextEditor(editor => {
 		if (editor) {
 			// if you changed, then execute the command again
-			vscode.commands.executeCommand('go-to-symbol.helloWorld');
+			vscode.commands.executeCommand('go-to-symbol.activate');
 		}
 	  });
 
