@@ -149,36 +149,26 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					const start = document.positionAt(match.index);
 					const end = document.positionAt(match.index + match[0].length);
 					const range:vscode.Range = new vscode.Range(start, end);
-					// put these words into array
-					// ranges.push(range);
-
-					// editor.selection = new vscode.Selection(start, end);
-					// editor.revealRange(range);
-					raw_matches.push(match);
 					
-					for (let raw_match of raw_matches)
+					// _regex = /function\s+([a-zA-Z_][a-zA-Z_0-9]*)\s*\([^)]*\)\s*\{/;
+					// let match = raw_match.toString().match(_regex);
+					let _match = _regex_name.exec(match.toString());
+					if(_match)
 					{
-						// _regex = /function\s+([a-zA-Z_][a-zA-Z_0-9]*)\s*\([^)]*\)\s*\{/;
-						// let match = raw_match.toString().match(_regex);
-						let match = _regex_name.exec(raw_match.toString());
-						// put these words into array
-						if(match)
-						{
-							// if you set breakpoint and investigate the value
-							// [1] holds the value of function name only
-							matches.push(match[1])
-						}
-						else
-						{
-							matches.push('anonymous');
-						}
-						
-						// push to array, this will show the list of symbols later
-						arr.push(new SymbolTreeItem(
-							``+match, 
-							vscode.TreeItemCollapsibleState.None, 
-							range));
+						// if you set breakpoint and investigate the value
+						// [1] holds the value of function name only
+						matches.push(_match[1])
 					}
+					else
+					{
+						matches.push('anonymous');
+					}
+					
+					// push to array, this will show the list of symbols later
+					arr.push(new SymbolTreeItem(
+						``+_match, 
+						vscode.TreeItemCollapsibleState.None, 
+						range));
 				}
 			}
 		}
