@@ -1,5 +1,3 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 
@@ -7,17 +5,11 @@ export function activate(context: vscode.ExtensionContext) {
 	// Create a tree data provider for the view
 	const treeDataProvider = new MyTreeDataProvider();
 	var treeView = null;
-	// Register the view with the tree data provider
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "go-to-symbol" is now active!');
+	// for keeping track of decorations
+	const decorationTypes: vscode.TextEditorDecorationType[] = [];
 	
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
 	let disposable = vscode.commands.registerCommand('go-to-symbol.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
+		// create the sidebar
 		treeView = vscode.window.createTreeView('my-view', {
 			treeDataProvider : treeDataProvider,
 			showCollapseAll: true,
@@ -27,33 +19,46 @@ export function activate(context: vscode.ExtensionContext) {
 		
 		// Listen for selection
 		treeView.onDidChangeSelection(event => {
+			// get the selected object
 			const selectedItems = event.selection as SymbolTreeItem[];
 			let editor = vscode.window.activeTextEditor;
+			const backgroundDecorationType = vscode.window.createTextEditorDecorationType({
+				// the last element is the opacity
+				backgroundColor: 'rgba(154, 154, 156, 0.3)',
+				// this opacity appleis to the text instead of the background color
+				// opacity: '0',
+				// this can be seen on minimap, the small block colors
+				overviewRulerColor: '#02fa0f', // green
+				// to show the block color on the right
+				overviewRulerLane: vscode.OverviewRulerLane.Full,
+				// minimapColor: 'red' // this color will be used in the minimap
+			  });
 			
-			if (selectedItems.length > 0) {
-				
+			// each decoratino made needs to be keep tracked, so tha tyou can dispose it later	
+			decorationTypes.push(backgroundDecorationType);
+			
+			if(!editor)
+			{
+				return;
+			}
+			
+			if (selectedItems.length > 0)
+			{
 				const selectedLabel = selectedItems[0].label;
-				const start = selectedItems[0].start as vscode.Position;
-				const end = selectedItems[0].end as vscode.Position;
-				const range:vscode.Range = new vscode.Range(start, end);
-				
-				vscode.window.showInformationMessage(`Selected tree item: ${selectedLabel}`);
-				const blueBackgroundDecorationType = vscode.window.createTextEditorDecorationType({
-					// the last element is the opacity
-					backgroundColor: 'rgba(154, 154, 156, 0.3)',
-					// this opacity appleis to the text instead of the background color
-					// opacity: '0',
-					// this can be seen on minimap, the small block colors
-					overviewRulerColor: '#02fa0f', // green
-					// to show the block color on the right
-					overviewRulerLane: vscode.OverviewRulerLane.Full,
-					// minimapColor: 'red' // this color will be used in the minimap
-				  });
-
-				const decoration = { range };
-				if(editor)
+				if(selectedLabel == 'reset')
 				{
-					editor.setDecorations(blueBackgroundDecorationType, [decoration]);
+					// Reset all decoration types to their default state
+					for (const type of decorationTypes) {
+						type.dispose();
+					}
+				}
+				else // else, decorate them
+				{
+					// have to put as vscode.Range at behind else it will flag error
+					const range = selectedItems[0].range as vscode.Range;
+					const decoration = { range };
+					editor.setDecorations(backgroundDecorationType, [decoration]);
+					// editor.setDecorations(backgroundDecorationType, []); // Pass an empty array to remove all decorations
 				}
 			}
 		});
@@ -68,14 +73,15 @@ export function activate(context: vscode.ExtensionContext) {
 class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 	// Implement the getChildren method
 	getChildren(element?: SymbolTreeItem): Thenable<SymbolTreeItem[]> {
-
+		
 		let editor = vscode.window.activeTextEditor;
 		// raw means unfiltered, contains many char that you dont want to show in the tree list
 		let raw_matches = [];
 		// matches means filtered, only show the name of the matched string, this is the one you want to show on the tree list
 		let matches = [];
 		let arr = [];
-
+		// for reseting decoration use
+		arr.push(new SymbolTreeItem('reset', vscode.TreeItemCollapsibleState.None));
 		if (editor) {
 			// display the JSON file path that this extension will be searching for
 			// display the current active editor
@@ -152,8 +158,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						arr.push(new SymbolTreeItem(
 							``+match, 
 							vscode.TreeItemCollapsibleState.None, 
-							start,
-							end));
+							range));
 					}
 				}
 			}
@@ -185,8 +190,7 @@ class SymbolTreeItem extends vscode.TreeItem {
 		public readonly label: string,
 		// whether they collapse or not, hold `CTRL`, hover over TreeItemCollapsibleState to see more
 		public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-		public readonly start?: vscode.Position,
-		public readonly end?: vscode.Position,
+		public readonly range?: vscode.Range,
 		public readonly id?: string,
 		public readonly command?: vscode.Command,
 		// public readonly iconPath: string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon;
