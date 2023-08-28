@@ -24,7 +24,7 @@ export function activate(context: vscode.ExtensionContext) {
 			let editor = vscode.window.activeTextEditor;
 			const backgroundDecorationType = vscode.window.createTextEditorDecorationType({
 				// the last element is the opacity
-				backgroundColor: 'rgba(154, 154, 156, 0.3)',
+				backgroundColor: 'rgba(154, 154, 156, 0.3)', // grey
 				// this opacity appleis to the text instead of the background color
 				// opacity: '0',
 				// this can be seen on minimap, the small block colors
@@ -64,9 +64,16 @@ export function activate(context: vscode.ExtensionContext) {
 		});
 		
 	});
-	context.subscriptions.push(disposable);
-	
 
+	// detect if you selected other editors (eg: different files)
+	vscode.window.onDidChangeActiveTextEditor(editor => {
+		if (editor) {
+			// if you changed, then execute the command again
+			vscode.commands.executeCommand('go-to-symbol.helloWorld');
+		}
+	  });
+
+	context.subscriptions.push(disposable);
 }
   
 // Define a class for the tree data provider
@@ -86,9 +93,11 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 			// display the JSON file path that this extension will be searching for
 			// display the current active editor
 			let language = getCurrentActiveEditorLanguage();
-			vscode.window.showInformationMessage('Language: ' + language);
+			console.log('Language: ' + language);
+			// vscode.window.showInformationMessage('Language: ' + language);
 			let JSONPath = getJSONPath(null);
-			vscode.window.showInformationMessage('JSON Path: ' + JSONPath);
+			console.log('JSON Path: ' + JSONPath);
+			// vscode.window.showInformationMessage('JSON Path: ' + JSONPath);
 
 		
 			language = getCurrentActiveEditorLanguage();
@@ -125,6 +134,9 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 				// a dynamic regex
 				let _regex_whole = new RegExp(regex_whole, flag_whole);
 				let _regex_name = new RegExp(regex_name, flag_name);
+				
+				if(regex_whole == '' || regex_name == '')
+					break;
 
 				while (match = _regex_whole.exec(text)) {
 					const start = document.positionAt(match.index);
@@ -198,26 +210,6 @@ class SymbolTreeItem extends vscode.TreeItem {
 		super(label, collapsibleState);
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // Get the JSON File
 function getJSONData(JSONPath: string): any {
