@@ -95,7 +95,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 			let language = getCurrentActiveEditorLanguage();
 			console.log('Language: ' + language);
 			// vscode.window.showInformationMessage('Language: ' + language);
-			let JSONPath = getJSONPath(null);
+			let JSONPath = getJSONPath(language);
 			console.log('JSON Path: ' + JSONPath);
 			// vscode.window.showInformationMessage('JSON Path: ' + JSONPath);
 
@@ -213,6 +213,7 @@ class SymbolTreeItem extends vscode.TreeItem {
 
 // Get the JSON File
 function getJSONData(JSONPath: string): any {
+	JSONPath = '/random'
 	let fileContents = fs.readFileSync(JSONPath, "utf8");
 	let data: any = JSON.parse(fileContents);
 	return data;
