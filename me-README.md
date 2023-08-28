@@ -27,3 +27,11 @@
 javascript.json
 ```
 4. The naming info can be seen on the console shown in dev tool as well
+
+# how it works
+1. the one that will display on the sidebar, is the `name` regex. 
+2. this `name` is dependent on `whole` regex
+3. that is, regex `whole` will run first, get the function start & end position
+4. then run `name` regex to extract the function name
+5. then display the name captured by `name` regex
+ 
