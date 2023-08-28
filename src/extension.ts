@@ -132,43 +132,115 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 				symbolType = key;
 				// show type, eg: function, macro, struct, etc
 				arr.push(new SymbolTreeItem(symbolType, vscode.TreeItemCollapsibleState.None));
-
-				let regex_whole = value.whole[0];
-				let flag_whole = value.whole[1];
-				let regex_name = value.name[0];
-				let flag_name = value.name[1];
-				let match = null;
-				// a dynamic regex
-				let _regex_whole = new RegExp(regex_whole, flag_whole);
-				let _regex_name = new RegExp(regex_name, flag_name);
 				
-				if(regex_whole == '' || regex_name == '')
-					break;
+				if(symbolType == 'function')
+				{
+					let regex_whole = value.whole[0];
+					let flag_whole = value.whole[1];
+					let symbol_before_name = value.name;
+					let function_opening = value.opening[0];
+					let function_closing = value.opening[1];
+					let match = null;
+					// a dynamic regex
+					let _regex_whole = new RegExp(regex_whole, flag_whole);
+					
+					if(regex_whole == '')
+						break;
+	
+					while (match = _regex_whole.exec(text)) {
+						
+						// to extract the function name
 
-				while (match = _regex_whole.exec(text)) {
-					const start = document.positionAt(match.index);
-					const end = document.positionAt(match.index + match[0].length);
-					const range:vscode.Range = new vscode.Range(start, end);
-					
-					// _regex = /function\s+([a-zA-Z_][a-zA-Z_0-9]*)\s*\([^)]*\)\s*\{/;
-					// let match = raw_match.toString().match(_regex);
-					let _match = _regex_name.exec(match.toString());
-					if(_match)
-					{
-						// if you set breakpoint and investigate the value
-						// [1] holds the value of function name only
-						matches.push(_match[1])
+						let start_index = 0;
+						// for checking whether the current index has found the 1st character or not
+						let hasFountFirstChar = false;
+						let str = match.toString();
+						let sub = str.substring(0, str.indexOf(symbol_before_name));
+						let index = -1; // start with invalid index
+						let i = sub.length - 1; // point to the last character
+						// Loop through the string backwards
+						while (i >= 0) 
+						{
+							let char = sub.charAt(i); // Get the character at the current index
+							if (char === " " && hasFountFirstChar) 
+							{ 	// Check if the character is a white space
+								index = i; // Update the index
+								break;
+							}
+							/*
+							* because there are some cases like this
+							* int main (...)
+							* there's white space before the `(`
+							*/
+							else if (!isNaN(Number(char))) // isNaN = is not a number
+							{
+								hasFountFirstChar = true;
+							}
+							else if ((char.match(/[a-z]/i))) // if is alphabet
+							{
+								hasFountFirstChar = true;
+							}
+							i--;
+						}
+						// save the start index
+						// + 1, because the current index is pointing to white spaces
+						start_index = index + 1;
+						// get the substring, starting from the given start index
+						let function_name = sub.substring(start_index);
+						
+
+
+						// find the whole function body, using depth method
+
+						
+						// my regex only match until the 1st opening, thus, set depth starting at 1
+						let depth = 1;
+						// these ranges are used for highlighting the background
+						// store value first
+						const start = document.positionAt(match.index);
+						var end = document.positionAt(match.index + match[0].length);
+						
+						let doc = editor.document;
+						index = doc.offsetAt(end); // get the index from the position
+						let pos = doc.positionAt(index); // get the position
+						let char = doc.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the character
+						while (depth != 0) 
+						{
+							if(char === function_opening)
+							depth++;
+							else if(char === function_closing)
+								depth--;
+
+							if(depth==0)
+								break;
+							index++;
+							pos = doc.positionAt(index); // get the next position
+							char = doc.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the next character
+						}
+						
+						// update the end position again
+						// match.index - the starting index that my regex matches it
+						// index - match.index - the length of the function body
+						end = document.positionAt(match.index + (index-match.index));
+						// construct the range
+						const range = new vscode.Range(start, end);
+						
+						// for javascript, they have anonymous function
+						if(function_name == null)
+						{
+							function_name = 'anonymous'
+						}
+
+						// push to array, this will show the list of symbols later
+						arr.push(new SymbolTreeItem(
+							``+function_name, 
+							vscode.TreeItemCollapsibleState.None, 
+							range));
 					}
-					else
-					{
-						matches.push('anonymous');
-					}
+				}
+				else
+				{
 					
-					// push to array, this will show the list of symbols later
-					arr.push(new SymbolTreeItem(
-						``+_match, 
-						vscode.TreeItemCollapsibleState.None, 
-						range));
 				}
 			}
 		}
@@ -177,9 +249,6 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 			vscode.window.showInformationMessage('No language detected');
 		}
 
-		for (let match of matches) {
-			// add items to the array
-		}
 		// Return an array of tree items
 		return Promise.resolve(arr);
 	}
