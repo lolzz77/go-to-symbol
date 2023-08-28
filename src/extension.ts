@@ -101,7 +101,14 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 
 		
 			language = getCurrentActiveEditorLanguage();
-			// for now, just make it to default.json first
+
+
+			/*********************************************************** 
+			************************* DEBUG ****************************
+			***********************************************************/
+			// change `getJSONPath(language);` to `getJSONPath(null);`
+			// so it will look for default.json
+
 			JSONPath = getJSONPath(language);
 			let data = getJSONData(JSONPath);
 			var ranges: vscode.Range[] = [];
