@@ -111,7 +111,6 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 
 			JSONPath = getJSONPath(language);
 			let data = getJSONData(JSONPath);
-			var ranges: vscode.Range[] = [];
 			var document = editor.document;
 			var text = document.getText();
 			var symbolType = null;
@@ -122,22 +121,32 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 			/*
 			{
 				"function" : {
-					"a" : 1
+					"a" : 1,
+					"b" : 2
 				}
 			}
 			key = function
-			value = {"a" : 1}
+			value = {"a" : 1, "b" : 2}
 			*/
 			for (const [key, value] of entries) {
 				symbolType = key;
 				// show type, eg: function, macro, struct, etc
 				arr.push(new SymbolTreeItem(symbolType, vscode.TreeItemCollapsibleState.None));
 				
-				if(symbolType == 'function')
+				if(	symbolType == 'function' || symbolType == 'class' || symbolType == 'struct' ||
+					symbolType == 'enum')
 				{
 					let regex_whole = value.whole[0];
 					let flag_whole = value.whole[1];
-					let symbol_before_name = value.name;
+					let keys = Object.keys(value);
+					let keyword_to_search_for_symbol = null;
+					// some need to search the symbol BEFORE the char
+					// some need to search the symbol AFTER the char
+					if(keys.includes("before"))
+						keyword_to_search_for_symbol = value.before;
+					else
+						keyword_to_search_for_symbol = value.after;
+
 					let function_opening = value.opening[0];
 					let function_closing = value.opening[1];
 					let match = null;
@@ -155,7 +164,13 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						// for checking whether the current index has found the 1st character or not
 						let hasFountFirstChar = false;
 						let str = match.toString();
-						let sub = str.substring(0, str.indexOf(symbol_before_name));
+						let sub = null;
+
+						if(keys.includes("before"))
+							sub = str.substring(0, str.indexOf(keyword_to_search_for_symbol));
+						else
+							sub = str.substring(str.indexOf(keyword_to_search_for_symbol));
+
 						let index = -1; // start with invalid index
 						let i = sub.length - 1; // point to the last character
 						// Loop through the string backwards
@@ -225,6 +240,10 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						// construct the range
 						const range = new vscode.Range(start, end);
 						
+						// to remove functions code from buffer
+						// next thing to do is scan for global variables
+						text = text.substring(0, match.index) + '' + str.substring((index-match.index));
+
 						// for javascript, they have anonymous function
 						if(function_name == null)
 						{
@@ -238,10 +257,125 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 							range));
 					}
 				}
-				else
-				{
+				// else // for those that dont need '{}' depth handling
+				// {
+				// 	let regex_whole = value.whole[0];
+				// 	let flag_whole = value.whole[1];
+				// 	let match = null;
+				// 	// a dynamic regex
+				// 	let _regex_whole = new RegExp(regex_whole, flag_whole);
+
+
+
+
+				// 	let keys = Object.keys(value);
+				// 	let keyword_to_search_for_symbol = null;
+				// 	if(keys.includes("before"))
+				// 		keyword_to_search_for_symbol = value.before;
+				// 	else
+				// 		keyword_to_search_for_symbol = value.after;
 					
-				}
+
+
+				// 	if(regex_whole == '')
+				// 		break;
+	
+				// 	while (match = _regex_whole.exec(text)) {
+						
+				// 		// to extract the function name
+	
+				// 		let start_index = 0;
+				// 		// for checking whether the current index has found the 1st character or not
+				// 		let hasFountFirstChar = false;
+				// 		let str = match.toString();
+				// 		let sub = null;
+				// 		let index = null;
+
+				// 		if(keys.includes("before"))
+				// 		{
+				// 			sub = str.substring(0, str.indexOf(keyword_to_search_for_symbol));
+				// 			index = -1; // start with invalid index
+				// 			let i = sub.length - 1; // point to the last character
+				// 			// Loop through the string backwards
+				// 			while (i >= 0) 
+				// 			{
+				// 				let char = sub.charAt(i); // Get the character at the current index
+				// 				if (char === " " && hasFountFirstChar) 
+				// 				{ 	// Check if the character is a white space
+				// 					index = i; // Update the index
+				// 					break;
+				// 				}
+				// 				/*
+				// 				* because there are some cases like this
+				// 				* int main (...)
+				// 				* there's white space before the `(`
+				// 				*/
+				// 				else if (!isNaN(Number(char))) // isNaN = is not a number
+				// 				{
+				// 					hasFountFirstChar = true;
+				// 				}
+				// 				else if ((char.match(/[a-z]/i))) // if is alphabet
+				// 				{
+				// 					hasFountFirstChar = true;
+				// 				}
+				// 				i--;
+				// 			}
+				// 			// save the start index
+				// 			// + 1, because the current index is pointing to white spaces
+				// 			start_index = index + 1;
+				// 		}
+				// 		else
+				// 		{
+				// 			sub = str.substring(str.indexOf(keyword_to_search_for_symbol));
+				// 			index = -1; // start with invalid index
+				// 			let i = 0; // point to the first character
+				// 			// Loop through the string forward
+				// 			while (i < sub.length) 
+				// 			{
+				// 				let char = sub.charAt(i); // Get the character at the current index
+				// 				if (char === " " && hasFountFirstChar) 
+				// 				{ 	// Check if the character is a white space
+				// 					index = i; // Update the index
+				// 					break;
+				// 				}
+				// 				/*
+				// 				* because there are some cases like this
+				// 				* int main (...)
+				// 				* there's white space before the `(`
+				// 				*/
+				// 				else if (!isNaN(Number(char))) // isNaN = is not a number
+				// 				{
+				// 					hasFountFirstChar = true;
+				// 				}
+				// 				else if ((char.match(/[a-z]/i))) // if is alphabet
+				// 				{
+				// 					hasFountFirstChar = true;
+				// 				}
+				// 				i++;
+				// 			}
+				// 			// save the start index
+				// 			// - 1, because the current index is pointing to the 2nd char
+				// 			start_index = index - 1;
+				// 		}
+					
+						
+				// 		// get the substring, starting from the given start index
+				// 		let symbol_name = sub.substring(start_index);
+						
+				// 		const start = document.positionAt(match.index);
+				// 		const end = document.positionAt(match.index + match[0].length);
+				// 		const range = new vscode.Range(start, end);
+
+				// 		text = text.substring(0, match.index) + '' + str.substring((index-match.index));
+
+				// 		// push to array, this will show the list of symbols later
+				// 		arr.push(new SymbolTreeItem(
+				// 			``+symbol_name, 
+				// 			vscode.TreeItemCollapsibleState.None, 
+				// 			range));
+				// 	}
+
+				// }
 			}
 		}
 		else
