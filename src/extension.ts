@@ -24,7 +24,7 @@ export function activate(context: vscode.ExtensionContext) {
 			let editor = vscode.window.activeTextEditor;
 			const backgroundDecorationType = vscode.window.createTextEditorDecorationType({
 				// the last element is the opacity
-				backgroundColor: 'rgba(154, 154, 156, 0.3)', // grey
+				backgroundColor: 'rgba(154, 154, 156, 0.1)', // grey
 				// this opacity appleis to the text instead of the background color
 				// opacity: '0',
 				// this can be seen on minimap, the small block colors
@@ -62,7 +62,7 @@ export function activate(context: vscode.ExtensionContext) {
 					editor.setDecorations(backgroundDecorationType, [decoration]);
 
 					// move the cursor to the location
-					
+
 					const newSelection = new vscode.Selection(range.start, range.start);
 					editor.selection = newSelection;
 					// Reveal the range in the editor
