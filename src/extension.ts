@@ -133,6 +133,11 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 				// show type, eg: function, macro, struct, etc
 				arr.push(new SymbolTreeItem(symbolType, vscode.TreeItemCollapsibleState.None));
 				
+
+				let position_arr = [];
+				let start_index = null;
+				let end_index = null;
+
 				if(	symbolType == 'function' || symbolType == 'class' || symbolType == 'struct' ||
 					symbolType == 'enum')
 				{
@@ -140,6 +145,8 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					let flag_whole = value.whole[1];
 					let keys = Object.keys(value);
 					let keyword_to_search_for_symbol = null;
+					position_arr = [];
+
 					// some need to search the symbol BEFORE the char
 					// some need to search the symbol AFTER the char
 					if(keys.includes("before"))
@@ -155,12 +162,14 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					
 					if(regex_whole == '')
 						break;
-	
+					
+
 					while (match = _regex_whole.exec(text)) {
 						
 						// to extract the function name
-
-						let start_index = 0;
+						
+						start_index = 0;
+						end_index = 0;
 						// for checking whether the current index has found the 1st character or not
 						let hasFountFirstChar = false;
 						let str = match.toString();
@@ -217,6 +226,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						
 						let doc = editor.document;
 						index = doc.offsetAt(end); // get the index from the position
+						start_index = index;
 						let pos = doc.positionAt(index); // get the position
 						let char = doc.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the character
 						while (depth != 0) 
@@ -232,150 +242,160 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 							pos = doc.positionAt(index); // get the next position
 							char = doc.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the next character
 						}
-						
+						end_index = index;
 						// update the end position again
 						// match.index - the starting index that my regex matches it
 						// index - match.index - the length of the function body
 						end = document.positionAt(match.index + (index-match.index));
 						// construct the range
 						const range = new vscode.Range(start, end);
-						
-						// to remove functions code from buffer
-						// next thing to do is scan for global variables
-						text = text.substring(0, match.index) + '' + str.substring((index-match.index));
-
 						// for javascript, they have anonymous function
-						if(function_name == null)
+						if(function_name == null || function_name == '')
 						{
 							function_name = 'anonymous'
 						}
-
+						
 						// push to array, this will show the list of symbols later
 						arr.push(new SymbolTreeItem(
 							``+function_name, 
 							vscode.TreeItemCollapsibleState.None, 
 							range));
+
+							position_arr.push([start_index, end_index]);
 					}
+
 				}
-				// else // for those that dont need '{}' depth handling
-				// {
-				// 	let regex_whole = value.whole[0];
-				// 	let flag_whole = value.whole[1];
-				// 	let match = null;
-				// 	// a dynamic regex
-				// 	let _regex_whole = new RegExp(regex_whole, flag_whole);
+				else // for those that dont need '{}' depth handling
+				{
+					let regex_whole = value.whole[0];
+					let flag_whole = value.whole[1];
+					let match = null;
+					// a dynamic regex
+					let _regex_whole = new RegExp(regex_whole, flag_whole);
+					position_arr = [];
 
 
 
 
-				// 	let keys = Object.keys(value);
-				// 	let keyword_to_search_for_symbol = null;
-				// 	if(keys.includes("before"))
-				// 		keyword_to_search_for_symbol = value.before;
-				// 	else
-				// 		keyword_to_search_for_symbol = value.after;
+					let keys = Object.keys(value);
+					let keyword_to_search_for_symbol = null;
+					if(keys.includes("before"))
+						keyword_to_search_for_symbol = value.before;
+					else
+						keyword_to_search_for_symbol = value.after;
 					
 
 
-				// 	if(regex_whole == '')
-				// 		break;
-	
-				// 	while (match = _regex_whole.exec(text)) {
+					if(regex_whole == '')
+						break;
+					
+					while (match = _regex_whole.exec(text)) {
 						
-				// 		// to extract the function name
+						// to extract the function name
 	
-				// 		let start_index = 0;
-				// 		// for checking whether the current index has found the 1st character or not
-				// 		let hasFountFirstChar = false;
-				// 		let str = match.toString();
-				// 		let sub = null;
-				// 		let index = null;
+						start_index = 0;
+						end_index = 0;
+						// for checking whether the current index has found the 1st character or not
+						let hasFountFirstChar = false;
+						let str = match.toString();
+						let sub = null;
+						let index = null;
 
-				// 		if(keys.includes("before"))
-				// 		{
-				// 			sub = str.substring(0, str.indexOf(keyword_to_search_for_symbol));
-				// 			index = -1; // start with invalid index
-				// 			let i = sub.length - 1; // point to the last character
-				// 			// Loop through the string backwards
-				// 			while (i >= 0) 
-				// 			{
-				// 				let char = sub.charAt(i); // Get the character at the current index
-				// 				if (char === " " && hasFountFirstChar) 
-				// 				{ 	// Check if the character is a white space
-				// 					index = i; // Update the index
-				// 					break;
-				// 				}
-				// 				/*
-				// 				* because there are some cases like this
-				// 				* int main (...)
-				// 				* there's white space before the `(`
-				// 				*/
-				// 				else if (!isNaN(Number(char))) // isNaN = is not a number
-				// 				{
-				// 					hasFountFirstChar = true;
-				// 				}
-				// 				else if ((char.match(/[a-z]/i))) // if is alphabet
-				// 				{
-				// 					hasFountFirstChar = true;
-				// 				}
-				// 				i--;
-				// 			}
-				// 			// save the start index
-				// 			// + 1, because the current index is pointing to white spaces
-				// 			start_index = index + 1;
-				// 		}
-				// 		else
-				// 		{
-				// 			sub = str.substring(str.indexOf(keyword_to_search_for_symbol));
-				// 			index = -1; // start with invalid index
-				// 			let i = 0; // point to the first character
-				// 			// Loop through the string forward
-				// 			while (i < sub.length) 
-				// 			{
-				// 				let char = sub.charAt(i); // Get the character at the current index
-				// 				if (char === " " && hasFountFirstChar) 
-				// 				{ 	// Check if the character is a white space
-				// 					index = i; // Update the index
-				// 					break;
-				// 				}
-				// 				/*
-				// 				* because there are some cases like this
-				// 				* int main (...)
-				// 				* there's white space before the `(`
-				// 				*/
-				// 				else if (!isNaN(Number(char))) // isNaN = is not a number
-				// 				{
-				// 					hasFountFirstChar = true;
-				// 				}
-				// 				else if ((char.match(/[a-z]/i))) // if is alphabet
-				// 				{
-				// 					hasFountFirstChar = true;
-				// 				}
-				// 				i++;
-				// 			}
-				// 			// save the start index
-				// 			// - 1, because the current index is pointing to the 2nd char
-				// 			start_index = index - 1;
-				// 		}
+						if(keys.includes("before"))
+						{
+							sub = str.substring(0, str.indexOf(keyword_to_search_for_symbol));
+							index = -1; // start with invalid index
+							let i = sub.length - 1; // point to the last character
+							// Loop through the string backwards
+							while (i >= 0) 
+							{
+								let char = sub.charAt(i); // Get the character at the current index
+								if (char === " " && hasFountFirstChar) 
+								{ 	// Check if the character is a white space
+									index = i; // Update the index
+									break;
+								}
+								/*
+								* because there are some cases like this
+								* int main (...)
+								* there's white space before the `(`
+								*/
+								else if (!isNaN(Number(char))) // isNaN = is not a number
+								{
+									hasFountFirstChar = true;
+								}
+								else if ((char.match(/[a-z]/i))) // if is alphabet
+								{
+									hasFountFirstChar = true;
+								}
+								i--;
+							}
+							// save the start index
+							// + 1, because the current index is pointing to white spaces
+							start_index = index + 1;
+						}
+						else
+						{
+							sub = str.substring(str.indexOf(keyword_to_search_for_symbol));
+							index = -1; // start with invalid index
+							let i = 0; // point to the first character
+							// Loop through the string forward
+							while (i < sub.length) 
+							{
+								let char = sub.charAt(i); // Get the character at the current index
+								if (char === " " && hasFountFirstChar) 
+								{ 	// Check if the character is a white space
+									index = i; // Update the index
+									break;
+								}
+								/*
+								* because there are some cases like this
+								* int main (...)
+								* there's white space before the `(`
+								*/
+								else if (!isNaN(Number(char))) // isNaN = is not a number
+								{
+									hasFountFirstChar = true;
+								}
+								else if ((char.match(/[a-z]/i))) // if is alphabet
+								{
+									hasFountFirstChar = true;
+								}
+								i++;
+							}
+							// save the start index
+							// - 1, because the current index is pointing to the 2nd char
+							start_index = index - 1;
+						}
 					
 						
-				// 		// get the substring, starting from the given start index
-				// 		let symbol_name = sub.substring(start_index);
+						// get the substring, starting from the given start index
+						let symbol_name = sub.substring(start_index);
 						
-				// 		const start = document.positionAt(match.index);
-				// 		const end = document.positionAt(match.index + match[0].length);
-				// 		const range = new vscode.Range(start, end);
+						const start = document.positionAt(match.index);
+						const end = document.positionAt(match.index + match[0].length);
+						const range = new vscode.Range(start, end);
 
-				// 		text = text.substring(0, match.index) + '' + str.substring((index-match.index));
+						// push to array, this will show the list of symbols later
+						arr.push(new SymbolTreeItem(
+							``+symbol_name, 
+							vscode.TreeItemCollapsibleState.None, 
+							range));
+					}
 
-				// 		// push to array, this will show the list of symbols later
-				// 		arr.push(new SymbolTreeItem(
-				// 			``+symbol_name, 
-				// 			vscode.TreeItemCollapsibleState.None, 
-				// 			range));
-				// 	}
-
-				// }
+				}
+				// remove the content i dont need in text buffer
+				// have to do it after the while loop
+				// else, u will affect the iterator
+				let prev_length = 0;
+				for (let [start_index, end_index] of position_arr)
+				{
+					// after you removed the strings, the indexes needs to be recalculated
+					start_index -= prev_length;
+					end_index -= prev_length;
+					text = text.substring(0, start_index) + '' + text.substring(end_index);
+					prev_length = end_index - start_index;
+				}
 			}
 		}
 		else
