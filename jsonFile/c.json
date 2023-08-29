@@ -5,7 +5,7 @@
         "before" : "("
     },
     "macro" : {
-        "whole" : ["/^#define\\s+\\w+\\s+.*$", "gm"],
+        "whole" : ["^\\s*#define\\s+([^\\n]+)\\n", "gm"],
         "after" : "define"
     },
     "global" : {

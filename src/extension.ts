@@ -372,8 +372,8 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 								i++;
 							}
 							// save the start index
-							// - 1, because the current index is pointing to the 2nd char
-							start_index = index - 1;
+							// + 1 because currently the index is pointing to the white space
+							start_index = index + 1;
 						}
 					
 						
