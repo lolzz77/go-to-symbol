@@ -52,13 +52,21 @@ export function activate(context: vscode.ExtensionContext) {
 						type.dispose();
 					}
 				}
-				else // else, decorate them
+				else
 				{
+					// decorate the selected items
+
 					// have to put as vscode.Range at behind else it will flag error
 					const range = selectedItems[0].range as vscode.Range;
 					const decoration = { range };
 					editor.setDecorations(backgroundDecorationType, [decoration]);
-					// editor.setDecorations(backgroundDecorationType, []); // Pass an empty array to remove all decorations
+
+					// move the cursor to the location
+					
+					const newSelection = new vscode.Selection(range.start, range.start);
+					editor.selection = newSelection;
+					// Reveal the range in the editor
+					editor.revealRange(range);
 				}
 			}
 		});
