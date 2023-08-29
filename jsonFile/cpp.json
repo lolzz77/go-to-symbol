@@ -1,0 +1,15 @@
+{
+    "function" : {
+        "whole" : ["\\b(?:void|int|char|float|double|long|short)\\s+([a-zA-Z_][a-zA-Z_0-9]*)\\s*\\([^)]*\\)\\s*\\{", "g"],
+        "opening" : ["{", "}"],
+        "before" : "("
+    },
+    "macro" : {
+        "whole" : ["^\\s*#define\\s+([^\\n]+)\\n", "gm"],
+        "after" : "define"
+    },
+    "global" : {
+        "whole" : ["", ""],
+        "before" : "="
+    }
+}
