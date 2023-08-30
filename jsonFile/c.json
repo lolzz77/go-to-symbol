@@ -4,11 +4,6 @@
         "opening" : ["{", "}"],
         "before" : "("
     },
-    "class" : {
-        "whole" : ["^\\s*class\\s+\\w+\\s*\\{", "gm"],
-        "opening" : ["{", "}"],
-        "before" : "("
-    },
     "struct" : {
         "whole" : ["^\\s*struct\\s+\\w+\\s*\\{", "gm"],
         "opening" : ["{", "}"],
