@@ -22,7 +22,7 @@
         "after" : "define"
     },
     "global" : {
-        "whole" : ["^\\s*(?!static)\\w+\\s+\\w+\\s*;", "g"],
+        "whole" : ["^(.*?);|\\n", "g"],
         "before" : "="
     }
 }

@@ -515,8 +515,34 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						symbol_name = sub_sub;
 					}
 					
-					const start = document.positionAt(match.index);
-					const end = document.positionAt(match.index + match[0].length);
+
+					let temp_doc = editor.document;
+					let temp_text = temp_doc.getText();
+					let temp_match = null;
+					// have to use another regex, 
+					// if reuse the existing regex, it will continue the next pattern
+					let temp_regex_whole = new RegExp(regex_whole, flag_whole);
+
+					// to capture regex on the original document
+					while( temp_match = temp_regex_whole.exec(temp_text) )
+					{
+						// if match with current matched pattern, 
+						// means this pattern is not a duplicate
+						if (temp_match[0] == match[0])
+							break;
+					}
+
+					// fail safe check, 
+					// if pattern not found on original document, dont proceed
+					if (!temp_match)
+					{
+						continue;
+					}
+
+
+
+					const start = document.positionAt(temp_match.index);
+					const end = document.positionAt(temp_match.index + temp_match[0].length);
 					const range = new vscode.Range(start, end);
 
 					to_repalce = document.getText(range);
