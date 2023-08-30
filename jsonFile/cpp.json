@@ -19,12 +19,15 @@
         "opening" : ["{", "}"],
         "before" : "{"
     },
+    "comment" : {
+        "whole" : ["\\/\\/.*|\\/\\*[^*]*\\*+(?:[^\\/*][^*]*\\*+)*\\/", "g"]
+    },
     "macro" : {
-        "whole" : ["^\\s*#define\\s+([^\\n]+)\\n", "gm"],
+        "whole" : ["#define\\s+([^\\n]+)\\n", "g"],
         "after" : "define"
     },
     "global" : {
-        "whole" : ["^\\s*(?!static)\\w+\\s+\\w+\\s*;", "gm"],
+        "whole" : ["\\b(?:void|int|char|float|double|long|short)\\s+[a-zA-Z_][a-zA-Z_0-9]*\\s*[^;]*;", "g"],
         "before" : "="
     }
 }
