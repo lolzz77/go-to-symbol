@@ -4,12 +4,27 @@
         "opening" : ["{", "}"],
         "before" : "("
     },
+    "class" : {
+        "whole" : ["^\\s*class\\s+\\w+\\s*\\{", "gm"],
+        "opening" : ["{", "}"],
+        "before" : "("
+    },
+    "struct" : {
+        "whole" : ["^\\s*struct\\s+\\w+\\s*\\{", "gm"],
+        "opening" : ["{", "}"],
+        "before" : "{"
+    },
+    "enum" : {
+        "whole" : ["^\\s*enum\\s+\\w+\\s*\\{", "gm"],
+        "opening" : ["{", "}"],
+        "before" : "{"
+    },
     "macro" : {
         "whole" : ["^\\s*#define\\s+([^\\n]+)\\n", "gm"],
         "after" : "define"
     },
     "global" : {
-        "whole" : ["", ""],
+        "whole" : ["^\\s*(?!static)\\w+\\s+\\w+\\s*;", "gm"],
         "before" : "="
     }
 }
