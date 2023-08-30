@@ -141,7 +141,6 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 			// show type, eg: function, macro, struct, etc
 			treeArr.push(new SymbolTreeItem(symbolType, vscode.TreeItemCollapsibleState.None));
 			var text = document.getText();
-			
 
 			let position_arr = [];
 			let start_index = null;
@@ -175,15 +174,25 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 
 				while (match = _regex_whole.exec(text)) {
 					
+
+
 					// to extract the function name
-					
+					// actually, the `match` is an array, match[1] holds the function name
+					// however, this algorithm applies got struct, enum those as well
+					// thus, tho you can do function_name = match[1]
+					// is better do manually, so that it applies to all cases
+
+
+
 					start_index = 0;
 					end_index = 0;
 					// for checking whether the current index has found the 1st character or not
 					let hasFountFirstChar = false;
 					let str = match.toString();
 					let sub = null;
-
+					let function_name = null;
+					
+					// given keyword, get substring
 					if(keys.includes("before"))
 						sub = str.substring(0, str.indexOf(keyword_to_search_for_symbol));
 					else
@@ -219,18 +228,47 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// + 1, because the current index is pointing to white spaces
 					start_index = index + 1;
 					// get the substring, starting from the given start index
-					let function_name = sub.substring(start_index);
-					
+					function_name = sub.substring(start_index);
+					// remove white spaces
+					function_name = function_name.replace('\\s*', '');
+					// remove '\n' characters
+					function_name = function_name.replace('\n', '');
 
 
 					// find the whole function body, using depth method
+
+
+					// First, make sure the regex that matches the pattern,
+					// matches the whole thing properly, like, at the start of the string
+					// this refers that this is the beginning of the document,
+					// you can go backwards anymore, this is the 1st index of document
+					if(match.index == 0)
+					{
+						;
+					}
+					else
+					{
+						let start = document.positionAt(match.index);
+						index = document.offsetAt(start); // get the index from the position
+						start_index = index;
+						let pos = document.positionAt(index); // get the position
+						let char = document.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the character
+						// i wanted it to stop when match new line '\n', but apparently, it just ''
+						while(char != '')
+						{
+							pos = document.positionAt(index); // get the position
+							char = document.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the character
+							index--;
+						}
+					}
+
 
 					
 					// my regex only match until the 1st opening, thus, set depth starting at 1
 					let depth = 1;
 					// these ranges are used for highlighting the background
 					// store value first
-					const start = document.positionAt(match.index);
+					const start = document.positionAt(index);
 					var end = document.positionAt(match.index + match[0].length);
 					
 					index = document.offsetAt(end); // get the index from the position
@@ -240,13 +278,16 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					while (depth != 0) 
 					{
 						if(char === function_opening)
-						depth++;
+							depth++;
 						else if(char === function_closing)
 							depth--;
 
+						// increment of index has to put before any oepration that will break the function
+						index++;
+						
 						if(depth==0)
 							break;
-						index++;
+						
 						pos = document.positionAt(index); // get the next position
 						char = document.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the next character
 					}
@@ -257,6 +298,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					end = document.positionAt(match.index + (index-match.index));
 					// construct the range
 					const range = new vscode.Range(start, end);
+					
 					// for javascript, they have anonymous function
 					// if not match alphabets, set it to anonymous
 					if(!function_name.match(/[a-z]/i))
@@ -272,8 +314,6 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 
 						position_arr.push([start_index, end_index]);
 				}
-				let test;
-
 			}
 			else // for those that dont need '{}' depth handling
 			{
@@ -413,42 +453,6 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 				end_index -= prev_length;
 				text = text.substring(0, start_index) + '' + text.substring(end_index);
 				prev_length = end_index - start_index;
-
-				const start = document.positionAt(start_index);
-				const end = document.positionAt(start_index + end_index);
-
-				// Create a TextEdit to replace a range with new content
-				const newText = '';
-				const range = new vscode.Range(start, end);
-				const edit = new vscode.TextEdit(range, newText);
-			
-				// Create a WorkspaceEdit to apply the TextEdit
-				const workspaceEdit = new vscode.WorkspaceEdit();
-				workspaceEdit.set(document.uri, [edit]);
-			
-				// Apply the edit
-				vscode.workspace.applyEdit(workspaceEdit);
-
-
-				// const edits: vscode.TextEdit[] = [];
-
-				// // Make your modifications to the document
-				// // For example, let's add a new line at the end of the document
-				// const lastLine = document.lineAt(document.lineCount - 1);
-				// const newLine = new vscode.Position(lastLine.range.end.line + 1, 0);
-				// edits.push(vscode.TextEdit.insert(newLine, '\n// Modified in memory'));
-			
-				// // Apply the edits to the document in memory
-				// const edit = new vscode.WorkspaceEdit();
-				// edit.set(document.uri, edits);
-				// vscode.workspace.applyEdit(edit);
-
-
-				let me = document.getText();
-				let x;
-
-				// modifyDocumentInMemory(document);
-
 			}
 		}
 
@@ -463,27 +467,13 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 	}
 }
 
-async function modifyDocumentInMemory(document: vscode.TextDocument) {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) {
-        return;
-    }
-    const edits: vscode.TextEdit[] = [];
+// async function modifyRangeInDocument(start: vscode.Position, end: vscode.Position, newText: string) {
 
-    // Make your modifications to the document
-    // For example, let's add a new line at the end of the document
-    const lastLine = document.lineAt(document.lineCount - 1);
-    const newLine = new vscode.Position(lastLine.range.end.line + 1, 0);
-    edits.push(vscode.TextEdit.insert(newLine, '\n// Modified in memory'));
 
-    // Apply the edits to the document in memory
-    const edit = new vscode.WorkspaceEdit();
-    edit.set(document.uri, edits);
-    await vscode.workspace.applyEdit(edit);
+// 	let me2 = document.getText();
+// 	let x2;
+// }
 
-	let me = document.getText();
-	let x;
-}
 
 
 // this class holds the detail of list of symbols that regex matches
