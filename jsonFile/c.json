@@ -14,8 +14,11 @@
         "opening" : ["{", "}"],
         "before" : "{"
     },
+    "comment" : {
+        "whole" : ["\\/\\/.*|\\/\\*[^*]*\\*+(?:[^\\/*][^*]*\\*+)*\\/", "g"]
+    },
     "macro" : {
-        "whole" : ["^\\s*#define\\s+([^\\n]+)\\n", "g"],
+        "whole" : ["#define\\s+([^\\n]+)\\n", "g"],
         "after" : "define"
     },
     "global" : {

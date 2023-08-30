@@ -140,15 +140,42 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 		*/
 		for (const [key, value] of entries) {
 			symbolType = key;
-			// show type, eg: function, macro, struct, etc
-			treeArr.push(new SymbolTreeItem(symbolType, vscode.TreeItemCollapsibleState.None));
+
+			if (symbolType != 'comment')
+			{
+				// show type, eg: function, macro, struct, etc
+				treeArr.push(new SymbolTreeItem(symbolType, vscode.TreeItemCollapsibleState.None));
+			}
 
 			let position_arr = [];
 			let start_index = null;
 			let end_index = null;
 			to_repalce = '';
+			if (symbolType == 'comment')
+			{
+				let regex_whole = value.whole[0];
+				let flag_whole = value.whole[1];
+				let match = null;
+				let symbol_name = null;
+				// a dynamic regex
+				let _regex_whole = new RegExp(regex_whole, flag_whole);
+				position_arr = [];
 
-			if(	symbolType == 'function' || symbolType == 'class' || symbolType == 'struct' ||
+				if(regex_whole == '')
+					break;
+				
+				while (match = _regex_whole.exec(text)) {
+					start_index = 0;
+					end_index = 0;
+					const start = document.positionAt(match.index);
+					const end = document.positionAt(match.index + match[0].length);
+					const range = new vscode.Range(start, end);
+
+					to_repalce = document.getText(range);
+					position_arr.push(to_repalce);
+				}
+			}
+			else if( symbolType == 'function' || symbolType == 'class' || symbolType == 'struct' ||
 				symbolType == 'enum')
 			{
 				let regex_whole = value.whole[0];
@@ -297,11 +324,11 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// i wanted it to stop when match new line '\n', but apparently, it just ''
 					while(temp_match.index != 0 && char != '')
 					{
+						index--;
 						pos = document.positionAt(index); // get the position
 						char = document.getText(new vscode.Range(pos, pos.translate(0, 1)));
-						index--;
 					}
-
+					index++;
 
 
 					
@@ -345,6 +372,12 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// construct the range
 					const range = new vscode.Range(start, end);
 					
+
+					/**********************************************************************
+					finally, push to array
+					***********************************************************************/
+
+
 					// for javascript, they have anonymous function
 					// if not match alphabets, set it to anonymous
 					if(!function_name.match(/[a-z]/i))
@@ -363,7 +396,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// to make way for next regex to search
 					to_repalce = document.getText(range);
 					// for removing text in the buffered 'text' later
-					position_arr.push([start_index, end_index]);
+					position_arr.push(to_repalce);
 				}
 			}
 			else // for those that dont need '{}' depth handling
@@ -377,8 +410,6 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 				position_arr = [];
 
 
-
-
 				let keys = Object.keys(value);
 				let keyword_to_search_for_symbol = null;
 				if(keys.includes("before"))
@@ -387,13 +418,15 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					keyword_to_search_for_symbol = value.after;
 				
 
-
 				if(regex_whole == '')
 					break;
 				
 				while (match = _regex_whole.exec(text)) {
 					
+
 					// to extract the function name
+
+
 
 					start_index = 0;
 					end_index = 0;
@@ -403,6 +436,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					let sub = null;
 					let index = null;
 
+					// handling for extracting symbol name given word appear 'before' the symbol
 					if(keys.includes("before"))
 					{
 						sub = str.substring(0, str.indexOf(keyword_to_search_for_symbol));
@@ -434,6 +468,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						// get the substring, starting from the given start index
 						symbol_name = sub.substring(start_index);
 					}
+					// handling for extracting symbol name given word appear 'after' the symbol
 					else
 					{
 						sub = str.substring(str.indexOf(keyword_to_search_for_symbol));
@@ -485,26 +520,28 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					const range = new vscode.Range(start, end);
 
 					to_repalce = document.getText(range);
+					position_arr.push(to_repalce);
 
 					// push to array, this will show the list of symbols later
 					treeArr.push(new SymbolTreeItem(
 						``+symbol_name, 
 						vscode.TreeItemCollapsibleState.None, 
 						range));
+						
 				}
 			}
 			// remove the content i dont need in text buffer
 			// have to do it after the while loop
 			// else, u will affect the iterator
 			let prev_length = 0;
-			for (let [start_index, end_index] of position_arr)
+			for (let to_repalce of position_arr)
 			{
 				// after you removed the strings, the indexes needs to be recalculated
-				start_index -= prev_length;
-				end_index -= prev_length;
+				// start_index -= prev_length;
+				// end_index -= prev_length;
 				// text = text.substring(0, start_index) + '' + text.substring(end_index);
 				text = text.replace(to_repalce, '');
-				prev_length = end_index - start_index;
+				// prev_length = end_index - start_index;
 			}
 		}
 
