@@ -121,11 +121,13 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 		JSONPath = getJSONPath(language);
 		let data = getJSONData(JSONPath);
 		var document = editor.document;
+		var text = document.getText();
 		var symbolType = null;
 		// have to put 'any', else this variable will have type 'unknown'
 		// then later loop will have error
 		// if dont want to put 'any', later in loop can put 'as any'
 		let entries:any = Object.entries(data);
+		let to_repalce = '';
 		/*
 		{
 			"function" : {
@@ -140,11 +142,11 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 			symbolType = key;
 			// show type, eg: function, macro, struct, etc
 			treeArr.push(new SymbolTreeItem(symbolType, vscode.TreeItemCollapsibleState.None));
-			var text = document.getText();
 
 			let position_arr = [];
 			let start_index = null;
 			let end_index = null;
+			to_repalce = '';
 
 			if(	symbolType == 'function' || symbolType == 'class' || symbolType == 'struct' ||
 				symbolType == 'enum')
@@ -235,6 +237,26 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					function_name = function_name.replace('\\s*', '');
 					// remove '\n' characters
 					function_name = function_name.replace('\n', '');
+					
+
+					// now, get updated document index
+
+					let temp_doc = editor.document;
+					let temp_text = temp_doc.getText();
+					let temp_match = null;
+					// have to use another regex, 
+					// if reuse the existing regex, it will continue the next pattern
+					let temp_regex_whole = new RegExp(regex_whole, flag_whole);
+					while( temp_match = temp_regex_whole.exec(temp_text) )
+					{
+						if (temp_match[0] == match[0])
+							break;
+					}
+					if (!temp_match)
+					{
+						continue;
+					}
+
 
 
 					// find the whole function body, using depth method
@@ -244,7 +266,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// matches the whole thing properly, like, at the start of the string
 					
 
-					let start = document.positionAt(match.index);
+					let start = document.positionAt(temp_match.index);
 					let end = null;
 					index = document.offsetAt(start); // get the index from the position
 					start_index = index;
@@ -254,13 +276,12 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// match.index == 0 refers that this is the beginning of the document,
 					// you can go backwards anymore, this is the 1st index of document
 					// i wanted it to stop when match new line '\n', but apparently, it just ''
-					while(match.index != 0 && char != '')
+					while(temp_match.index != 0 && char != '')
 					{
 						pos = document.positionAt(index); // get the position
 						char = document.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the character
 						index--;
 					}
-
 
 					
 					// my regex only match until the 1st opening, thus, set depth starting at 1
@@ -270,7 +291,12 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// these ranges are used for highlighting the background
 					// store value first
 					start = document.positionAt(index);
-					end = document.positionAt(match.index + match[0].length);
+
+					// let temp_offset = document.offsetAt(start);
+					// let temp_position = document.positionAt(temp_offset);
+					// to_repalce = document.getText(new vscode.Range(temp_position, temp_position.translate(0, 1))); // get the character
+
+					end = document.positionAt(temp_match.index + temp_match[0].length);
 					
 					index = document.offsetAt(end); // get the index from the position
 					start_index = index;
@@ -296,10 +322,12 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// update the end position again
 					// match.index - the starting index that my regex matches it
 					// index - match.index - the length of the function body
-					end = document.positionAt(match.index + (index-match.index));
+					end = document.positionAt(temp_match.index + (index-temp_match.index));
 					// construct the range
 					const range = new vscode.Range(start, end);
 					
+					to_repalce = document.getText(range);
+
 					// for javascript, they have anonymous function
 					// if not match alphabets, set it to anonymous
 					if(!function_name.match(/[a-z]/i))
@@ -318,7 +346,8 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 
 					// Now, modify the document text buffer, remove it, give way to the next regex
 
-					
+					// text = text.substring(0, start_index) + '' + text.substring(end_index);
+					// text = text.replace(to_repalce, '');
 				}
 			}
 			else // for those that dont need '{}' depth handling
@@ -435,11 +464,11 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						symbol_name = sub_sub;
 					}
 					
-					
 					var me = match.index;
 					const start = document.positionAt(match.index);
 					const end = document.positionAt(match.index + match[0].length);
 					const range = new vscode.Range(start, end);
+					to_repalce = document.getText(range);
 
 					// push to array, this will show the list of symbols later
 					treeArr.push(new SymbolTreeItem(
@@ -457,7 +486,8 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 				// after you removed the strings, the indexes needs to be recalculated
 				start_index -= prev_length;
 				end_index -= prev_length;
-				text = text.substring(0, start_index) + '' + text.substring(end_index);
+				// text = text.substring(0, start_index) + '' + text.substring(end_index);
+				text = text.replace(to_repalce, '');
 				prev_length = end_index - start_index;
 			}
 		}
