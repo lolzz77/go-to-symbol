@@ -144,7 +144,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 			if (symbolType != 'comment')
 			{
 				// show type, eg: function, macro, struct, etc
-				treeArr.push(new SymbolTreeItem(symbolType, vscode.TreeItemCollapsibleState.None));
+				treeArr.push(new SymbolTreeItem('------------'+symbolType+'------------', vscode.TreeItemCollapsibleState.None));
 			}
 
 			let position_arr = [];

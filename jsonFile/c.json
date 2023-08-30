@@ -22,7 +22,7 @@
         "after" : "define"
     },
     "global" : {
-        "whole" : ["^(.*?);|\\n", "g"],
+        "whole" : ["\\b(?:void|int|char|float|double|long|short)\\s+[a-zA-Z_][a-zA-Z_0-9]*\\s*[^;]*;", "g"],
         "before" : "="
     }
 }
