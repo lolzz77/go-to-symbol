@@ -5,12 +5,12 @@
         "before" : "("
     },
     "struct" : {
-        "whole" : ["^\\s*struct\\s+\\w+\\s*\\{", "gm"],
+        "whole" : ["struct\\s+[^{}]*\\{", "g"],
         "opening" : ["{", "}"],
         "before" : "{"
     },
     "enum" : {
-        "whole" : ["^\\s*enum\\s+\\w+\\s*\\{", "gm"],
+        "whole" : ["^enum\\s*\\{[^}]*\\}", "g"],
         "opening" : ["{", "}"],
         "before" : "{"
     },

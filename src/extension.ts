@@ -121,7 +121,6 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 		JSONPath = getJSONPath(language);
 		let data = getJSONData(JSONPath);
 		var document = editor.document;
-		var text = document.getText();
 		var symbolType = null;
 		// have to put 'any', else this variable will have type 'unknown'
 		// then later loop will have error
@@ -141,6 +140,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 			symbolType = key;
 			// show type, eg: function, macro, struct, etc
 			treeArr.push(new SymbolTreeItem(symbolType, vscode.TreeItemCollapsibleState.None));
+			var text = document.getText();
 			
 
 			let position_arr = [];
@@ -233,11 +233,10 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					const start = document.positionAt(match.index);
 					var end = document.positionAt(match.index + match[0].length);
 					
-					let doc = editor.document;
-					index = doc.offsetAt(end); // get the index from the position
+					index = document.offsetAt(end); // get the index from the position
 					start_index = index;
-					let pos = doc.positionAt(index); // get the position
-					let char = doc.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the character
+					let pos = document.positionAt(index); // get the position
+					let char = document.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the character
 					while (depth != 0) 
 					{
 						if(char === function_opening)
@@ -248,8 +247,8 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						if(depth==0)
 							break;
 						index++;
-						pos = doc.positionAt(index); // get the next position
-						char = doc.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the next character
+						pos = document.positionAt(index); // get the next position
+						char = document.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the next character
 					}
 					end_index = index;
 					// update the end position again
@@ -259,7 +258,8 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// construct the range
 					const range = new vscode.Range(start, end);
 					// for javascript, they have anonymous function
-					if(function_name == null || function_name == '')
+					// if not match alphabets, set it to anonymous
+					if(!function_name.match(/[a-z]/i))
 					{
 						function_name = 'anonymous'
 					}
@@ -272,6 +272,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 
 						position_arr.push([start_index, end_index]);
 				}
+				let test;
 
 			}
 			else // for those that dont need '{}' depth handling
@@ -389,7 +390,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					}
 					
 					
-					
+					var me = match.index;
 					const start = document.positionAt(match.index);
 					const end = document.positionAt(match.index + match[0].length);
 					const range = new vscode.Range(start, end);
@@ -400,7 +401,6 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						vscode.TreeItemCollapsibleState.None, 
 						range));
 				}
-
 			}
 			// remove the content i dont need in text buffer
 			// have to do it after the while loop
@@ -413,6 +413,42 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 				end_index -= prev_length;
 				text = text.substring(0, start_index) + '' + text.substring(end_index);
 				prev_length = end_index - start_index;
+
+				const start = document.positionAt(start_index);
+				const end = document.positionAt(start_index + end_index);
+
+				// Create a TextEdit to replace a range with new content
+				const newText = '';
+				const range = new vscode.Range(start, end);
+				const edit = new vscode.TextEdit(range, newText);
+			
+				// Create a WorkspaceEdit to apply the TextEdit
+				const workspaceEdit = new vscode.WorkspaceEdit();
+				workspaceEdit.set(document.uri, [edit]);
+			
+				// Apply the edit
+				vscode.workspace.applyEdit(workspaceEdit);
+
+
+				// const edits: vscode.TextEdit[] = [];
+
+				// // Make your modifications to the document
+				// // For example, let's add a new line at the end of the document
+				// const lastLine = document.lineAt(document.lineCount - 1);
+				// const newLine = new vscode.Position(lastLine.range.end.line + 1, 0);
+				// edits.push(vscode.TextEdit.insert(newLine, '\n// Modified in memory'));
+			
+				// // Apply the edits to the document in memory
+				// const edit = new vscode.WorkspaceEdit();
+				// edit.set(document.uri, edits);
+				// vscode.workspace.applyEdit(edit);
+
+
+				let me = document.getText();
+				let x;
+
+				// modifyDocumentInMemory(document);
+
 			}
 		}
 
@@ -426,6 +462,29 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 		return element;
 	}
 }
+
+async function modifyDocumentInMemory(document: vscode.TextDocument) {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        return;
+    }
+    const edits: vscode.TextEdit[] = [];
+
+    // Make your modifications to the document
+    // For example, let's add a new line at the end of the document
+    const lastLine = document.lineAt(document.lineCount - 1);
+    const newLine = new vscode.Position(lastLine.range.end.line + 1, 0);
+    edits.push(vscode.TextEdit.insert(newLine, '\n// Modified in memory'));
+
+    // Apply the edits to the document in memory
+    const edit = new vscode.WorkspaceEdit();
+    edit.set(document.uri, edits);
+    await vscode.workspace.applyEdit(edit);
+
+	let me = document.getText();
+	let x;
+}
+
 
 // this class holds the detail of list of symbols that regex matches
 // one symbol for 1 class
