@@ -21,6 +21,7 @@ export function activate(context: vscode.ExtensionContext) {
 		treeView.onDidChangeSelection(event => {
 			// get the selected object
 			const selectedItems = event.selection as SymbolTreeItem[];
+			const selectedLabel = selectedItems[0].label;
 			let editor = vscode.window.activeTextEditor;
 			const backgroundDecorationType = vscode.window.createTextEditorDecorationType({
 				// the last element is the opacity
@@ -42,32 +43,30 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 			
-			if (selectedItems.length > 0)
+			if (selectedItems.length == 0)
 			{
-				const selectedLabel = selectedItems[0].label;
-				if(selectedLabel == 'reset')
-				{
-					// Reset all decoration types to their default state
-					for (const type of decorationTypes) {
-						type.dispose();
-					}
-				}
-				else
-				{
-					// decorate the selected items
+				return;
+			}
 
-					// have to put as vscode.Range at behind else it will flag error
-					const range = selectedItems[0].range as vscode.Range;
-					const decoration = { range };
-					editor.setDecorations(backgroundDecorationType, [decoration]);
+			if(selectedLabel == 'reset')
+			{
+				resetDecoration(decorationTypes);
+			}
+			else
+			{
+				// decorate the selected items
 
-					// move the cursor to the location
+				// have to put as vscode.Range at behind else it will flag error
+				const range = selectedItems[0].range as vscode.Range;
+				const decoration = { range };
+				editor.setDecorations(backgroundDecorationType, [decoration]);
 
-					const newSelection = new vscode.Selection(range.start, range.start);
-					editor.selection = newSelection;
-					// Reveal the range in the editor
-					editor.revealRange(range);
-				}
+				// move the cursor to the location
+
+				const newSelection = new vscode.Selection(range.start, range.start);
+				editor.selection = newSelection;
+				// Reveal the range in the editor
+				editor.revealRange(range);
 			}
 		});
 		
@@ -90,105 +89,232 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 	getChildren(element?: SymbolTreeItem): Thenable<SymbolTreeItem[]> {
 		
 		let editor = vscode.window.activeTextEditor;
-		// raw means unfiltered, contains many char that you dont want to show in the tree list
-		let raw_matches = [];
-		// matches means filtered, only show the name of the matched string, this is the one you want to show on the tree list
-		let matches = [];
-		let arr = [];
+		let treeArr = [];
 		// for reseting decoration use
-		arr.push(new SymbolTreeItem('reset', vscode.TreeItemCollapsibleState.None));
-		if (editor) {
-			// display the JSON file path that this extension will be searching for
-			// display the current active editor
-			let language = getCurrentActiveEditorLanguage();
-			console.log('Language: ' + language);
-			// vscode.window.showInformationMessage('Language: ' + language);
-			let JSONPath = getJSONPath(language);
-			console.log('JSON Path: ' + JSONPath);
-			// vscode.window.showInformationMessage('JSON Path: ' + JSONPath);
+		treeArr.push(new SymbolTreeItem('reset', vscode.TreeItemCollapsibleState.None));
 
-		
-			language = getCurrentActiveEditorLanguage();
+		if(!editor)
+		{
+			vscode.window.showInformationMessage('No language detected');
+			return Promise.resolve(treeArr);
+		}
+
+		// display the JSON file path that this extension will be searching for
+		// display the current active editor
+		let language = getCurrentActiveEditorLanguage();
+		console.log('Language: ' + language);
+		// vscode.window.showInformationMessage('Language: ' + language);
+		let JSONPath = getJSONPath(language);
+		console.log('JSON Path: ' + JSONPath);
+		// vscode.window.showInformationMessage('JSON Path: ' + JSONPath);
+
+	
+		language = getCurrentActiveEditorLanguage();
 
 
-			/*********************************************************** 
-			************************* DEBUG ****************************
-			***********************************************************/
-			// change `getJSONPath(language);` to `getJSONPath(null);`
-			// so it will look for default.json
+		/*********************************************************** 
+		************************* DEBUG ****************************
+		***********************************************************/
+		// change `getJSONPath(language);` to `getJSONPath(null);`
+		// so it will look for default.json
 
-			JSONPath = getJSONPath(language);
-			let data = getJSONData(JSONPath);
-			var document = editor.document;
-			var text = document.getText();
-			var symbolType = null;
-			// have to put 'any', else this variable will have type 'unknown'
-			// then later loop will have error
-			// if dont want to put 'any', later in loop can put 'as any'
-			let entries:any = Object.entries(data);
-			/*
-			{
-				"function" : {
-					"a" : 1,
-					"b" : 2
-				}
+		JSONPath = getJSONPath(language);
+		let data = getJSONData(JSONPath);
+		var document = editor.document;
+		var text = document.getText();
+		var symbolType = null;
+		// have to put 'any', else this variable will have type 'unknown'
+		// then later loop will have error
+		// if dont want to put 'any', later in loop can put 'as any'
+		let entries:any = Object.entries(data);
+		/*
+		{
+			"function" : {
+				"a" : 1,
+				"b" : 2
 			}
-			key = function
-			value = {"a" : 1, "b" : 2}
-			*/
-			for (const [key, value] of entries) {
-				symbolType = key;
-				// show type, eg: function, macro, struct, etc
-				arr.push(new SymbolTreeItem(symbolType, vscode.TreeItemCollapsibleState.None));
+		}
+		key = function
+		value = {"a" : 1, "b" : 2}
+		*/
+		for (const [key, value] of entries) {
+			symbolType = key;
+			// show type, eg: function, macro, struct, etc
+			treeArr.push(new SymbolTreeItem(symbolType, vscode.TreeItemCollapsibleState.None));
+			
+
+			let position_arr = [];
+			let start_index = null;
+			let end_index = null;
+
+			if(	symbolType == 'function' || symbolType == 'class' || symbolType == 'struct' ||
+				symbolType == 'enum')
+			{
+				let regex_whole = value.whole[0];
+				let flag_whole = value.whole[1];
+				let keys = Object.keys(value);
+				let keyword_to_search_for_symbol = null;
+				position_arr = [];
+
+				// some need to search the symbol BEFORE the char
+				// some need to search the symbol AFTER the char
+				if(keys.includes("before"))
+					keyword_to_search_for_symbol = value.before;
+				else
+					keyword_to_search_for_symbol = value.after;
+
+				let function_opening = value.opening[0];
+				let function_closing = value.opening[1];
+				let match = null;
+				// a dynamic regex
+				let _regex_whole = new RegExp(regex_whole, flag_whole);
+				
+				if(regex_whole == '')
+					break;
 				
 
-				let position_arr = [];
-				let start_index = null;
-				let end_index = null;
+				while (match = _regex_whole.exec(text)) {
+					
+					// to extract the function name
+					
+					start_index = 0;
+					end_index = 0;
+					// for checking whether the current index has found the 1st character or not
+					let hasFountFirstChar = false;
+					let str = match.toString();
+					let sub = null;
 
-				if(	symbolType == 'function' || symbolType == 'class' || symbolType == 'struct' ||
-					symbolType == 'enum')
-				{
-					let regex_whole = value.whole[0];
-					let flag_whole = value.whole[1];
-					let keys = Object.keys(value);
-					let keyword_to_search_for_symbol = null;
-					position_arr = [];
-
-					// some need to search the symbol BEFORE the char
-					// some need to search the symbol AFTER the char
 					if(keys.includes("before"))
-						keyword_to_search_for_symbol = value.before;
+						sub = str.substring(0, str.indexOf(keyword_to_search_for_symbol));
 					else
-						keyword_to_search_for_symbol = value.after;
+						sub = str.substring(str.indexOf(keyword_to_search_for_symbol));
 
-					let function_opening = value.opening[0];
-					let function_closing = value.opening[1];
-					let match = null;
-					// a dynamic regex
-					let _regex_whole = new RegExp(regex_whole, flag_whole);
+					let index = -1; // start with invalid index
+					let i = sub.length - 1; // point to the last character
+					// Loop through the string backwards
+					while (i >= 0) 
+					{
+						let char = sub.charAt(i); // Get the character at the current index
+						if (char === " " && hasFountFirstChar) 
+						{ 	// Check if the character is a white space
+							index = i; // Update the index
+							break;
+						}
+						/*
+						* because there are some cases like this
+						* int main (...)
+						* there's white space before the `(`
+						*/
+						else if (!isNaN(Number(char))) // isNaN = is not a number
+						{
+							hasFountFirstChar = true;
+						}
+						else if ((char.match(/[a-z]/i))) // if is alphabet
+						{
+							hasFountFirstChar = true;
+						}
+						i--;
+					}
+					// save the start index
+					// + 1, because the current index is pointing to white spaces
+					start_index = index + 1;
+					// get the substring, starting from the given start index
+					let function_name = sub.substring(start_index);
 					
-					if(regex_whole == '')
-						break;
+
+
+					// find the whole function body, using depth method
+
 					
+					// my regex only match until the 1st opening, thus, set depth starting at 1
+					let depth = 1;
+					// these ranges are used for highlighting the background
+					// store value first
+					const start = document.positionAt(match.index);
+					var end = document.positionAt(match.index + match[0].length);
+					
+					let doc = editor.document;
+					index = doc.offsetAt(end); // get the index from the position
+					start_index = index;
+					let pos = doc.positionAt(index); // get the position
+					let char = doc.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the character
+					while (depth != 0) 
+					{
+						if(char === function_opening)
+						depth++;
+						else if(char === function_closing)
+							depth--;
 
-					while (match = _regex_whole.exec(text)) {
-						
-						// to extract the function name
-						
-						start_index = 0;
-						end_index = 0;
-						// for checking whether the current index has found the 1st character or not
-						let hasFountFirstChar = false;
-						let str = match.toString();
-						let sub = null;
+						if(depth==0)
+							break;
+						index++;
+						pos = doc.positionAt(index); // get the next position
+						char = doc.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the next character
+					}
+					end_index = index;
+					// update the end position again
+					// match.index - the starting index that my regex matches it
+					// index - match.index - the length of the function body
+					end = document.positionAt(match.index + (index-match.index));
+					// construct the range
+					const range = new vscode.Range(start, end);
+					// for javascript, they have anonymous function
+					if(function_name == null || function_name == '')
+					{
+						function_name = 'anonymous'
+					}
+					
+					// push to array, this will show the list of symbols later
+					treeArr.push(new SymbolTreeItem(
+						``+function_name, 
+						vscode.TreeItemCollapsibleState.None, 
+						range));
 
-						if(keys.includes("before"))
-							sub = str.substring(0, str.indexOf(keyword_to_search_for_symbol));
-						else
-							sub = str.substring(str.indexOf(keyword_to_search_for_symbol));
+						position_arr.push([start_index, end_index]);
+				}
 
-						let index = -1; // start with invalid index
+			}
+			else // for those that dont need '{}' depth handling
+			{
+				let regex_whole = value.whole[0];
+				let flag_whole = value.whole[1];
+				let match = null;
+				let symbol_name = null;
+				// a dynamic regex
+				let _regex_whole = new RegExp(regex_whole, flag_whole);
+				position_arr = [];
+
+
+
+
+				let keys = Object.keys(value);
+				let keyword_to_search_for_symbol = null;
+				if(keys.includes("before"))
+					keyword_to_search_for_symbol = value.before;
+				else
+					keyword_to_search_for_symbol = value.after;
+				
+
+
+				if(regex_whole == '')
+					break;
+				
+				while (match = _regex_whole.exec(text)) {
+					
+					// to extract the function name
+
+					start_index = 0;
+					end_index = 0;
+					// for checking whether the current index has found the 1st character or not
+					let hasFountFirstChar = false;
+					let str = match.toString();
+					let sub = null;
+					let index = null;
+
+					if(keys.includes("before"))
+					{
+						sub = str.substring(0, str.indexOf(keyword_to_search_for_symbol));
+						index = -1; // start with invalid index
 						let i = sub.length - 1; // point to the last character
 						// Loop through the string backwards
 						while (i >= 0) 
@@ -199,11 +325,6 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 								index = i; // Update the index
 								break;
 							}
-							/*
-							* because there are some cases like this
-							* int main (...)
-							* there's white space before the `(`
-							*/
 							else if (!isNaN(Number(char))) // isNaN = is not a number
 							{
 								hasFountFirstChar = true;
@@ -217,202 +338,86 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						// save the start index
 						// + 1, because the current index is pointing to white spaces
 						start_index = index + 1;
+
 						// get the substring, starting from the given start index
-						let function_name = sub.substring(start_index);
-						
-
-
-						// find the whole function body, using depth method
-
-						
-						// my regex only match until the 1st opening, thus, set depth starting at 1
-						let depth = 1;
-						// these ranges are used for highlighting the background
-						// store value first
-						const start = document.positionAt(match.index);
-						var end = document.positionAt(match.index + match[0].length);
-						
-						let doc = editor.document;
-						index = doc.offsetAt(end); // get the index from the position
-						start_index = index;
-						let pos = doc.positionAt(index); // get the position
-						let char = doc.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the character
-						while (depth != 0) 
-						{
-							if(char === function_opening)
-							depth++;
-							else if(char === function_closing)
-								depth--;
-
-							if(depth==0)
-								break;
-							index++;
-							pos = doc.positionAt(index); // get the next position
-							char = doc.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the next character
-						}
-						end_index = index;
-						// update the end position again
-						// match.index - the starting index that my regex matches it
-						// index - match.index - the length of the function body
-						end = document.positionAt(match.index + (index-match.index));
-						// construct the range
-						const range = new vscode.Range(start, end);
-						// for javascript, they have anonymous function
-						if(function_name == null || function_name == '')
-						{
-							function_name = 'anonymous'
-						}
-						
-						// push to array, this will show the list of symbols later
-						arr.push(new SymbolTreeItem(
-							``+function_name, 
-							vscode.TreeItemCollapsibleState.None, 
-							range));
-
-							position_arr.push([start_index, end_index]);
+						symbol_name = sub.substring(start_index);
 					}
-
-				}
-				else // for those that dont need '{}' depth handling
-				{
-					let regex_whole = value.whole[0];
-					let flag_whole = value.whole[1];
-					let match = null;
-					// a dynamic regex
-					let _regex_whole = new RegExp(regex_whole, flag_whole);
-					position_arr = [];
-
-
-
-
-					let keys = Object.keys(value);
-					let keyword_to_search_for_symbol = null;
-					if(keys.includes("before"))
-						keyword_to_search_for_symbol = value.before;
 					else
-						keyword_to_search_for_symbol = value.after;
-					
-
-
-					if(regex_whole == '')
-						break;
-					
-					while (match = _regex_whole.exec(text)) {
-						
-						// to extract the function name
-	
-						start_index = 0;
-						end_index = 0;
-						// for checking whether the current index has found the 1st character or not
-						let hasFountFirstChar = false;
-						let str = match.toString();
-						let sub = null;
-						let index = null;
-
-						if(keys.includes("before"))
+					{
+						sub = str.substring(str.indexOf(keyword_to_search_for_symbol));
+						index = -1; // start with invalid index
+						let i = 0; // point to the first character
+						// Loop through the string forward
+						while (i < sub.length) 
 						{
-							sub = str.substring(0, str.indexOf(keyword_to_search_for_symbol));
-							index = -1; // start with invalid index
-							let i = sub.length - 1; // point to the last character
-							// Loop through the string backwards
-							while (i >= 0) 
-							{
-								let char = sub.charAt(i); // Get the character at the current index
-								if (char === " " && hasFountFirstChar) 
-								{ 	// Check if the character is a white space
-									index = i; // Update the index
-									break;
-								}
-								/*
-								* because there are some cases like this
-								* int main (...)
-								* there's white space before the `(`
-								*/
-								else if (!isNaN(Number(char))) // isNaN = is not a number
-								{
-									hasFountFirstChar = true;
-								}
-								else if ((char.match(/[a-z]/i))) // if is alphabet
-								{
-									hasFountFirstChar = true;
-								}
-								i--;
+							let char = sub.charAt(i); // Get the character at the current index
+							if (char === " " && hasFountFirstChar) 
+							{ 	// Check if the character is a white space
+								index = i; // Update the index
+								break;
 							}
-							// save the start index
-							// + 1, because the current index is pointing to white spaces
-							start_index = index + 1;
-						}
-						else
-						{
-							sub = str.substring(str.indexOf(keyword_to_search_for_symbol));
-							index = -1; // start with invalid index
-							let i = 0; // point to the first character
-							// Loop through the string forward
-							while (i < sub.length) 
+							else if (!isNaN(Number(char))) // isNaN = is not a number
 							{
-								let char = sub.charAt(i); // Get the character at the current index
-								if (char === " " && hasFountFirstChar) 
-								{ 	// Check if the character is a white space
-									index = i; // Update the index
-									break;
-								}
-								/*
-								* because there are some cases like this
-								* int main (...)
-								* there's white space before the `(`
-								*/
-								else if (!isNaN(Number(char))) // isNaN = is not a number
-								{
-									hasFountFirstChar = true;
-								}
-								else if ((char.match(/[a-z]/i))) // if is alphabet
-								{
-									hasFountFirstChar = true;
-								}
-								i++;
+								hasFountFirstChar = true;
 							}
-							// save the start index
-							// + 1 because currently the index is pointing to the white space
-							start_index = index + 1;
+							else if ((char.match(/[a-z]/i))) // if is alphabet
+							{
+								hasFountFirstChar = true;
+							}
+							i++;
 						}
-					
-						
-						// get the substring, starting from the given start index
-						let symbol_name = sub.substring(start_index);
-						
-						const start = document.positionAt(match.index);
-						const end = document.positionAt(match.index + match[0].length);
-						const range = new vscode.Range(start, end);
+						// save the start index
+						// + 1 because currently the index is pointing to the white space
+						start_index = index + 1;
 
-						// push to array, this will show the list of symbols later
-						arr.push(new SymbolTreeItem(
-							``+symbol_name, 
-							vscode.TreeItemCollapsibleState.None, 
-							range));
+						// for 'after' case, you need to handle how to extract the symbol name
+						
+						// sub_sub may refer to substring of the substring
+						// get the string from the start_index
+						// cannot skip this, if you straight do sub.indexof(" ")
+						// then it will detect the 1st white space
+						// eg: #define A 1
+						// there are 2 white spaces
+						// what you want is extract "A" out, 1st white space ady handled from loop above
+						// then this is to handle the 2nd white space
+						let sub_sub = sub.substring(start_index);
+						// only get until the next white space
+						// have to add the start_index, because you're substring-ing the 'sub' varaible
+						// and the sub_sub variable has the start_index cut off, from the code above 
+						sub_sub = sub.substring(start_index, sub_sub.indexOf(" ") + start_index);
+						symbol_name = sub_sub;
 					}
+					
+					
+					
+					const start = document.positionAt(match.index);
+					const end = document.positionAt(match.index + match[0].length);
+					const range = new vscode.Range(start, end);
 
+					// push to array, this will show the list of symbols later
+					treeArr.push(new SymbolTreeItem(
+						``+symbol_name, 
+						vscode.TreeItemCollapsibleState.None, 
+						range));
 				}
-				// remove the content i dont need in text buffer
-				// have to do it after the while loop
-				// else, u will affect the iterator
-				let prev_length = 0;
-				for (let [start_index, end_index] of position_arr)
-				{
-					// after you removed the strings, the indexes needs to be recalculated
-					start_index -= prev_length;
-					end_index -= prev_length;
-					text = text.substring(0, start_index) + '' + text.substring(end_index);
-					prev_length = end_index - start_index;
-				}
+
 			}
-		}
-		else
-		{
-			vscode.window.showInformationMessage('No language detected');
+			// remove the content i dont need in text buffer
+			// have to do it after the while loop
+			// else, u will affect the iterator
+			let prev_length = 0;
+			for (let [start_index, end_index] of position_arr)
+			{
+				// after you removed the strings, the indexes needs to be recalculated
+				start_index -= prev_length;
+				end_index -= prev_length;
+				text = text.substring(0, start_index) + '' + text.substring(end_index);
+				prev_length = end_index - start_index;
+			}
 		}
 
 		// Return an array of tree items
-		return Promise.resolve(arr);
+		return Promise.resolve(treeArr);
 	}
 
 	// Implement the getTreeItem method
@@ -437,6 +442,16 @@ class SymbolTreeItem extends vscode.TreeItem {
 	) {
 		super(label, collapsibleState);
 	}
+}
+
+function resetDecoration(decorationTypes: vscode.TextEditorDecorationType[])
+{
+	// Reset all decoration types to their default state
+	for (const type of decorationTypes) {
+		type.dispose();
+	}
+	// delete all the elements
+	decorationTypes = [];
 }
 
 // Get the JSON File
