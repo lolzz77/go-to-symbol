@@ -191,6 +191,8 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					let str = match.toString();
 					let sub = null;
 					let function_name = null;
+					let index = null;
+					let i = null; // for loop
 					
 					// given keyword, get substring
 					if(keys.includes("before"))
@@ -198,8 +200,8 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					else
 						sub = str.substring(str.indexOf(keyword_to_search_for_symbol));
 
-					let index = -1; // start with invalid index
-					let i = sub.length - 1; // point to the last character
+					index = -1; // start with invalid index
+					i = sub.length - 1; // point to the last character
 					// Loop through the string backwards
 					while (i >= 0) 
 					{
@@ -240,41 +242,40 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 
 					// First, make sure the regex that matches the pattern,
 					// matches the whole thing properly, like, at the start of the string
-					// this refers that this is the beginning of the document,
+					
+
+					let start = document.positionAt(match.index);
+					let end = null;
+					index = document.offsetAt(start); // get the index from the position
+					start_index = index;
+					let pos = document.positionAt(index); // get the position
+					let char = document.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the character
+
+					// match.index == 0 refers that this is the beginning of the document,
 					// you can go backwards anymore, this is the 1st index of document
-					if(match.index == 0)
+					// i wanted it to stop when match new line '\n', but apparently, it just ''
+					while(match.index != 0 && char != '')
 					{
-						;
-					}
-					else
-					{
-						let start = document.positionAt(match.index);
-						index = document.offsetAt(start); // get the index from the position
-						start_index = index;
-						let pos = document.positionAt(index); // get the position
-						let char = document.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the character
-						// i wanted it to stop when match new line '\n', but apparently, it just ''
-						while(char != '')
-						{
-							pos = document.positionAt(index); // get the position
-							char = document.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the character
-							index--;
-						}
+						pos = document.positionAt(index); // get the position
+						char = document.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the character
+						index--;
 					}
 
 
 					
 					// my regex only match until the 1st opening, thus, set depth starting at 1
+					// i cannot do regex that matches whole function body
+					// the best i can do is match til the 1st encounter of '}'
 					let depth = 1;
 					// these ranges are used for highlighting the background
 					// store value first
-					const start = document.positionAt(index);
-					var end = document.positionAt(match.index + match[0].length);
+					start = document.positionAt(index);
+					end = document.positionAt(match.index + match[0].length);
 					
 					index = document.offsetAt(end); // get the index from the position
 					start_index = index;
-					let pos = document.positionAt(index); // get the position
-					let char = document.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the character
+					pos = document.positionAt(index); // get the position
+					char = document.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the character
 					while (depth != 0) 
 					{
 						if(char === function_opening)
@@ -312,7 +313,12 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						vscode.TreeItemCollapsibleState.None, 
 						range));
 
-						position_arr.push([start_index, end_index]);
+					position_arr.push([start_index, end_index]);
+
+
+					// Now, modify the document text buffer, remove it, give way to the next regex
+
+					
 				}
 			}
 			else // for those that dont need '{}' depth handling
