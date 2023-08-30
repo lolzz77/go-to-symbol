@@ -177,8 +177,9 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 				while (match = _regex_whole.exec(text)) {
 					
 
-
-					// to extract the function name
+					/**********************************************************************
+					 to extract the function name
+					***********************************************************************/
 					// actually, the `match` is an array, match[1] holds the function name
 					// however, this algorithm applies got struct, enum those as well
 					// thus, tho you can do function_name = match[1]
@@ -239,7 +240,13 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					function_name = function_name.replace('\n', '');
 					
 
-					// now, get updated document index
+					/**********************************************************************
+					Given the pattern, get the original document position
+					***********************************************************************/
+					// because currently your 'text' has been modified
+					// where, you erased those that matched pattern,
+					// to make way for next regex to detect pattern
+					// to not make the regex detect duplicate pattern
 
 					let temp_doc = editor.document;
 					let temp_text = temp_doc.getText();
@@ -247,11 +254,18 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// have to use another regex, 
 					// if reuse the existing regex, it will continue the next pattern
 					let temp_regex_whole = new RegExp(regex_whole, flag_whole);
+
+					// to capture regex on the original document
 					while( temp_match = temp_regex_whole.exec(temp_text) )
 					{
+						// if match with current matched pattern, 
+						// means this pattern is not a duplicate
 						if (temp_match[0] == match[0])
 							break;
 					}
+
+					// fail safe check, 
+					// if pattern not found on original document, dont proceed
 					if (!temp_match)
 					{
 						continue;
@@ -259,12 +273,17 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 
 
 
-					// find the whole function body, using depth method
+					/**********************************************************************
+					find the whole function body, using depth method
+					***********************************************************************/
 
 
 					// First, make sure the regex that matches the pattern,
 					// matches the whole thing properly, like, at the start of the string
 					
+
+					// search the function backwards
+
 
 					let start = document.positionAt(temp_match.index);
 					let end = null;
@@ -279,11 +298,16 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					while(temp_match.index != 0 && char != '')
 					{
 						pos = document.positionAt(index); // get the position
-						char = document.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the character
+						char = document.getText(new vscode.Range(pos, pos.translate(0, 1)));
 						index--;
 					}
 
+
+
 					
+					// now, search the rest of the function forward
+
+
 					// my regex only match until the 1st opening, thus, set depth starting at 1
 					// i cannot do regex that matches whole function body
 					// the best i can do is match til the 1st encounter of '}'
@@ -291,17 +315,12 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// these ranges are used for highlighting the background
 					// store value first
 					start = document.positionAt(index);
-
-					// let temp_offset = document.offsetAt(start);
-					// let temp_position = document.positionAt(temp_offset);
-					// to_repalce = document.getText(new vscode.Range(temp_position, temp_position.translate(0, 1))); // get the character
-
 					end = document.positionAt(temp_match.index + temp_match[0].length);
 					
-					index = document.offsetAt(end); // get the index from the position
+					index = document.offsetAt(end);
 					start_index = index;
-					pos = document.positionAt(index); // get the position
-					char = document.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the character
+					pos = document.positionAt(index);
+					char = document.getText(new vscode.Range(pos, pos.translate(0, 1)));
 					while (depth != 0) 
 					{
 						if(char === function_opening)
@@ -326,8 +345,6 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// construct the range
 					const range = new vscode.Range(start, end);
 					
-					to_repalce = document.getText(range);
-
 					// for javascript, they have anonymous function
 					// if not match alphabets, set it to anonymous
 					if(!function_name.match(/[a-z]/i))
@@ -340,14 +357,13 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						``+function_name, 
 						vscode.TreeItemCollapsibleState.None, 
 						range));
-
+						
+						
+					// get the complete string that you want to remove from the buffered 'text'
+					// to make way for next regex to search
+					to_repalce = document.getText(range);
+					// for removing text in the buffered 'text' later
 					position_arr.push([start_index, end_index]);
-
-
-					// Now, modify the document text buffer, remove it, give way to the next regex
-
-					// text = text.substring(0, start_index) + '' + text.substring(end_index);
-					// text = text.replace(to_repalce, '');
 				}
 			}
 			else // for those that dont need '{}' depth handling
@@ -464,10 +480,10 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						symbol_name = sub_sub;
 					}
 					
-					var me = match.index;
 					const start = document.positionAt(match.index);
 					const end = document.positionAt(match.index + match[0].length);
 					const range = new vscode.Range(start, end);
+
 					to_repalce = document.getText(range);
 
 					// push to array, this will show the list of symbols later
