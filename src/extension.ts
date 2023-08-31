@@ -156,18 +156,21 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 				let regex_whole = value.whole[0];
 				let flag_whole = value.whole[1];
 				let match = null;
-				let keys = Object.keys(value);
-				let keyword_to_search_for_symbol = null;
+				string_to_remove_arr = [];
+
+						// not needed, but just leave it here
+						let keys = Object.keys(value);
+						let keyword_to_search_for_symbol = null;
+						let function_opening = value.opening[0];
+						let function_closing = value.opening[1];
+
+						if(keys.includes("before"))
+							keyword_to_search_for_symbol = value.before;
+						else
+							keyword_to_search_for_symbol = value.after;
 
 				// a dynamic regex
 				let _regex_whole = new RegExp(regex_whole, flag_whole);
-				string_to_remove_arr = [];
-	
-				if(keys.includes("before"))
-					keyword_to_search_for_symbol = value.before;
-				else
-					keyword_to_search_for_symbol = value.after;
-
 				if(regex_whole == '')
 					break;
 			
@@ -428,6 +431,12 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 
 
 				
+						// not needed, just leave it here
+						let function_opening = value.opening[0];
+						let function_closing = value.opening[1];
+				
+
+
 				let keys = Object.keys(value);
 				let keyword_to_search_for_symbol = null;
 				

@@ -1,29 +1,38 @@
 {
     "function" : {
+        "myComment" : "",
         "whole" : ["\\b(?:void|int|char|float|double|long|short)\\s+([a-zA-Z_][a-zA-Z_0-9]*)\\s*\\([^)]*\\)\\s*\\{", "g"],
         "opening" : ["{", "}"],
         "before" : ["("]
     },
     "struct" : {
+        "myComment" : "",
         "whole" : ["struct\\s+[^{}]*\\{", "g"],
         "opening" : ["{", "}"],
         "before" : ["{"]
     },
     "enum" : {
+        "myComment" : "",
         "whole" : ["enum\\s+[^{}]*\\{", "g"],
         "opening" : ["{", "}"],
         "before" : ["{"]
     },
     "comment" : {
+        "myComment" : "",
         "whole" : ["\\/\\/.*|\\/\\*[^*]*\\*+(?:[^\\/*][^*]*\\*+)*\\/", "g"],
+        "opening" : ["", ""],
         "before" : [""]
     },
     "macro" : {
+        "myComment" : "",
         "whole" : ["#define\\s+([^\\n]+)\\n", "g"],
+        "opening" : ["", ""],
         "after" : ["define"]
     },
     "global" : {
-        "whole" : ["\\b(?:void|int|char|float|double|long|short)\\s+[a-zA-Z_][a-zA-Z_0-9]*\\s*[^;]*;", "g"],
+        "myComment" : "match 1 newline, then match anything except ';' & newline, at least one. Then match ';'",
+        "whole" : ["\\n[^;\\n]+;", "g"],
+        "opening" : ["", ""],
         "before" : ["=", ";"]
     }
 }
