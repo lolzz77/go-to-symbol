@@ -236,7 +236,9 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					for(let keyword of keyword_to_search_for_symbol)
 					{
 						// save the 1st index first, else, later math.min, it will always 0
-						if(closest_index == 0)
+						// if indexOf cannot find the symbol, it will return -1
+						// thus, check <=0 is better
+						if(closest_index <= 0)
 							closest_index = str.indexOf(keyword);
 						else if(keys.includes("before"))
 							closest_index = Math.min(closest_index, str.indexOf(keyword));
@@ -469,7 +471,9 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 
 					for(let keyword of keyword_to_search_for_symbol)
 					{
-						if(closest_index == 0)
+						// if indexOf cannot find the symbol, it will return -1
+						// thus, check <=0 is better
+						if(closest_index <= 0)
 							closest_index = str.indexOf(keyword);
 						else if(keys.includes("before"))
 							closest_index = Math.min(closest_index, str.indexOf(keyword));
