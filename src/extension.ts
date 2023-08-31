@@ -38,16 +38,12 @@ export function activate(context: vscode.ExtensionContext) {
 			// each decoratino made needs to be keep tracked, so tha tyou can dispose it later	
 			decorationTypes.push(backgroundDecorationType);
 			
-			if(!editor)
+			if(	editor == null ||
+				selectedItems.length == 0)
 			{
 				return;
 			}
 			
-			if (selectedItems.length == 0)
-			{
-				return;
-			}
-
 			if(selectedLabel == 'reset')
 			{
 				resetDecoration(decorationTypes);
@@ -122,7 +118,6 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 		let data = getJSONData(JSONPath);
 		var document = editor.document;
 		var text = document.getText();
-		var symbolType = null;
 		// have to put 'any', else this variable will have type 'unknown'
 		// then later loop will have error
 		// if dont want to put 'any', later in loop can put 'as any'
@@ -139,40 +134,44 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 		value = {"a" : 1, "b" : 2}
 		*/
 		for (const [key, value] of entries) {
-			symbolType = key;
+			let symbolType = key;
 
+			// dont print out 'comment' tree list
+			// the intention for 'comment' regex is to remove comments only
 			if (symbolType != 'comment')
 			{
 				// show type, eg: function, macro, struct, etc
 				treeArr.push(new SymbolTreeItem('------------'+symbolType+'------------', vscode.TreeItemCollapsibleState.None));
 			}
 
-			let position_arr = [];
+			let string_to_remove_arr = [];
 			let start_index = null;
 			let end_index = null;
 			to_repalce = '';
+
+			// if it is comment regex
+			// the intention is just to remove comments
 			if (symbolType == 'comment')
 			{
 				let regex_whole = value.whole[0];
 				let flag_whole = value.whole[1];
 				let match = null;
-				let symbol_name = null;
 				// a dynamic regex
 				let _regex_whole = new RegExp(regex_whole, flag_whole);
-				position_arr = [];
-
+				string_to_remove_arr = [];
+				
 				if(regex_whole == '')
 					break;
-				
+			
 				while (match = _regex_whole.exec(text)) {
 					start_index = 0;
 					end_index = 0;
 					const start = document.positionAt(match.index);
 					const end = document.positionAt(match.index + match[0].length);
 					const range = new vscode.Range(start, end);
-
+					
 					to_repalce = document.getText(range);
-					position_arr.push(to_repalce);
+					string_to_remove_arr.push(to_repalce);
 				}
 			}
 			else if( symbolType == 'function' || symbolType == 'class' || symbolType == 'struct' ||
@@ -182,15 +181,15 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 				let flag_whole = value.whole[1];
 				let keys = Object.keys(value);
 				let keyword_to_search_for_symbol = null;
-				position_arr = [];
-
+				string_to_remove_arr = [];
+				
 				// some need to search the symbol BEFORE the char
 				// some need to search the symbol AFTER the char
 				if(keys.includes("before"))
 					keyword_to_search_for_symbol = value.before;
 				else
 					keyword_to_search_for_symbol = value.after;
-
+		
 				let function_opening = value.opening[0];
 				let function_closing = value.opening[1];
 				let match = null;
@@ -198,12 +197,12 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 				let _regex_whole = new RegExp(regex_whole, flag_whole);
 				
 				if(regex_whole == '')
-					break;
-				
-
+				break;
+			
+			
 				while (match = _regex_whole.exec(text)) {
 					
-
+					
 					/**********************************************************************
 					 to extract the function name
 					***********************************************************************/
@@ -211,9 +210,8 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// however, this algorithm applies got struct, enum those as well
 					// thus, tho you can do function_name = match[1]
 					// is better do manually, so that it applies to all cases
-
-
-
+					
+					
 					start_index = 0;
 					end_index = 0;
 					// for checking whether the current index has found the 1st character or not
@@ -223,12 +221,22 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					let function_name = null;
 					let index = null;
 					let i = null; // for loop
+					let closest_index = 0;
+					for(let keyword of keyword_to_search_for_symbol)
+					{
+						if(closest_index == 0)
+							closest_index = str.indexOf(keyword);
+						else if(keys.includes("before"))
+							closest_index = Math.min(closest_index, str.indexOf(keyword));
+						else
+							closest_index = Math.max(closest_index, str.indexOf(keyword));
+					}
 					
 					// given keyword, get substring
 					if(keys.includes("before"))
-						sub = str.substring(0, str.indexOf(keyword_to_search_for_symbol));
+						sub = str.substring(0, closest_index);
 					else
-						sub = str.substring(str.indexOf(keyword_to_search_for_symbol));
+						sub = str.substring(closest_index);
 
 					index = -1; // start with invalid index
 					i = sub.length - 1; // point to the last character
@@ -396,7 +404,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// to make way for next regex to search
 					to_repalce = document.getText(range);
 					// for removing text in the buffered 'text' later
-					position_arr.push(to_repalce);
+					string_to_remove_arr.push(to_repalce);
 				}
 			}
 			else // for those that dont need '{}' depth handling
@@ -407,17 +415,23 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 				let symbol_name = null;
 				// a dynamic regex
 				let _regex_whole = new RegExp(regex_whole, flag_whole);
-				position_arr = [];
+				string_to_remove_arr = [];
 
 
+				
 				let keys = Object.keys(value);
 				let keyword_to_search_for_symbol = null;
+				
+				
+				
 				if(keys.includes("before"))
 					keyword_to_search_for_symbol = value.before;
 				else
 					keyword_to_search_for_symbol = value.after;
+		
+					
 				
-
+				
 				if(regex_whole == '')
 					break;
 				
@@ -425,9 +439,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					
 
 					// to extract the function name
-
-
-
+					
 					start_index = 0;
 					end_index = 0;
 					// for checking whether the current index has found the 1st character or not
@@ -435,11 +447,22 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					let str = match.toString();
 					let sub = null;
 					let index = null;
+					let closest_index = 0;
+
+					for(let keyword of keyword_to_search_for_symbol)
+					{
+						if(closest_index == 0)
+							closest_index = str.indexOf(keyword);
+						else if(keys.includes("before"))
+							closest_index = Math.min(closest_index, str.indexOf(keyword));
+						else
+							closest_index = Math.max(closest_index, str.indexOf(keyword));
+					}
 
 					// handling for extracting symbol name given word appear 'before' the symbol
 					if(keys.includes("before"))
 					{
-						sub = str.substring(0, str.indexOf(keyword_to_search_for_symbol));
+						sub = str.substring(0, closest_index);
 						index = -1; // start with invalid index
 						let i = sub.length - 1; // point to the last character
 						// Loop through the string backwards
@@ -471,7 +494,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// handling for extracting symbol name given word appear 'after' the symbol
 					else
 					{
-						sub = str.substring(str.indexOf(keyword_to_search_for_symbol));
+						sub = str.substring(closest_index);
 						index = -1; // start with invalid index
 						let i = 0; // point to the first character
 						// Loop through the string forward
@@ -546,7 +569,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					const range = new vscode.Range(start, end);
 
 					to_repalce = document.getText(range);
-					position_arr.push(to_repalce);
+					string_to_remove_arr.push(to_repalce);
 
 					// push to array, this will show the list of symbols later
 					treeArr.push(new SymbolTreeItem(
@@ -560,7 +583,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 			// have to do it after the while loop
 			// else, u will affect the iterator
 			let prev_length = 0;
-			for (let to_repalce of position_arr)
+			for (let to_repalce of string_to_remove_arr)
 			{
 				// after you removed the strings, the indexes needs to be recalculated
 				// start_index -= prev_length;

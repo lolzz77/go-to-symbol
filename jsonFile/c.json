@@ -2,27 +2,27 @@
     "function" : {
         "whole" : ["\\b(?:void|int|char|float|double|long|short)\\s+([a-zA-Z_][a-zA-Z_0-9]*)\\s*\\([^)]*\\)\\s*\\{", "g"],
         "opening" : ["{", "}"],
-        "before" : "("
+        "before" : ["("]
     },
     "struct" : {
         "whole" : ["struct\\s+[^{}]*\\{", "g"],
         "opening" : ["{", "}"],
-        "before" : "{"
+        "before" : ["{"]
     },
     "enum" : {
         "whole" : ["enum\\s+[^{}]*\\{", "g"],
         "opening" : ["{", "}"],
-        "before" : "{"
+        "before" : ["{"]
     },
     "comment" : {
         "whole" : ["\\/\\/.*|\\/\\*[^*]*\\*+(?:[^\\/*][^*]*\\*+)*\\/", "g"]
     },
     "macro" : {
         "whole" : ["#define\\s+([^\\n]+)\\n", "g"],
-        "after" : "define"
+        "after" : ["define"]
     },
     "global" : {
         "whole" : ["\\b(?:void|int|char|float|double|long|short)\\s+[a-zA-Z_][a-zA-Z_0-9]*\\s*[^;]*;", "g"],
-        "before" : "="
+        "before" : ["=", ";"]
     }
 }
