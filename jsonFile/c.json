@@ -25,7 +25,7 @@
     },
     "macro" : {
         "myComment" : "",
-        "whole" : ["#define\\s+([^\\n]+)\\n", "g"],
+        "whole" : ["#define\\s+([a-zA-Z_0-9]+)(.+\\\\s*\\n.+|[^\\n]+)\\n", "g"],
         "opening" : ["", ""],
         "after" : ["define"]
     },
