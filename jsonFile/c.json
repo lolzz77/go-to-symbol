@@ -1,6 +1,6 @@
 {
     "function" : {
-        "myComment" : "",
+        "myComment" : "must match til the 1st encounter of 'opening' symbol, else, the code will stuck in a loop",
         "whole" : ["\\b(?:void|int|char|float|double|long|short)\\s+([a-zA-Z_][a-zA-Z_0-9]*)\\s*\\([^)]*\\)\\s*\\{", "g"],
         "opening" : ["{", "}"],
         "before" : ["("]

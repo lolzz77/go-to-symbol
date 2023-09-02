@@ -127,6 +127,7 @@ test haha
 #define LOG_LOAD_DSP_IMAGE_TO_RAM            "\tprintf(\"MEE %s:%d " LOAD_DSP_IMAGE_TO_RAM " next\\r\\n\", __FUNCTION__, __LINE__);\n"
 
 /*  test_powercut function */
+#define TEST                "TEST"
 #define TEST_POWERCUT_FUNCTION \
 "void test_powercut()\n" \
 "{\n" \
@@ -164,6 +165,12 @@ test haha
     "\tme_force_failure = BTN_NONE_PRESSED;\n"\
     "\tdelay_msec(2000);\n"\
 "}\n"
+#define TEST2                "TEST2"
+#define TEST3                TEST2 \
+                             TEST1 \
+                             "test"
+#define TEST4                4
+#define TEST5                5
 
 /*---------------GLOBAL VARIABLE----------------------*/
 // For test_powercut() function definition

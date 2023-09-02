@@ -208,7 +208,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 				let _regex_whole = new RegExp(regex_whole, flag_whole);
 				
 				if(regex_whole == '')
-				break;
+					break;
 			
 			
 				while (match = _regex_whole.exec(text)) {
@@ -376,16 +376,30 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 							depth++;
 						else if(char === function_closing)
 							depth--;
-
+						
 						// increment of index has to put before any oepration that will break the function
 						index++;
 						
 						if(depth==0)
 							break;
-						
+					
 						pos = document.positionAt(index); // get the next position
 						char = document.getText(new vscode.Range(pos, pos.translate(0, 1))); // get the next character
 					}
+					
+					
+					// match until the newline, or until end of document
+					// newline will not be '\n', but instead, ''
+					pos = document.positionAt(index);
+					char = document.getText(new vscode.Range(pos, pos.translate(0, 1)));
+					while(char != '' && index <= temp_text.length)
+					{
+						index++;
+						pos = document.positionAt(index);
+						char = document.getText(new vscode.Range(pos, pos.translate(0, 1)));
+					}
+
+
 					end_index = index;
 					// update the end position again
 					// match.index - the starting index that my regex matches it
@@ -604,15 +618,9 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 			// remove the content i dont need in text buffer
 			// have to do it after the while loop
 			// else, u will affect the iterator
-			let prev_length = 0;
 			for (let to_repalce of string_to_remove_arr)
 			{
-				// after you removed the strings, the indexes needs to be recalculated
-				// start_index -= prev_length;
-				// end_index -= prev_length;
-				// text = text.substring(0, start_index) + '' + text.substring(end_index);
 				text = text.replace(to_repalce, '');
-				// prev_length = end_index - start_index;
 			}
 		}
 
