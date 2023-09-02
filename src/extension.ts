@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import path from 'path';
 
 export function activate(context: vscode.ExtensionContext) {
 	// Create a tree data provider for the view
@@ -8,7 +9,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// for keeping track of decorations
 	const decorationTypes: vscode.TextEditorDecorationType[] = [];
 	
-	let disposable = vscode.commands.registerCommand('go-to-symbol.activate', () => {
+	let disposable1 = vscode.commands.registerCommand('go-to-symbol.activate', () => {
 		// create the sidebar
 		treeView = vscode.window.createTreeView('my-view', {
 			treeDataProvider : treeDataProvider,
@@ -68,15 +69,23 @@ export function activate(context: vscode.ExtensionContext) {
 		
 	});
 
+
+	let disposable2 = vscode.commands.registerCommand('go-to-symbol.showPath', () => {
+		showFilePath();
+	});
+
+	
+	
 	// detect if you selected other editors (eg: different files)
 	vscode.window.onDidChangeActiveTextEditor(editor => {
 		if (editor) {
 			// if you changed, then execute the command again
 			vscode.commands.executeCommand('go-to-symbol.activate');
 		}
-	  });
-
-	context.subscriptions.push(disposable);
+	});
+	
+	context.subscriptions.push(disposable1);
+	context.subscriptions.push(disposable2);
 }
   
 // Define a class for the tree data provider
@@ -115,6 +124,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 		// so it will look for default.json
 
 		JSONPath = getJSONPath(language);
+		createAndWriteFile(JSONPath, language);
 		let data = getJSONData(JSONPath);
 		var document = editor.document;
 		var text = document.getText();
@@ -687,6 +697,54 @@ function getJSONPath(language: string|null): string {
 	return vscode.env.appRoot + '/go-to-symbol/' + language + '.json';
 }
 
+// to display file path
+function showFilePath(): any {
+	let message = vscode.env.appRoot + '/go-to-symbol/';
+	vscode.window.showInformationMessage('Path: ' + message);
+}
+
+// to create file, then write the JSON content into it
+function createAndWriteFile(filePath:string, language:string): void {
+	let fileContent = '';
+	// fileContent = getJSONData(__dirname + "/../jsonFile/" + language + ".json");
+	fileContent = fs.readFileSync(__dirname + "/../jsonFile/" + language + ".json", 'utf-8');
+
+	if (fs.existsSync(filePath)) {
+		return;
+	}
+
+	if (!fs.existsSync(path.dirname(filePath)))
+	{
+		fs.mkdir(path.dirname(filePath), { recursive : true }, (err) => {
+			if (err) {
+				console.error(err);
+			}
+			else
+			{
+				console.log(path.dirname(filePath) + " created");
+			}
+		})
+	}
+	
+	// fs.mkdir(path.dirname(filePath), { recursive: true }, (err) => {
+	// 	if (err) {
+	// 	  // Handle error
+	// 	  console.error(err);
+	// 	} else {
+		  // Create the file
+		  fs.writeFile(filePath, JSON.stringify(fileContent), (err) => {
+			if (err) {
+			  // Handle error
+			  console.error(err);
+			} else {
+			  // File created successfully
+			  console.log('File created successfully');
+			}
+		  });
+		// }
+	//   });
+}
+
 // To get the current active editor language
 function getCurrentActiveEditorLanguage(): string {
 	let language;
@@ -699,6 +757,10 @@ function getCurrentActiveEditorLanguage(): string {
 	{
 		language = 'No language detected';
 	}
+
+	// they are more or less the same
+	if(language == 'c')
+		language = 'cpp'
 
 	return language;
 }
