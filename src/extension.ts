@@ -608,8 +608,6 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						continue;
 					}
 
-
-
 					const start = document.positionAt(temp_match.index);
 					const end = document.positionAt(temp_match.index + temp_match[0].length);
 					const range = new vscode.Range(start, end);
@@ -644,15 +642,6 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 		return element;
 	}
 }
-
-// async function modifyRangeInDocument(start: vscode.Position, end: vscode.Position, newText: string) {
-
-
-// 	let me2 = document.getText();
-// 	let x2;
-// }
-
-
 
 // this class holds the detail of list of symbols that regex matches
 // one symbol for 1 class
@@ -705,14 +694,24 @@ function showFilePath(): any {
 
 // to create file, then write the JSON content into it
 function createAndWriteFile(filePath:string, language:string): void {
-	let fileContent = '';
-	// fileContent = getJSONData(__dirname + "/../jsonFile/" + language + ".json");
-	fileContent = JSON.parse(fs.readFileSync(__dirname + "/../jsonFile/" + language + ".json", 'utf-8'));
+	let readBuffer = '';
+	let readBufferJSON = '';
+	let writeBuffer = '';
+	let repo_json_file = __dirname + "/../jsonFile/" + language + ".json";
+	
+	// only read if the repo JSON file exists
+	if (fs.existsSync(repo_json_file)) {
+		readBuffer = fs.readFileSync(repo_json_file, 'utf-8');
+		readBufferJSON = JSON.parse(readBuffer);
+		writeBuffer = JSON.stringify(readBufferJSON, null, 4); // 4 spaces indentation
+	}
 
+	// check if the JSON file that im going to write exists
 	if (fs.existsSync(filePath)) {
 		return;
 	}
 
+	// create parent folder if not exists
 	if (!fs.existsSync(path.dirname(filePath)))
 	{
 		fs.mkdir(path.dirname(filePath), { recursive : true }, (err) => {
@@ -725,25 +724,9 @@ function createAndWriteFile(filePath:string, language:string): void {
 			}
 		})
 	}
-	
-	// fs.mkdir(path.dirname(filePath), { recursive: true }, (err) => {
-	// 	if (err) {
-	// 	  // Handle error
-	// 	  console.error(err);
-	// 	} else {
-		  // Create the file
-		//   fs.writeFile(filePath, JSON.stringify(fileContent, null, 2), (err) => {
-		// 	if (err) {
-		// 	  // Handle error
-		// 	  console.error(err);
-		// 	} else {
-		// 	  // File created successfully
-		// 	  console.log('File created successfully');
-		// 	}
-		//   });
-		// }
-	//   });
-	fs.writeFileSync(filePath, JSON.stringify(fileContent, null, 4), 'utf8');
+
+	// create file & write
+	fs.writeFileSync(filePath, writeBuffer, 'utf8');
 }
 
 // To get the current active editor language
