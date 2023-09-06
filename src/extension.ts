@@ -707,7 +707,7 @@ function showFilePath(): any {
 function createAndWriteFile(filePath:string, language:string): void {
 	let fileContent = '';
 	// fileContent = getJSONData(__dirname + "/../jsonFile/" + language + ".json");
-	fileContent = fs.readFileSync(__dirname + "/../jsonFile/" + language + ".json", 'utf-8');
+	fileContent = JSON.parse(fs.readFileSync(__dirname + "/../jsonFile/" + language + ".json", 'utf-8'));
 
 	if (fs.existsSync(filePath)) {
 		return;
@@ -732,17 +732,18 @@ function createAndWriteFile(filePath:string, language:string): void {
 	// 	  console.error(err);
 	// 	} else {
 		  // Create the file
-		  fs.writeFile(filePath, JSON.stringify(fileContent), (err) => {
-			if (err) {
-			  // Handle error
-			  console.error(err);
-			} else {
-			  // File created successfully
-			  console.log('File created successfully');
-			}
-		  });
+		//   fs.writeFile(filePath, JSON.stringify(fileContent, null, 2), (err) => {
+		// 	if (err) {
+		// 	  // Handle error
+		// 	  console.error(err);
+		// 	} else {
+		// 	  // File created successfully
+		// 	  console.log('File created successfully');
+		// 	}
+		//   });
 		// }
 	//   });
+	fs.writeFileSync(filePath, JSON.stringify(fileContent, null, 4), 'utf8');
 }
 
 // To get the current active editor language
