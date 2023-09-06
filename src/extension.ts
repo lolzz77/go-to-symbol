@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import path from 'path';
 
 export function activate(context: vscode.ExtensionContext) {
 	// Create a tree data provider for the view
@@ -95,6 +94,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 		
 		let editor = vscode.window.activeTextEditor;
 		let treeArr = [];
+		let data;
 		// for reseting decoration use
 		treeArr.push(new SymbolTreeItem('reset', vscode.TreeItemCollapsibleState.None));
 
@@ -125,7 +125,15 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 
 		JSONPath = getJSONPath(language);
 		createAndWriteFile(JSONPath, language);
-		let data = getJSONData(JSONPath);
+		data = getJSONData(JSONPath);
+
+		// if no regex, put null and return
+		if(!data)
+		{
+			treeArr.push(new SymbolTreeItem('regex is null', vscode.TreeItemCollapsibleState.None));
+			return Promise.resolve(treeArr);
+		}
+
 		var document = editor.document;
 		var text = document.getText();
 		// have to put 'any', else this variable will have type 'unknown'
@@ -672,8 +680,14 @@ function resetDecoration(decorationTypes: vscode.TextEditorDecorationType[])
 
 // Get the JSON File
 function getJSONData(JSONPath: string): any {
-	let fileContents = fs.readFileSync(JSONPath, "utf8");
-	let data: any = JSON.parse(fileContents);
+	let fileContents;
+	let data:any;
+	
+	fileContents = fs.readFileSync(JSONPath, "utf8");
+	if(fileContents == null || fileContents == undefined || fileContents == '')
+		return null;
+
+	data = JSON.parse(fileContents);
 	return data;
 }
 
@@ -697,8 +711,15 @@ function createAndWriteFile(filePath:string, language:string): void {
 	let readBuffer = '';
 	let readBufferJSON = '';
 	let writeBuffer = '';
+	let segments;
+	let parentDir:any;
 	// the current repo json file
 	let repo_json_file = __dirname + "/../jsonFile/" + language + ".json";
+
+	// get the parent dir of the file path
+	segments = filePath.split('/'); // split the path by slashes
+	segments.pop(); // remove the last segment (file name)
+	parentDir = segments.join('/'); // join the remaining segments with slashes
 	
 	// only read if the repo JSON file exists
 	if (fs.existsSync(repo_json_file)) {
@@ -713,15 +734,15 @@ function createAndWriteFile(filePath:string, language:string): void {
 	}
 
 	// create parent folder if not exists
-	if (!fs.existsSync(path.dirname(filePath)))
+	if (!fs.existsSync(parentDir))
 	{
-		fs.mkdir(path.dirname(filePath), { recursive : true }, (err) => {
+		fs.mkdir(parentDir, { recursive : true }, (err) => {
 			if (err) {
 				console.error(err);
 			}
 			else
 			{
-				console.log(path.dirname(filePath) + " created");
+				console.log(parentDir + " created");
 			}
 		})
 	}
