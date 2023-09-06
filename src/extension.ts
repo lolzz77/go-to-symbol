@@ -697,6 +697,7 @@ function createAndWriteFile(filePath:string, language:string): void {
 	let readBuffer = '';
 	let readBufferJSON = '';
 	let writeBuffer = '';
+	// the current repo json file
 	let repo_json_file = __dirname + "/../jsonFile/" + language + ".json";
 	
 	// only read if the repo JSON file exists
