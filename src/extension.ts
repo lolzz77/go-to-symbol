@@ -77,6 +77,9 @@ export function activate(context: vscode.ExtensionContext) {
 	
 	// detect if you selected other editors (eg: different files)
 	vscode.window.onDidChangeActiveTextEditor(editor => {
+		// cleanup
+		resetDecoration(decorationTypes);
+		
 		if (editor) {
 			// if you changed, then execute the command again
 			vscode.commands.executeCommand('go-to-symbol.activate');
