@@ -1,44 +1,66 @@
 {
     "function" : {
-        "myComment" : "1st group matching is function return type, then compulsory white space, then function name, then option whitespace, then match (, then match anything not equal to ), then match match {.",
-        "whole" : ["([a-zA-Z0-9_*]*)\\s+([a-zA-Z0-9_*]*)\\s*\\([^)]*\\)\\s*\\{", "g"],
+        "myComment" : "first, whitespace, then, 1st group macthing is function name, no need to match return type, my code will handle detect backwards until newline. Then option whitespace, then match (. Then match anything not equal to ). then match match {. Stop here, my code will handle depth handling and detect whole function",
+        "whole" : ["\\s+([a-zA-Z0-9_*]*)\\s*\\([^)]*\\)\\s*\\{", "g"],
         "opening" : ["{", "}"],
-        "before" : ["("]
+        "before" : ["("],
+        "exclude" : [
+            "//",
+            "/*"
+        ]
     },
     "class" : {
         "myComment" : "",
         "whole" : ["^\\s*class\\s+\\w+\\s*\\{", "gm"],
         "opening" : ["{", "}"],
-        "before" : ["("]
+        "before" : ["("],
+        "exclude" : [
+            ""
+        ]
     },
     "struct" : {
         "myComment" : "",
-        "whole" : ["struct\\s+[^{}]*\\{", "g"],
+        "whole" : ["struct\\s*[a-zA-Z0-9_]*\\{", "g"],
         "opening" : ["{", "}"],
-        "before" : ["{"]
+        "before" : ["{"],
+        "exclude" : [
+            ""
+        ]
     },
     "enum" : {
         "myComment" : "",
-        "whole" : ["enum\\s+[^{}]*\\{", "g"],
+        "whole" : ["enum\\s*[]*\\{", "g"],
         "opening" : ["{", "}"],
-        "before" : ["{"]
+        "before" : ["{"],
+        "exclude" : [
+            ""
+        ]
     },
     "comment" : {
         "myComment" : "",
         "whole" : ["\\/\\/.*|\\/\\*[^*]*\\*+(?:[^\\/*][^*]*\\*+)*\\/", "g"],
         "opening" : ["", ""],
-        "before" : [""]
+        "before" : [""],
+        "exclude" : [
+            ""
+        ]
     },
     "macro" : {
         "myComment" : "",
         "whole" : ["#define\\s+([^\\n]+)\\n", "g"],
         "opening" : ["", ""],
-        "after" : ["define"]
+        "after" : ["define"],
+        "exclude" : [
+            ""
+        ]
     },
     "global" : {
         "myComment" : "match 1 newline, then match anything except ';' & newline, at least one. Then match ';'",
         "whole" : ["\\n[^;\\n]+;", "g"],
         "opening" : ["", ""],
-        "before" : ["=", ";"]
+        "before" : ["=", ";"],
+        "exclude" : [
+            ""
+        ]
     }
 }

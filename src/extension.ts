@@ -79,7 +79,7 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.window.onDidChangeActiveTextEditor(editor => {
 		// cleanup
 		resetDecoration(decorationTypes);
-		
+
 		if (editor) {
 			// if you changed, then execute the command again
 			vscode.commands.executeCommand('go-to-symbol.activate');
@@ -156,6 +156,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 		*/
 		for (const [key, value] of entries) {
 			let symbolType = key;
+			let skip = false;
 
 			// dont print out 'comment' tree list
 			// the intention for 'comment' regex is to remove comments only
@@ -251,9 +252,11 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					keyword_to_search_for_symbol = value.before;
 				else
 					keyword_to_search_for_symbol = value.after;
-		
+			
 				let function_opening = value.opening[0];
 				let function_closing = value.opening[1];
+				let exclude = value.exclude;
+
 				let match = null;
 				// a dynamic regex
 				let _regex_whole = new RegExp(regex_whole, flag_whole);
@@ -363,7 +366,9 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						// later, you have another loop function to match the whole pattern (eg the whole function)
 						// you might wanna do another similarity checking next
 						if (temp_match[0] == match[0])
+						{
 							break;
+						}
 					}
 
 					// fail safe check, 
@@ -373,7 +378,30 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						continue;
 					}
 
+					let buffer_doc_start = document.positionAt(match.index);
+					let buffer_doc_index = document.offsetAt(buffer_doc_start);
+					let buffer_doc_pos = document.positionAt(buffer_doc_index);
+					let buffer_dock_char = document.getText(new vscode.Range(buffer_doc_pos, buffer_doc_pos.translate(0, 1)));
 
+					let original_doc_start = document.positionAt(temp_match.index);
+					let original_doc_index = document.offsetAt(original_doc_start);
+					let original_doc_pos = document.positionAt(original_doc_index);
+					let original_dock_char = document.getText(new vscode.Range(original_doc_pos, original_doc_pos.translate(0, 1)));
+					while(buffer_dock_char == original_dock_char && 
+						(buffer_doc_index <= text.length || original_doc_index <= text.length))
+					{
+						buffer_doc_index ++;
+						original_doc_index ++;
+
+						buffer_doc_pos = document.positionAt(buffer_doc_index);
+						buffer_dock_char = document.getText(new vscode.Range(buffer_doc_pos, buffer_doc_pos.translate(0, 1)));
+						original_doc_pos = document.positionAt(buffer_doc_index);
+						original_dock_char = document.getText(new vscode.Range(original_doc_pos, original_doc_pos.translate(0, 1)));
+
+						if(buffer_dock_char != original_dock_char)
+							break;
+					}
+					
 
 					/**********************************************************************
 					find the whole function body, using depth method
@@ -474,13 +502,6 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						function_name = 'anonymous'
 					}
 					
-					// push to array, this will show the list of symbols later
-					treeArr.push(new SymbolTreeItem(
-						``+function_name, 
-						vscode.TreeItemCollapsibleState.None, 
-						range));
-						
-						
 					// get the complete string that you want to remove from the buffered 'text'
 					// to make way for next regex to search
 					to_repalce = document.getText(range);
@@ -494,6 +515,43 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					if(!text.includes(to_repalce))
 						continue;
 
+
+					// this is for cases that regex wasnt able to catch
+					// and to use the "exclude" in the JSON
+					// basically, my code will loop backwards to get the whole pattern
+					// and if the whole pattern is not what i wanted, this will exclude it,
+					// given that i provide the "exclude" symbol
+
+					// TODO: use dynamic programming way to optimize this,
+					// save it into memory so the whole process wont repeat again
+					// reminder, you will reset _regex_whole.lastIndex to 0, so this will be looped again
+					// for pattern that you want to skip
+					if(exclude != '')
+					{
+						for(let symbol of exclude)
+						{
+							if(to_repalce.trimStart().startsWith(symbol))
+							{
+								skip = true;
+								break;
+							}
+							else
+								skip = false;
+						}
+					}
+					else
+						skip = false;
+
+
+					if(skip)
+						continue;
+
+
+					// push to array, this will show the list of symbols later
+					treeArr.push(new SymbolTreeItem(
+						``+function_name, 
+						vscode.TreeItemCollapsibleState.None, 
+						range));
 
 					// remove the content that matched in the text buffer
 					// to make way for next regex
@@ -512,7 +570,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 				let symbol_name = null;
 				// a dynamic regex
 				let _regex_whole = new RegExp(regex_whole, flag_whole);
-
+				let exclude = value.exclude;
 
 				
 						// not needed, just leave it here
@@ -673,15 +731,37 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					to_repalce = document.getText(range);
 					if(!text.includes(to_repalce))
 						continue;
-					text = text.replace(to_repalce, '');
-					_regex_whole.lastIndex = 0;
 
+					if(exclude != '')
+					{
+						for(let symbol of exclude)
+						{
+							if(to_repalce.trimStart().startsWith(symbol))
+							{
+								skip = true;
+								break;
+							}
+							else
+								skip = false;
+						}
+					}
+					else
+						skip = false;
+
+
+					if(skip)
+						continue;
+
+					
 					// push to array, this will show the list of symbols later
 					treeArr.push(new SymbolTreeItem(
 						``+symbol_name, 
 						vscode.TreeItemCollapsibleState.None, 
 						range));
-						
+
+
+					text = text.replace(to_repalce, '');
+					_regex_whole.lastIndex = 0;
 				}
 			}
 		}
