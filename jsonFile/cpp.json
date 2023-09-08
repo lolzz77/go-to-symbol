@@ -23,17 +23,17 @@
         "opening" : ["{", "}"],
         "before" : ["{"]
     },
-    "comment" : {
-        "myComment" : "",
-        "whole" : ["\\/\\/.*|\\/\\*[^*]*\\*+(?:[^\\/*][^*]*\\*+)*\\/", "g"],
-        "opening" : ["", ""],
-        "before" : [""]
-    },
     "macro" : {
         "myComment" : "",
         "whole" : ["#define\\s+([^\\n]+)\\n", "g"],
         "opening" : ["", ""],
         "after" : ["define"]
+    },
+    "comment" : {
+        "myComment" : "",
+        "whole" : ["\\/\\/.*|\\/\\*[^*]*\\*+(?:[^\\/*][^*]*\\*+)*\\/", "g"],
+        "opening" : ["", ""],
+        "before" : [""]
     },
     "global" : {
         "myComment" : "match 1 newline, then match anything except ';' & newline, at least one. Then match ';'",

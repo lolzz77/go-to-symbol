@@ -177,7 +177,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 				let flag_whole = value.whole[1];
 				let match = null;
 
-						// not needed, but just leave it here
+						// 'not needed', but just leave it here
 						let keys = Object.keys(value);
 						let keyword_to_search_for_symbol = null;
 						let function_opening = value.opening[0];
@@ -187,51 +187,20 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 							keyword_to_search_for_symbol = value.before;
 						else
 							keyword_to_search_for_symbol = value.after;
+						// end of 'not needed'
 
 				// a dynamic regex
 				let _regex_whole = new RegExp(regex_whole, flag_whole);
 				if(regex_whole == '')
-					break;
+					continue;
 				
 				while (match = _regex_whole.exec(text)) {
 					start_index = 0;
 					end_index = 0;
 
-					// get the position from the original uneditted document
-
-					let temp_doc = editor.document;
-					let temp_text = temp_doc.getText();
-					let temp_match = null;
-					// have to use another regex, 
-					// if reuse the existing regex, it will continue the next pattern
-					let temp_regex_whole = new RegExp(regex_whole, flag_whole);
-
-					// to capture regex on the original document
-					while( temp_match = temp_regex_whole.exec(temp_text) )
-					{
-						// if match with current matched pattern, 
-						// means this pattern is not a duplicate
-						if (temp_match[0] == match[0])
-							break;
-					}
-
-					// fail safe check, 
-					// if pattern not found on original document, dont proceed
-					if (!temp_match)
-					{
-						continue;
-					}
-
-					// construct range then to remove the string
-
-					const start = document.positionAt(temp_match.index);
-					const end = document.positionAt(temp_match.index + temp_match[0].length);
-					const range = new vscode.Range(start, end);
-					
-					to_replace = document.getText(range);
-
-					if(!text.includes(to_replace))
-						continue;
+					start_index = match.index;
+					end_index = match.index + match[0].length;
+					to_replace = text.substring(start_index, end_index)
 
 					text = text.replace(to_replace, '');
 					_regex_whole.lastIndex = 0;
@@ -259,7 +228,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 				let _regex_whole = new RegExp(regex_whole, flag_whole);
 				
 				if(regex_whole == '')
-					break;
+					continue;
 			
 				
 				while(match = _regex_whole.exec(text)) {
@@ -381,7 +350,6 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// the best i can do is match til the 1st encounter of '}'
 					let depth = 1;
 					// these ranges are used for highlighting the background
-					// store value first
 					index = match.index + match[0].length;
 					char = text.charAt(index);
 					while (depth != 0 && index <= text.length) 
@@ -402,7 +370,6 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					
 					
 					// match until the newline, or until end of document
-					// newline will not be '\n', but instead, ''
 					char = text.charAt(index);
 					while(char != "\n" && index <= text.length)
 					{
@@ -437,8 +404,8 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// to make way for next regex to detect pattern
 					// to not make the regex detect duplicate pattern
 
-					let temp_text = document.getText();
-					let original_doc_start = temp_text.indexOf(to_replace);
+					let original_doc_text = document.getText();
+					let original_doc_start = original_doc_text.indexOf(to_replace);
 					let original_doc_end = original_doc_start + to_replace.length;
 					let start = document.positionAt(original_doc_start);
 					let end = document.positionAt(original_doc_end);
@@ -488,10 +455,10 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 
 
 				
-						// not needed, just leave it here
+						// 'not needed', but just leave it here
 						let function_opening = value.opening[0];
 						let function_closing = value.opening[1];
-				
+						// end of 'not needed'
 
 
 				let keys = Object.keys(value);
@@ -508,13 +475,12 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 				
 				
 				if(regex_whole == '')
-					break;
+					continue;
 				
 				while (match = _regex_whole.exec(text)) {
-					
-
-					// to extract the function name
-					
+					/**********************************************************************
+					to extract symbol name
+					***********************************************************************/
 					start_index = 0;
 					end_index = 0;
 					// for checking whether the current index has found the 1st character or not
@@ -546,9 +512,22 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						while (i >= 0) 
 						{
 							let char = sub.charAt(i); // Get the character at the current index
-							if (char === " " && hasFountFirstChar) 
+							if (char == " " && hasFountFirstChar) 
 							{ 	// Check if the character is a white space
+
+								// there are cases where ppl put more than 1 whitespaces
+								while(char == " ")
+								{
+									i++;
+									char = sub.charAt(i);
+								}
+								i--; // current char is whitespace, move to previous character
 								index = i; // Update the index
+								break;
+							}
+							else if(char == "\n")
+							{
+								index = i;
 								break;
 							}
 							else if (!isNaN(Number(char))) // isNaN = is not a number
@@ -562,8 +541,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 							i--;
 						}
 						// save the start index
-						// + 1, because the current index is pointing to white spaces
-						start_index = index + 1;
+						start_index = index;
 
 						// get the substring, starting from the given start index
 						symbol_name = sub.substring(start_index);
@@ -578,9 +556,23 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						while (i < sub.length) 
 						{
 							let char = sub.charAt(i); // Get the character at the current index
-							if (char === " " && hasFountFirstChar) 
+							if (char == " " && hasFountFirstChar)  
 							{ 	// Check if the character is a white space
+
+								// there are cases where ppl put more than 1 whitespaces
+								while(char == " ")
+								{
+									i++;
+									char = sub.charAt(i);
+								}
+								// not needed, above loop made sure the current char is not whitespace
+								// i++; // current char is whitespace, move to the character
 								index = i; // Update the index
+								break;
+							}
+							else if(char == "\n")
+							{
+								index = i;
 								break;
 							}
 							else if (!isNaN(Number(char))) // isNaN = is not a number
@@ -594,8 +586,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 							i++;
 						}
 						// save the start index
-						// + 1 because currently the index is pointing to the white space
-						start_index = index + 1;
+						start_index = index;
 
 						// for 'after' case, you need to handle how to extract the symbol name
 						
@@ -608,53 +599,117 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						// what you want is extract "A" out, 1st white space ady handled from loop above
 						// then this is to handle the 2nd white space
 						let sub_sub = sub.substring(start_index);
+
+
+						// this is to handle cases that, they dont have whitespace as the end
+						// instead, is a newline at the end
+						let end_substring = sub_sub.indexOf(" ");
+						if (end_substring < 0)
+							end_substring = sub_sub.indexOf("\n");
+						
+						
 						// only get until the next white space
 						// have to add the start_index, because you're substring-ing the 'sub' varaible
 						// and the sub_sub variable has the start_index cut off, from the code above 
-						sub_sub = sub.substring(start_index, sub_sub.indexOf(" ") + start_index);
+						sub_sub = sub.substring(start_index, end_substring + start_index);
 						symbol_name = sub_sub;
 					}
 					
+					/**********************************************************************
+					to get the whole pattern
+					***********************************************************************/
+					// 1. loop backwards
+					// 2. loop forwards
 
-					let temp_doc = editor.document;
-					let temp_text = temp_doc.getText();
-					let temp_match = null;
-					// have to use another regex, 
-					// if reuse the existing regex, it will continue the next pattern
-					let temp_regex_whole = new RegExp(regex_whole, flag_whole);
-
-					// to capture regex on the original document
-					while( temp_match = temp_regex_whole.exec(temp_text) )
+					/**********************************************************************
+					loop backwards
+					***********************************************************************/
+					// match until newline, or start of document
+					index = match.index;
+					let char = text.charAt(index);
+					while(index != 0 && char != "\n")
 					{
-						// if match with current matched pattern, 
-						// means this pattern is not a duplicate
-						if (temp_match[0] == match[0])
-							break;
+						index--;
+						char = text.charAt(index);
 					}
+					// current char is newline, move to the next char
+					index++;
+					// save start_index
+					start_index = index;
 
-					// fail safe check, 
-					// if pattern not found on original document, dont proceed
-					if (!temp_match)
+					/**********************************************************************
+					loop forwards
+					***********************************************************************/
+					// match until the newline, or until end of document
+					// if detected '\\n, newline that is preceded with another '\', then dont stop,
+					// continue, until match '\n' that has no '\' precede
+					// -1, cos the current index is pointing to the next char of what my regex has matched.
+					// That is, my regex macthed til \n, but the index will point to the next char of the \n
+					index = match.index + match[0].length -1;
+					char = text.charAt(index);
+
+					// this ugly nested is to handle "\\n" detection
+					// kekeke
+					// basically, if detects "\\n", means not real newline
+					// only when detect "\n", is real newline
+					let prev_char = text.charAt(index - 1); // previous char of the current index
+					if(prev_char == "\\")
 					{
-						continue;
+						index ++;
+						char = text.charAt(index);
+						prev_char = text.charAt(index - 1);
+						while(char != "\n" && index <= text.length)
+						{
+							index++;
+							char = text.charAt(index);
+							prev_char = text.charAt(index - 1);
+							if(char == "\n")
+							{
+								if(prev_char == "\\")
+								{
+									index++;
+									char = text.charAt(index);
+								}
+							}
+	
+						}
 					}
+					// save end_index
+					end_index = index;
+					// get the whole pattern
+					to_replace = text.substring(start_index, end_index)
 
-					const start = document.positionAt(temp_match.index);
-					const end = document.positionAt(temp_match.index + temp_match[0].length);
-					const range = new vscode.Range(start, end);
-
-					to_replace = document.getText(range);
+					/**********************************************************************
+					then, check whether to push to array or not
+					***********************************************************************/
 					if(!text.includes(to_replace))
 						continue;
+
+					/**********************************************************************
+					Given the pattern, get the original document position
+					***********************************************************************/
+					let original_doc_text = document.getText();
+					let original_doc_start = original_doc_text.indexOf(to_replace);
+					let original_doc_end = original_doc_start + to_replace.length;
+					let start = document.positionAt(original_doc_start);
+					let end = document.positionAt(original_doc_end);
+					const range = new vscode.Range(start, end);
+
+
+					/**********************************************************************
+					remove the text from buffered text
+					***********************************************************************/
 					text = text.replace(to_replace, '');
 					_regex_whole.lastIndex = 0;
-
+					
+					/**********************************************************************
+					finally, push to array
+					***********************************************************************/
 					// push to array, this will show the list of symbols later
 					treeArr.push(new SymbolTreeItem(
 						``+symbol_name, 
 						vscode.TreeItemCollapsibleState.None, 
 						range));
-						
 				}
 			}
 		}

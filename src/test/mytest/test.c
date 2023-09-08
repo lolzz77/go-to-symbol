@@ -172,6 +172,16 @@ test haha
 #define TEST4                4
 #define TEST5                5
 
+#ifdef MEME
+#define NIAMA 5
+#else
+#define NIAMA 1
+#endif
+
+/*function prototype*/
+static int read_line (char* file_to_open);
+int main (int argc, char* argv[]);
+
 /*---------------GLOBAL VARIABLE----------------------*/
 // For test_powercut() function definition
 // I want to write the function definition for once, in a file that i want, and before encoutnering the 1st function in the file
