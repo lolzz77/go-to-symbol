@@ -13,7 +13,7 @@
     },
     "struct" : {
         "myComment" : "",
-        "whole" : ["struct\\s*[a-zA-Z0-9_]*\\{", "g"],
+        "whole" : ["struct\\s*[a-zA-Z0-9_]*\\s*\\{", "g"],
         "opening" : ["{", "}"],
         "before" : ["{"]
     },
