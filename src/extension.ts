@@ -286,6 +286,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					let index = null;
 					let i = null; // for loop
 					let closest_index = 0;
+					let is_diff = false;
 					for(let keyword of keyword_to_search_for_symbol)
 					{
 						// save the 1st index first, else, later math.min, it will always 0
@@ -353,55 +354,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					let temp_doc = editor.document;
 					let temp_text = temp_doc.getText();
 					let temp_match = null;
-					// have to use another regex, 
-					// if reuse the existing regex, it will continue the next pattern
-					let temp_regex_whole = new RegExp(regex_whole, flag_whole);
 
-					// to capture regex on the original document
-					while( temp_match = temp_regex_whole.exec(temp_text) )
-					{
-						// if match with current matched pattern, 
-						// means this pattern is not a duplicate
-						// however, this only matches what your regex algorithm matches
-						// later, you have another loop function to match the whole pattern (eg the whole function)
-						// you might wanna do another similarity checking next
-						if (temp_match[0] == match[0])
-						{
-							break;
-						}
-					}
-
-					// fail safe check, 
-					// if pattern not found on original document, dont proceed
-					if (!temp_match)
-					{
-						continue;
-					}
-
-					let buffer_doc_start = document.positionAt(match.index);
-					let buffer_doc_index = document.offsetAt(buffer_doc_start);
-					let buffer_doc_pos = document.positionAt(buffer_doc_index);
-					let buffer_dock_char = document.getText(new vscode.Range(buffer_doc_pos, buffer_doc_pos.translate(0, 1)));
-
-					let original_doc_start = document.positionAt(temp_match.index);
-					let original_doc_index = document.offsetAt(original_doc_start);
-					let original_doc_pos = document.positionAt(original_doc_index);
-					let original_dock_char = document.getText(new vscode.Range(original_doc_pos, original_doc_pos.translate(0, 1)));
-					while(buffer_dock_char == original_dock_char && 
-						(buffer_doc_index <= text.length || original_doc_index <= text.length))
-					{
-						buffer_doc_index ++;
-						original_doc_index ++;
-
-						buffer_doc_pos = document.positionAt(buffer_doc_index);
-						buffer_dock_char = document.getText(new vscode.Range(buffer_doc_pos, buffer_doc_pos.translate(0, 1)));
-						original_doc_pos = document.positionAt(buffer_doc_index);
-						original_dock_char = document.getText(new vscode.Range(original_doc_pos, original_doc_pos.translate(0, 1)));
-
-						if(buffer_dock_char != original_dock_char)
-							break;
-					}
-					
 
 					/**********************************************************************
 					find the whole function body, using depth method
@@ -415,7 +368,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// search the function backwards
 
 
-					let start = document.positionAt(temp_match.index);
+					let start:any = document.positionAt(match.index);
 					let end = null;
 					index = document.offsetAt(start); // get the index from the position
 					start_index = index;
@@ -425,7 +378,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// match.index == 0 refers that this is the beginning of the document,
 					// you can go backwards anymore, this is the 1st index of document
 					// i wanted it to stop when match new line '\n', but apparently, it just ''
-					while(temp_match.index != 0 && char != '')
+					while(match.index != 0 && char != '')
 					{
 						index--;
 						pos = document.positionAt(index); // get the position
@@ -445,13 +398,13 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// these ranges are used for highlighting the background
 					// store value first
 					start = document.positionAt(index);
-					end = document.positionAt(temp_match.index + temp_match[0].length);
+					end = document.positionAt(match.index + match[0].length);
 					
 					index = document.offsetAt(end);
 					start_index = index;
 					pos = document.positionAt(index);
 					char = document.getText(new vscode.Range(pos, pos.translate(0, 1)));
-					while (depth != 0) 
+					while (depth != 0 && index <= text.length) 
 					{
 						if(char === function_opening)
 							depth++;
@@ -485,10 +438,11 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// update the end position again
 					// match.index - the starting index that my regex matches it
 					// index - match.index - the length of the function body
-					end = document.positionAt(temp_match.index + (index-temp_match.index));
+					end = document.positionAt(match.index + (index-match.index));
 					// construct the range
-					const range = new vscode.Range(start, end);
+					let range = new vscode.Range(start, end);
 					
+
 
 					/**********************************************************************
 					finally, push to array
@@ -505,6 +459,15 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// get the complete string that you want to remove from the buffered 'text'
 					// to make way for next regex to search
 					to_repalce = document.getText(range);
+
+					let temp_start = temp_text.indexOf(to_repalce);
+					let len = start - to_repalce.length;
+					start = document.positionAt(temp_start);
+					end = document.positionAt(temp_start + len);
+
+					range = new vscode.Range(start, end);
+					to_repalce = document.getText(range);
+
 
 					// above has handling for duplicate regex
 					// however, that only detects what the regex matches
