@@ -1,6 +1,16 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 
+/*
+ problem
+ 1. if you happen to have pattern same name, like
+ #define abc 1
+ #define abc
+
+ and your pattern is the 2nd one, which is '#define abc'
+ then, your algorithm will keep highlighting the 1st encounter of '#define abc', which is the 1st one
+*/
+
 export function activate(context: vscode.ExtensionContext) {
 	// Create a tree data provider for the view
 	const treeDataProvider = new MyTreeDataProvider();
@@ -144,22 +154,14 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 		// if dont want to put 'any', later in loop can put 'as any'
 		let entries:any = Object.entries(data);
 		let to_replace = '';
-		/*
-		{
-			"function" : {
-				"a" : 1,
-				"b" : 2
-			}
-		}
-		key = function
-		value = {"a" : 1, "b" : 2}
-		*/
+
 		for (const [key, value] of entries) {
 			let symbolType = key;
+			let operation = value.operation;
 
 			// dont print out 'comment' tree list
 			// the intention for 'comment' regex is to remove comments only
-			if (symbolType != 'comment')
+			if (operation != 'remove')
 			{
 				// show type, eg: function, macro, struct, etc
 				treeArr.push(new SymbolTreeItem('------------'+symbolType+'------------', vscode.TreeItemCollapsibleState.None));
@@ -171,7 +173,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 
 			// if it is comment regex
 			// the intention is just to remove comments
-			if (symbolType == 'comment')
+			if (operation == 'remove')
 			{
 				let regex_whole = value.whole[0];
 				let flag_whole = value.whole[1];
@@ -206,8 +208,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					_regex_whole.lastIndex = 0;
 				}
 			}
-			else if( symbolType == 'function' || symbolType == 'class' || symbolType == 'struct' ||
-				symbolType == 'enum')
+			else if( operation == 'depth')
 			{
 				let regex_whole = value.whole[0];
 				let flag_whole = value.whole[1];
@@ -277,7 +278,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					while (i >= 0) 
 					{
 						let char = sub.charAt(i); // Get the character at the current index
-						if (char === " " && hasFountFirstChar) 
+						if (char == " " && hasFountFirstChar) 
 						{ 	// Check if the character is a white space
 							index = i; // Update the index
 							break;
@@ -432,7 +433,9 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 
 					// for javascript, they have anonymous function
 					// if not match alphabets, set it to anonymous
-					if(!function_name.match(/[a-z]/i))
+
+					// or, if the name is same as symbol type, also set it to anonymous
+					if(!function_name.match(/[a-z]/i) || function_name == symbolType)
 					{
 						function_name = 'anonymous'
 					}
@@ -518,7 +521,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 								// there are cases where ppl put more than 1 whitespaces
 								while(char == " ")
 								{
-									i++;
+									i--;
 									char = sub.charAt(i);
 								}
 								i--; // current char is whitespace, move to previous character

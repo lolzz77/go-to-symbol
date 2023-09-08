@@ -1,43 +1,58 @@
 {
     "function" : {
-        "myComment" : "1st group matching is function return type, then compulsory white space, then function name, then option whitespace, then match (, then match anything not equal to ), then match match {.",
+        "comment1" : "1st group matching is function return type, then compulsory white space, then function name, then option whitespace, then match (, then match anything not equal to ), then match match {.",
         "whole" : ["([a-zA-Z0-9_*]*)\\s+([a-zA-Z0-9_*]*)\\s*\\([^)]*\\)\\s*\\{", "g"],
+        "comment2" : "this operation is to tell my code how should i handle it. Currently has 'depth', 'remove', ''. depth - i will perform depth search, will use 'opening' key. 'remove' - will perform operation to remove it from buffered text, will not print on the tree list. '' - will fall into else case",
+        "operation" : "depth",
         "opening" : ["{", "}"],
         "before" : ["("]
     },
     "class" : {
-        "myComment" : "",
+        "comment1" : "",
         "whole" : ["^\\s*class\\s+\\w+\\s*\\{", "gm"],
+        "operation" : "depth",
         "opening" : ["{", "}"],
         "before" : ["("]
     },
     "struct" : {
-        "myComment" : "",
+        "comment1" : "",
         "whole" : ["struct\\s*[a-zA-Z0-9_]*\\s*\\{", "g"],
+        "operation" : "depth",
         "opening" : ["{", "}"],
         "before" : ["{"]
     },
     "enum" : {
-        "myComment" : "",
+        "comment1" : "",
         "whole" : ["enum\\s+[^{}]*\\{", "g"],
+        "operation" : "depth",
         "opening" : ["{", "}"],
         "before" : ["{"]
     },
     "macro" : {
-        "myComment" : "",
+        "comment1" : "",
         "whole" : ["#define\\s+([^\\n]+)\\n", "g"],
+        "operation" : "",
         "opening" : ["", ""],
         "after" : ["define"]
     },
     "comment" : {
-        "myComment" : "",
+        "comment1" : "",
         "whole" : ["\\/\\/.*|\\/\\*[^*]*\\*+(?:[^\\/*][^*]*\\*+)*\\/", "g"],
+        "operation" : "remove",
         "opening" : ["", ""],
         "before" : [""]
     },
+    "function_prototype" : {
+        "comment1" : "",
+        "whole" : ["([a-zA-Z0-9_*]*)\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*\\([^)]*\\)", "g"],
+        "operation" : "remove",
+        "opening" : [""],
+        "before" : [";"]
+    },
     "global" : {
-        "myComment" : "match 1 newline, then match anything except ';' & newline, at least one. Then match ';'",
+        "comment1" : "match 1 newline, then match anything except ';' & newline, at least one. Then match ';'",
         "whole" : ["\\n[^;\\n]+;", "g"],
+        "operation" : "",
         "opening" : ["", ""],
         "before" : ["=", ";"]
     }
