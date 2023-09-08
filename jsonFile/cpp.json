@@ -43,15 +43,22 @@
         "before" : [""]
     },
     "function_prototype" : {
-        "comment1" : "",
-        "whole" : ["([a-zA-Z0-9_*]*)\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*\\([^)]*\\)", "g"],
+        "comment1" : "1st group matching is 'static' those kind (will be optional for this). 2nd group is function return type. 3rd group is function name. Then match parenthesis. Then match ';'",
+        "whole" : ["([a-zA-Z0-9_*]*)\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*\\([^)]*\\)\\s*;", "g"],
         "operation" : "remove",
         "opening" : [""],
-        "before" : [";"]
+        "before" : [""]
+    },
+    "include" : {
+        "comment1" : "",
+        "whole" : ["#include\\s+([^\\n]+)\\s*\\n", "g"],
+        "operation" : "remove",
+        "opening" : [""],
+        "before" : [""]
     },
     "global" : {
         "comment1" : "match 1 newline, then match anything except ';' & newline, at least one. Then match ';'",
-        "whole" : ["\\n[^;\\n]+;", "g"],
+        "whole" : ["\\n([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*[^;]+;", "g"],
         "operation" : "",
         "opening" : ["", ""],
         "before" : ["=", ";"]

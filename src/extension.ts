@@ -480,6 +480,13 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 				if(regex_whole == '')
 					continue;
 				
+				
+				if(symbolType == 'global')
+				{
+					console.log("hi");
+				}
+
+
 				while (match = _regex_whole.exec(text)) {
 					/**********************************************************************
 					to extract symbol name
@@ -524,7 +531,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 									i--;
 									char = sub.charAt(i);
 								}
-								i--; // current char is whitespace, move to previous character
+								i++; // current char is prev char of the whitespace, move back forward 1 character
 								index = i; // Update the index
 								break;
 							}
@@ -680,7 +687,9 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// save end_index
 					end_index = index;
 					// get the whole pattern
-					to_replace = text.substring(start_index, end_index)
+					// i guess substring 2nd argument is not included?.. like python slice()
+					// i dk...
+					to_replace = text.substring(start_index, end_index + 1)
 
 					/**********************************************************************
 					then, check whether to push to array or not
