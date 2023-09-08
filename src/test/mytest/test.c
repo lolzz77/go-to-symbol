@@ -178,6 +178,8 @@ test haha
 #define NIAMA 1
 #endif
 
+const char TEST[]               = "00";
+
 /*function prototype*/
 static int read_line (char* file_to_open);
 int main (int argc, char* argv[]);

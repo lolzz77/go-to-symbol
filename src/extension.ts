@@ -288,11 +288,11 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						* int main (...)
 						* there's white space before the `(`
 						*/
-						else if (!isNaN(Number(char))) // isNaN = is not a number
+						else if (!isNaN(Number(char)) && char != " ") // isNaN = is not a number
 						{
 							hasFountFirstChar = true;
 						}
-						else if ((char.match(/[a-z]/i))) // if is alphabet
+						else if ((char.match(/[a-z]/i)) && char != " ") // if is alphabet
 						{
 							hasFountFirstChar = true;
 						}
@@ -515,6 +515,10 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// handling for extracting symbol name given word appear 'before' the symbol
 					if(keys.includes("before"))
 					{
+						if(match[0].includes("IMG_TYPE_TAG_FILE"))
+						{
+							console.log("hi");
+						}
 						sub = str.substring(0, closest_index);
 						index = -1; // start with invalid index
 						let i = sub.length - 1; // point to the last character
@@ -522,7 +526,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						while (i >= 0) 
 						{
 							let char = sub.charAt(i); // Get the character at the current index
-							if (char == " " && hasFountFirstChar) 
+							if (char == " " && hasFountFirstChar)
 							{ 	// Check if the character is a white space
 
 								// there are cases where ppl put more than 1 whitespaces
@@ -540,11 +544,11 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 								index = i;
 								break;
 							}
-							else if (!isNaN(Number(char))) // isNaN = is not a number
+							else if (!isNaN(Number(char)) && char != " ") // isNaN = is not a number
 							{
 								hasFountFirstChar = true;
 							}
-							else if ((char.match(/[a-z]/i))) // if is alphabet
+							else if ((char.match(/[a-z]/i)) && char != " ") // if is alphabet
 							{
 								hasFountFirstChar = true;
 							}
@@ -585,11 +589,11 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 								index = i;
 								break;
 							}
-							else if (!isNaN(Number(char))) // isNaN = is not a number
+							else if (!isNaN(Number(char)) && char != " ") // isNaN = is not a number
 							{
 								hasFountFirstChar = true;
 							}
-							else if ((char.match(/[a-z]/i))) // if is alphabet
+							else if ((char.match(/[a-z]/i)) && char != " ") // if is alphabet
 							{
 								hasFountFirstChar = true;
 							}
@@ -624,7 +628,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						sub_sub = sub.substring(start_index, end_substring + start_index);
 						symbol_name = sub_sub;
 					}
-					
+
 					/**********************************************************************
 					to get the whole pattern
 					***********************************************************************/
