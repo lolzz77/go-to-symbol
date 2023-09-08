@@ -143,7 +143,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 		// then later loop will have error
 		// if dont want to put 'any', later in loop can put 'as any'
 		let entries:any = Object.entries(data);
-		let to_repalce = '';
+		let to_replace = '';
 		/*
 		{
 			"function" : {
@@ -167,7 +167,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 
 			let start_index = null;
 			let end_index = null;
-			to_repalce = '';
+			to_replace = '';
 
 			// if it is comment regex
 			// the intention is just to remove comments
@@ -228,12 +228,12 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					const end = document.positionAt(temp_match.index + temp_match[0].length);
 					const range = new vscode.Range(start, end);
 					
-					to_repalce = document.getText(range);
+					to_replace = document.getText(range);
 
-					if(!text.includes(to_repalce))
+					if(!text.includes(to_replace))
 						continue;
 
-					text = text.replace(to_repalce, '');
+					text = text.replace(to_replace, '');
 					_regex_whole.lastIndex = 0;
 				}
 			}
@@ -339,39 +339,6 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					function_name = function_name.replace('\n', '');
 					
 
-					/**********************************************************************
-					Given the pattern, get the original document position
-					***********************************************************************/
-					// because currently your 'text' has been modified
-					// where, you erased those that matched pattern,
-					// to make way for next regex to detect pattern
-					// to not make the regex detect duplicate pattern
-
-					let temp_doc = editor.document;
-					let temp_text = temp_doc.getText();
-					let temp_match = null;
-					// have to use another regex, 
-					// if reuse the existing regex, it will continue the next pattern
-					let temp_regex_whole = new RegExp(regex_whole, flag_whole);
-
-					// to capture regex on the original document
-					while( temp_match = temp_regex_whole.exec(temp_text) )
-					{
-						// if match with current matched pattern, 
-						// means this pattern is not a duplicate
-						// however, this only matches what your regex algorithm matches
-						// later, you have another loop function to match the whole pattern (eg the whole function)
-						// you might wanna do another similarity checking next
-						if (temp_match[0] == match[0])
-							break;
-					}
-
-					// fail safe check, 
-					// if pattern not found on original document, dont proceed
-					if (!temp_match)
-					{
-						continue;
-					}
 
 
 
@@ -387,7 +354,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// search the function backwards
 
 
-					let start = document.positionAt(temp_match.index);
+					let start = document.positionAt(match.index);
 					let end = null;
 					index = document.offsetAt(start); // get the index from the position
 					start_index = index;
@@ -397,7 +364,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// match.index == 0 refers that this is the beginning of the document,
 					// you can go backwards anymore, this is the 1st index of document
 					// i wanted it to stop when match new line '\n', but apparently, it just ''
-					while(temp_match.index != 0 && char != '')
+					while(match.index != 0 && char != '')
 					{
 						index--;
 						pos = document.positionAt(index); // get the position
@@ -417,7 +384,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// these ranges are used for highlighting the background
 					// store value first
 					start = document.positionAt(index);
-					end = document.positionAt(temp_match.index + temp_match[0].length);
+					end = document.positionAt(match.index + match[0].length);
 					
 					index = document.offsetAt(end);
 					start_index = index;
@@ -445,7 +412,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// newline will not be '\n', but instead, ''
 					pos = document.positionAt(index);
 					char = document.getText(new vscode.Range(pos, pos.translate(0, 1)));
-					while(char != '' && index <= temp_text.length)
+					while(char != '' && index <= text.length)
 					{
 						index++;
 						pos = document.positionAt(index);
@@ -457,10 +424,56 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					// update the end position again
 					// match.index - the starting index that my regex matches it
 					// index - match.index - the length of the function body
-					end = document.positionAt(temp_match.index + (index-temp_match.index));
+					end = document.positionAt(match.index + (index-match.index));
 					// construct the range
-					const range = new vscode.Range(start, end);
-					
+					let range = new vscode.Range(start, end);
+					// get the complete string that you want to remove from the buffered 'text'
+					// to make way for next regex to search
+					// this current range, is the one follow buffered text, no the original document one.
+					to_replace = document.getText(range);
+
+
+
+
+					/**********************************************************************
+					Given the pattern, get the original document position
+					***********************************************************************/
+					// because currently your 'text' has been modified
+					// where, you erased those that matched pattern,
+					// to make way for next regex to detect pattern
+					// to not make the regex detect duplicate pattern
+
+					let temp_doc = editor.document;
+					let temp_text = temp_doc.getText();
+					let original_doc_start = temp_text.indexOf(to_replace);
+					let original_doc_end = original_doc_start - to_replace.length;
+					start = document.positionAt(original_doc_start);
+					end = document.positionAt(original_doc_end);
+					range = new vscode.Range(start, end);
+
+					/**********************************************************************
+					then, check whether to push to array or not
+					***********************************************************************/
+
+
+
+					// above has handling for duplicate regex
+					// however, that only detects what the regex matches
+					// you had another loop to handle to match whole pattern (eg whole function)
+					// thus, this to ensure the whole pattern is present in the current text buffer
+					// else, it means this pattern has been removed from the buffer
+					// and shall not reset the _regex_whole.lastIndex to 0
+					if(!text.includes(to_replace))
+						continue;
+
+					// remove the content that matched in the text buffer
+					// to make way for next regex
+					text = text.replace(to_replace, '');
+					// you have to reset its lastIndex,
+					// else, the next regex wont able to find the next pattern cos the 'text'
+					// buffer has been modified
+					_regex_whole.lastIndex = 0;
+
 
 					/**********************************************************************
 					finally, push to array
@@ -479,29 +492,11 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 						``+function_name, 
 						vscode.TreeItemCollapsibleState.None, 
 						range));
+
+
+					
 						
-						
-					// get the complete string that you want to remove from the buffered 'text'
-					// to make way for next regex to search
-					to_repalce = document.getText(range);
 
-					// above has handling for duplicate regex
-					// however, that only detects what the regex matches
-					// you had another loop to handle to match whole pattern (eg whole function)
-					// thus, this to ensure the whole pattern is present in the current text buffer
-					// else, it means this pattern has been removed from the buffer
-					// and shall not reset the _regex_whole.lastIndex to 0
-					if(!text.includes(to_repalce))
-						continue;
-
-
-					// remove the content that matched in the text buffer
-					// to make way for next regex
-					text = text.replace(to_repalce, '');
-					// you have to reset its lastIndex,
-					// else, the next regex wont able to find the next pattern cos the 'text'
-					// buffer has been modified
-					_regex_whole.lastIndex = 0;
 				}
 			}
 			else // for those that dont need '{}' depth handling
@@ -670,10 +665,10 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 					const end = document.positionAt(temp_match.index + temp_match[0].length);
 					const range = new vscode.Range(start, end);
 
-					to_repalce = document.getText(range);
-					if(!text.includes(to_repalce))
+					to_replace = document.getText(range);
+					if(!text.includes(to_replace))
 						continue;
-					text = text.replace(to_repalce, '');
+					text = text.replace(to_replace, '');
 					_regex_whole.lastIndex = 0;
 
 					// push to array, this will show the list of symbols later
