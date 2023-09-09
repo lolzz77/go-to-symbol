@@ -328,36 +328,43 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				***********************************************************************/
 				text = text.replace(to_replace, '');
 				_regex_whole.lastIndex = 0;
+
+				// that's it for 'remove' operation, no need add into array
+				continue;
 			}
 			
-			else if( operation == 'depth')
+			/**********************************************************************
+			 to extract the function name
+			***********************************************************************/
+			// actually, the `match` is an array, match[1] holds the function name
+			// however, this algorithm applies got struct, enum those as well
+			// thus, tho you can do symbol_name = match[1]
+			// is better do manually, so that it applies to all cases
+
+			for(let keyword of keyword_to_search_for_symbol)
+			{
+				// save the 1st index first, else, later math.min, it will always 0
+				// if indexOf cannot find the symbol, it will return -1
+				// thus, check <=0 is better
+				if(closest_index <= 0)
+					closest_index = str.indexOf(keyword);
+				else if(keys.includes("before"))
+					closest_index = Math.min(closest_index, str.indexOf(keyword));
+				else
+					closest_index = Math.max(closest_index, str.indexOf(keyword));
+			}
+
+			// given keyword, get substring
+			if(keys.includes("before"))
+				sub = str.substring(0, closest_index);
+			else
+				sub = str.substring(closest_index);
+
+			if( operation == 'depth')
 			{
 				/**********************************************************************
-				 to extract the function name
+				 still trying to extract the function name
 				***********************************************************************/
-				// actually, the `match` is an array, match[1] holds the function name
-				// however, this algorithm applies got struct, enum those as well
-				// thus, tho you can do symbol_name = match[1]
-				// is better do manually, so that it applies to all cases
-
-				for(let keyword of keyword_to_search_for_symbol)
-				{
-					// save the 1st index first, else, later math.min, it will always 0
-					// if indexOf cannot find the symbol, it will return -1
-					// thus, check <=0 is better
-					if(closest_index <= 0)
-						closest_index = str.indexOf(keyword);
-					else if(keys.includes("before"))
-						closest_index = Math.min(closest_index, str.indexOf(keyword));
-					else
-						closest_index = Math.max(closest_index, str.indexOf(keyword));
-				}
-				
-				// given keyword, get substring
-				if(keys.includes("before"))
-					sub = str.substring(0, closest_index);
-				else
-					sub = str.substring(closest_index);
 
 				index = sub.length - 1; // point to the last character
 				// Loop through the string backwards
@@ -530,51 +537,31 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 			else
 			{
 				/**********************************************************************
-				to extract symbol name
+				 still trying to extract the function name
 				***********************************************************************/
-
-				for(let keyword of keyword_to_search_for_symbol)
-				{
-					// if indexOf cannot find the symbol, it will return -1
-					// thus, check <=0 is better
-					if(closest_index <= 0)
-						closest_index = str.indexOf(keyword);
-					else if(keys.includes("before"))
-						closest_index = Math.min(closest_index, str.indexOf(keyword));
-					else
-						closest_index = Math.max(closest_index, str.indexOf(keyword));
-				}
 
 				// handling for extracting symbol name given word appear 'before' the symbol
 				if(keys.includes("before"))
 				{
-					if(match[0].includes("IMG_TYPE_TAG_FILE"))
-					{
-						console.log("hi");
-					}
-					sub = str.substring(0, closest_index);
-					index = -1; // start with invalid index
-					let i = sub.length - 1; // point to the last character
+					index = sub.length - 1; // point to the last character
 					// Loop through the string backwards
-					while (i >= 0) 
+					while (index >= 0) 
 					{
-						let char = sub.charAt(i); // Get the character at the current index
+						let char = sub.charAt(index); // Get the character at the current index
 						if (char == " " && hasFountFirstChar)
 						{ 	// Check if the character is a white space
 
 							// there are cases where ppl put more than 1 whitespaces
 							while(char == " ")
 							{
-								i--;
-								char = sub.charAt(i);
+								index--;
+								char = sub.charAt(index);
 							}
-							i++; // current char is prev char of the whitespace, move back forward 1 character
-							index = i; // Update the index
+							index++; // current char is prev char of the whitespace, move back forward 1 character
 							break;
 						}
 						else if(char == "\n")
 						{
-							index = i;
 							break;
 						}
 						else if (!isNaN(Number(char)) && char != " ") // isNaN = is not a number
@@ -585,7 +572,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 						{
 							hasFountFirstChar = true;
 						}
-						i--;
+						index--;
 					}
 					// save the start index
 					start_index = index;
@@ -596,30 +583,26 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				// handling for extracting symbol name given word appear 'after' the symbol
 				else
 				{
-					sub = str.substring(closest_index);
-					index = -1; // start with invalid index
-					let i = 0; // point to the first character
+					index = 0; // point to the first character
 					// Loop through the string forward
-					while (i < sub.length) 
+					while (index < sub.length) 
 					{
-						let char = sub.charAt(i); // Get the character at the current index
+						let char = sub.charAt(index); // Get the character at the current index
 						if (char == " " && hasFountFirstChar)  
 						{ 	// Check if the character is a white space
 
 							// there are cases where ppl put more than 1 whitespaces
 							while(char == " ")
 							{
-								i++;
-								char = sub.charAt(i);
+								index++;
+								char = sub.charAt(index);
 							}
 							// not needed, above loop made sure the current char is not whitespace
 							// i++; // current char is whitespace, move to the character
-							index = i; // Update the index
 							break;
 						}
 						else if(char == "\n")
 						{
-							index = i;
 							break;
 						}
 						else if (!isNaN(Number(char)) && char != " ") // isNaN = is not a number
@@ -630,7 +613,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 						{
 							hasFountFirstChar = true;
 						}
-						i++;
+						index++;
 					}
 					// save the start index
 					start_index = index;
@@ -673,7 +656,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				***********************************************************************/
 				// match until newline, or start of document
 				index = match.index;
-				let char = text.charAt(index);
+				char = text.charAt(index);
 				while(index != 0 && char != "\n")
 				{
 					index--;
@@ -737,11 +720,11 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				/**********************************************************************
 				Given the pattern, get the original document position
 				***********************************************************************/
-				let original_doc_text = document.getText();
-				let original_doc_start = original_doc_text.indexOf(to_replace);
-				let original_doc_end = original_doc_start + to_replace.length;
-				let start = document.positionAt(original_doc_start);
-				let end = document.positionAt(original_doc_end);
+				original_doc_text = document.getText();
+				original_doc_start = original_doc_text.indexOf(to_replace);
+				original_doc_end = original_doc_start + to_replace.length;
+				start = document.positionAt(original_doc_start);
+				end = document.positionAt(original_doc_end);
 				range = new vscode.Range(start, end);
 
 
