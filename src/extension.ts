@@ -295,12 +295,27 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 		else
 			keyword_to_search_for_symbol = value.after;
 
-		if (operation == 'remove')
-		{
-			while (match = _regex_whole.exec(text)) {
-				start_index = 0;
-				end_index = 0;
+		while(match = _regex_whole.exec(text)) {
+			start_index = 0;
+			end_index = 0;
+			symbol_name = '';
+			range = null;
+			// for checking whether the current index has found the 1st character or not
+			let hasFountFirstChar = false;
+			let str = match.toString();
+			let sub = '';
+			let index = 0;
+			let closest_index = 0;
+			let char = '';
 
+			let original_doc_text = '';
+			let original_doc_start = 0;
+			let original_doc_end = 0;
+			let start = null; // rename to smethg better, this is for start = document.positionAt(original_doc_start)
+			let end = null;
+
+			if (operation == 'remove')
+			{
 				/**********************************************************************
 				 to get whole pattern start & end index
 				***********************************************************************/
@@ -314,11 +329,9 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				text = text.replace(to_replace, '');
 				_regex_whole.lastIndex = 0;
 			}
-		}
-		else if( operation == 'depth')
-		{
-			while(match = _regex_whole.exec(text)) {
-				
+			
+			else if( operation == 'depth')
+			{
 				/**********************************************************************
 				 to extract the function name
 				***********************************************************************/
@@ -326,17 +339,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				// however, this algorithm applies got struct, enum those as well
 				// thus, tho you can do symbol_name = match[1]
 				// is better do manually, so that it applies to all cases
-				
-				
-				start_index = 0;
-				end_index = 0;
-				symbol_name = '';
-				// for checking whether the current index has found the 1st character or not
-				let hasFountFirstChar = false;
-				let str = match.toString();
-				let sub = '';
-				let index = 0;
-				let closest_index = 0;
+
 				for(let keyword of keyword_to_search_for_symbol)
 				{
 					// save the 1st index first, else, later math.min, it will always 0
@@ -404,7 +407,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				***********************************************************************/
 
 				index = match.index;
-				let char = text.charAt(index);
+				char = text.charAt(index);
 
 				// match.index == 0 refers that this is the beginning of the document,
 				// you can go backwards anymore, this is the 1st index of document
@@ -483,11 +486,11 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				// to make way for next regex to detect pattern
 				// to not make the regex detect duplicate pattern
 
-				let original_doc_text = document.getText();
-				let original_doc_start = original_doc_text.indexOf(to_replace);
-				let original_doc_end = original_doc_start + to_replace.length;
-				let start = document.positionAt(original_doc_start);
-				let end = document.positionAt(original_doc_end);
+				original_doc_text = document.getText();
+				original_doc_start = original_doc_text.indexOf(to_replace);
+				original_doc_end = original_doc_start + to_replace.length;
+				start = document.positionAt(original_doc_start);
+				end = document.positionAt(original_doc_end);
 				range = new vscode.Range(start, end);
 
 				/**********************************************************************
@@ -523,21 +526,12 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					vscode.TreeItemCollapsibleState.None, 
 					range));
 			}
-		}
-		else // for those that dont need '{}' depth handling
-		{
-			while (match = _regex_whole.exec(text)) {
+
+			else
+			{
 				/**********************************************************************
 				to extract symbol name
 				***********************************************************************/
-				start_index = 0;
-				end_index = 0;
-				// for checking whether the current index has found the 1st character or not
-				let hasFountFirstChar = false;
-				let str = match.toString();
-				let sub = null;
-				let index = null;
-				let closest_index = 0;
 
 				for(let keyword of keyword_to_search_for_symbol)
 				{
@@ -762,8 +756,9 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					vscode.TreeItemCollapsibleState.None, 
 					range));
 			}
-			
 		}
+
+			
 
 		/**********************************************************************
 		finally, push to array
