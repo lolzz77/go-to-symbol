@@ -193,11 +193,16 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 	readonly onDidChangeTreeData: vscode.Event<SymbolTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
 	// Implement the getChildren method
+	// the `element` will only be triggered when you expand the collapsed tree
 	getChildren(element?: SymbolTreeItem): vscode.ProviderResult<SymbolTreeItem[]> {
+		// element will be undefined for tree that doesn't collapse, that is, vscode.TreeItemCollapsibleState.None
 		if(element == undefined)
 		{
+			// which means, no children, thus, just return the object's data
 			return this.data;
 		}
+		// else, return the children
+		return element.children;
 	}
 
 	// Implement the getTreeItem method
