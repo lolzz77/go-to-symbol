@@ -103,3 +103,24 @@ export function getCurrentActiveEditorLanguage(): string {
 
 	return language;
 }
+
+
+// get the regex JSON data
+// the one with cpp.json, typescript.json etc
+export function getRegexData():any {
+	// get language, path, and data
+	let language = getCurrentActiveEditorLanguage();
+	let JSONPath = getJSONPath(language);
+	JSONPath = getJSONPath(language);
+	// check & create JSON file if needed
+	createAndWriteFile(JSONPath, language);
+	let data = getJSONData(JSONPath);
+	// if no regex, put null and return
+	if(!data)
+		return null;
+	// have to put 'any', else this variable will have type 'unknown'
+	// then later loop will have error
+	// if dont want to put 'any', later in loop can put 'as any'
+	let entries:any = Object.entries(data);
+	return entries;
+}

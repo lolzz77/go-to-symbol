@@ -29,7 +29,6 @@ export function activate(context: vscode.ExtensionContext) {
 	// and the activate function that you activate thru clicking the command in command pallete
 
 
-	let entries:any = getData();
 	let editor = vscode.window.activeTextEditor;
 	let symbolTreeItem;
 	if(editor)
@@ -232,7 +231,7 @@ class SymbolTreeItem extends vscode.TreeItem {
 		public readonly label: string,
 		// whether they collapse or not, hold `CTRL`, hover over TreeItemCollapsibleState to see more
 		public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-		public readonly range?: vscode.Range,
+		public readonly range?: vscode.Range|null,
 		children?: SymbolTreeItem[],
 		// public readonly id?: string,
 		// public readonly command?: vscode.Command,
@@ -243,50 +242,35 @@ class SymbolTreeItem extends vscode.TreeItem {
 	}
 }
 
-// get JSON data
-function getData():any {
-	// get language, path, and data
-	let language = func.getCurrentActiveEditorLanguage();
-	let JSONPath = func.getJSONPath(language);
-	JSONPath = func.getJSONPath(language);
-	// check & create JSON file if needed
-	func.createAndWriteFile(JSONPath, language);
-	let data = func.getJSONData(JSONPath);
-	// if no regex, put null and return
-	if(!data)
-		return null;
-	// have to put 'any', else this variable will have type 'unknown'
-	// then later loop will have error
-	// if dont want to put 'any', later in loop can put 'as any'
-	let entries:any = Object.entries(data);
-	return entries;
-}
 
+// the main function to get the symbols
 function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
-	var entries = getData();
+	// this is the regex JSON data
+	var entries = func.getRegexData();
+	// the parent tree. This will be 'function',
+	// then inside 'function', has a lot of matched function patterns
 	var treeArr:SymbolTreeItem[] = [];
+	// the children. This will be the matched function patterns
+	// for the parent tree
 	var childTreeArr:SymbolTreeItem[] = [];
+
 	if(!entries)
 		return [new SymbolTreeItem('regex is null', vscode.TreeItemCollapsibleState.None)];
 
+	// button to reset decoration
 	treeArr.push(new SymbolTreeItem('reset', vscode.TreeItemCollapsibleState.None));
 
 	const document = editor.document;
 	var text = document.getText();
-	var to_replace = '';
-
 	for (const [key, value] of entries) {
+		childTreeArr = [];
+
 		let symbolType = key;
 		let operation = value.operation;
 
-
-
-		let start_index = null;
-		let end_index = null;
-		to_replace = '';
-
-
-
+		let start_index = 0;
+		let end_index = 0;
+		let to_replace = '';
 
 		let regex_whole = value.whole[0];
 		let flag_whole = value.whole[1];
@@ -294,7 +278,16 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 		let keyword_to_search_for_symbol = null;
 		let function_opening = value.opening[0];
 		let function_closing = value.opening[1];
+
+		let symbol_name = '';
+		let range = null;
+		let match = null;
+		let _regex_whole = new RegExp(regex_whole, flag_whole);
 		
+		// fail safe check, if no regex, skip
+		if(regex_whole == '')
+			continue;
+
 		// some need to search the symbol BEFORE the char
 		// some need to search the symbol AFTER the char
 		if(keys.includes("before"))
@@ -302,31 +295,22 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 		else
 			keyword_to_search_for_symbol = value.after;
 
-		let match = null;
-		// a dynamic regex
-		let _regex_whole = new RegExp(regex_whole, flag_whole);
-		
-		if(regex_whole == '')
-			continue;
-
-
-		let symbol_name = null;
-		var range = null;
-		childTreeArr = [];
-
-
-		// if it is comment regex
-		// the intention is just to remove comments
 		if (operation == 'remove')
 		{
 			while (match = _regex_whole.exec(text)) {
 				start_index = 0;
 				end_index = 0;
 
+				/**********************************************************************
+				 to get whole pattern start & end index
+				***********************************************************************/
 				start_index = match.index;
 				end_index = match.index + match[0].length;
 				to_replace = text.substring(start_index, end_index)
-
+				
+				/**********************************************************************
+				 to remove the pattern from the buffered text
+				***********************************************************************/
 				text = text.replace(to_replace, '');
 				_regex_whole.lastIndex = 0;
 			}
@@ -346,13 +330,12 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				
 				start_index = 0;
 				end_index = 0;
+				symbol_name = '';
 				// for checking whether the current index has found the 1st character or not
 				let hasFountFirstChar = false;
 				let str = match.toString();
-				let sub = null;
-				symbol_name = null;
-				let index = null;
-				let i = null; // for loop
+				let sub = '';
+				let index = 0;
 				let closest_index = 0;
 				for(let keyword of keyword_to_search_for_symbol)
 				{
@@ -373,15 +356,13 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				else
 					sub = str.substring(closest_index);
 
-				index = -1; // start with invalid index
-				i = sub.length - 1; // point to the last character
+				index = sub.length - 1; // point to the last character
 				// Loop through the string backwards
-				while (i >= 0) 
+				while (index >= 0) 
 				{
-					let char = sub.charAt(i); // Get the character at the current index
+					let char = sub.charAt(index); // Get the character at the current index
 					if (char == " " && hasFountFirstChar) 
 					{ 	// Check if the character is a white space
-						index = i; // Update the index
 						break;
 					}
 					/*
@@ -397,7 +378,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					{
 						hasFountFirstChar = true;
 					}
-					i--;
+					index--;
 				}
 				// + 1, because the current index is pointing to white spaces
 				// get the substring, starting from the given start index
@@ -407,8 +388,6 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				// remove '\n' characters
 				symbol_name = symbol_name.replace('\n', '');
 				
-
-
 
 
 				/**********************************************************************
@@ -478,8 +457,6 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					index++;
 					char = text.charAt(index);
 				}
-
-
 				end_index = index;
 				to_replace = text.substring(start_index, end_index)
 
@@ -540,6 +517,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				{
 					symbol_name = 'anonymous'
 				}
+
 				childTreeArr.push(new SymbolTreeItem(
 					symbol_name, 
 					vscode.TreeItemCollapsibleState.None, 
@@ -786,18 +764,14 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 			}
 			
 		}
-		if(symbol_name == null)
-			symbol_name = 'null'
-		if(range == null)
-			range = new vscode.Range(document.positionAt(0), document.positionAt(0));
 
+		/**********************************************************************
+		finally, push to array
+		***********************************************************************/
 		// dont print out 'comment' tree list
 		// the intention for 'comment' regex is to remove comments only
 		if (operation != 'remove')
 		{
-			/**********************************************************************
-			finally, push to array
-			***********************************************************************/
 			// push to array, this will show the list of symbols later
 			treeArr.push(new SymbolTreeItem(
 				symbolType, 
