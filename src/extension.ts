@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as func from './function';
 
 /*
  problem
@@ -11,22 +12,67 @@ import * as fs from 'fs';
  then, your algorithm will keep highlighting the 1st encounter of '#define abc', which is the 1st one
 */
 
+
+// interface symbolTreeInterface {
+// 	// each active editor has the file path name, this will store the file path
+// 	[filePath: string]: string;
+// 	// this is the tree list on the sidebar
+// 	[symbolTree: vscode.TreeView<SymbolTreeItem>]: vscode.TreeView<SymbolTreeItem>;
+// }
+
 export function activate(context: vscode.ExtensionContext) {
+	// the following code will run, once you press the sidebar logo
+	// it will then construct the sidebar
+	// once constructed, it will not construct anymore
+	// meaning the following code will not run anymore
+	// unless you trigger onDidChange... etc function
+	// and the activate function that you activate thru clicking the command in command pallete
+
+
 	// Create a tree data provider for the view
+	// this variable, i believe is to create the sidebar, but not the list inside of it
 	const treeDataProvider = new MyTreeDataProvider();
-	var treeView = null;
+	// this variable, will be the list that will be shown on the sidebar.
+	var treeView:vscode.TreeView<SymbolTreeItem>;
 	// for keeping track of decorations
 	const decorationTypes: vscode.TextEditorDecorationType[] = [];
-	
+	// an array that can be used to dispose item inside when needed
+	// to dispose it, call disposables.forEach(d => d.dispose());
+	let disposables: vscode.Disposable[] = [];
+	// my extension array, to be placed into disposables array so dispose them
+	// let goToSymbolArr: symbolTreeInterface[] = [];
+
 	let disposable1 = vscode.commands.registerCommand('go-to-symbol.activate', () => {
-		// create the sidebar
-		treeView = vscode.window.createTreeView('my-view', {
+		let editor = vscode.window.activeTextEditor;
+		if(!editor)
+			return;
+
+		// let currentFilePath = editor.document.uri.toString();
+		// // because my array uses interface, thus, have to use `find` method
+		// // if found, will return the whole element of that interface
+		// // else, will return undefined
+		// if(goToSymbolArr.find(e => e.filePath === currentFilePath))
+		// {
+		// 	goToSymbolArr[0].symbolTree.reveal()
+		// }
+
+		// create the list
+		treeView = vscode.window.createTreeView<SymbolTreeItem>('my-view', {
 			treeDataProvider : treeDataProvider,
 			showCollapseAll: true,
 			canSelectMany: true,
 			manageCheckboxStateManually: false,
 		});
-		
+
+		// let goToSymbolData:symbolTreeInterface = {
+		// 	filePath : currentFilePath,
+		// 	symbolTree : ,
+
+
+		// }
+
+
+
 		// Listen for selection
 		treeView.onDidChangeSelection(event => {
 			// get the selected object
@@ -56,7 +102,7 @@ export function activate(context: vscode.ExtensionContext) {
 			
 			if(selectedLabel == 'reset')
 			{
-				resetDecoration(decorationTypes);
+				func.resetDecoration(decorationTypes);
 			}
 			else
 			{
@@ -80,28 +126,42 @@ export function activate(context: vscode.ExtensionContext) {
 
 
 	let disposable2 = vscode.commands.registerCommand('go-to-symbol.showPath', () => {
-		showFilePath();
+		func.showFilePath();
 	});
 
-	
 	
 	// detect if you selected other editors (eg: different files)
 	vscode.window.onDidChangeActiveTextEditor(editor => {
 		// cleanup
-		resetDecoration(decorationTypes);
+		// treeView.dispose();
+		func.resetDecoration(decorationTypes);
 		
 		if (editor) {
 			// if you changed, then execute the command again
+			// treeDataProvider.refresh(editor);
 			vscode.commands.executeCommand('go-to-symbol.activate');
 		}
 	});
 	
+	// register command into command pallete
 	context.subscriptions.push(disposable1);
 	context.subscriptions.push(disposable2);
 }
-  
+
+// this function will be triggered when you disable your extension
+export function deactivate() {
+
+}
+
 // Define a class for the tree data provider
 class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
+
+	private data: SymbolTreeItem|undefined;
+	
+	// A private event emitter that fires the onDidChangeTreeData event
+	private _onDidChangeTreeData: vscode.EventEmitter<SymbolTreeItem | undefined | null | void> = new vscode.EventEmitter<SymbolTreeItem | undefined | null | void>();
+	readonly onDidChangeTreeData: vscode.Event<SymbolTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
+
 	// Implement the getChildren method
 	getChildren(element?: SymbolTreeItem): Thenable<SymbolTreeItem[]> {
 		
@@ -119,15 +179,15 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 
 		// display the JSON file path that this extension will be searching for
 		// display the current active editor
-		let language = getCurrentActiveEditorLanguage();
+		let language = func.getCurrentActiveEditorLanguage();
 		console.log('Language: ' + language);
 		// vscode.window.showInformationMessage('Language: ' + language);
-		let JSONPath = getJSONPath(language);
+		let JSONPath = func.getJSONPath(language);
 		console.log('JSON Path: ' + JSONPath);
 		// vscode.window.showInformationMessage('JSON Path: ' + JSONPath);
 
 	
-		language = getCurrentActiveEditorLanguage();
+		language = func.getCurrentActiveEditorLanguage();
 
 
 		/*********************************************************** 
@@ -136,9 +196,9 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 		// change `getJSONPath(language);` to `getJSONPath(null);`
 		// so it will look for default.json
 
-		JSONPath = getJSONPath(language);
-		createAndWriteFile(JSONPath, language);
-		data = getJSONData(JSONPath);
+		JSONPath = func.getJSONPath(language);
+		func.createAndWriteFile(JSONPath, language);
+		data = func.getJSONData(JSONPath);
 
 		// if no regex, put null and return
 		if(!data)
@@ -739,6 +799,15 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 		// Return the element as a tree item
 		return element;
 	}
+
+	// A refresh method that updates the tree view data and fires the event
+	refresh(data?: SymbolTreeItem): void {
+		// Update the data source for the tree view
+		this.data = data;
+		// Fire the event to notify VS Code that the tree view has changed
+		this._onDidChangeTreeData.fire();
+	}
+
 }
 
 // this class holds the detail of list of symbols that regex matches
@@ -756,107 +825,4 @@ class SymbolTreeItem extends vscode.TreeItem {
 	) {
 		super(label, collapsibleState);
 	}
-}
-
-function resetDecoration(decorationTypes: vscode.TextEditorDecorationType[])
-{
-	// Reset all decoration types to their default state
-	for (const type of decorationTypes) {
-		type.dispose();
-	}
-	// delete all the elements
-	decorationTypes = [];
-}
-
-// Get the JSON File
-function getJSONData(JSONPath: string): any {
-	let fileContents;
-	let data:any;
-	
-	fileContents = fs.readFileSync(JSONPath, "utf8");
-	if(fileContents == null || fileContents == undefined || fileContents == '')
-		return null;
-
-	data = JSON.parse(fileContents);
-	return data;
-}
-
-// To get the JSON file path that the extension will be looking
-// This JSON describe what keyword to recolor
-function getJSONPath(language: string|null): string {
-	// if language passed in is null, then set it to 'default.json'
-	if(language == null)
-		language = 'default'
-	return vscode.env.appRoot + '/go-to-symbol/' + language + '.json';
-}
-
-// to display file path
-function showFilePath(): any {
-	let message = vscode.env.appRoot + '/go-to-symbol/';
-	vscode.window.showInformationMessage('Path: ' + message);
-}
-
-// to create file, then write the JSON content into it
-function createAndWriteFile(filePath:string, language:string): void {
-	let readBuffer = '';
-	let readBufferJSON = '';
-	let writeBuffer = '';
-	let segments;
-	let parentDir:any;
-	// the current repo json file
-	let repo_json_file = __dirname + "/../jsonFile/" + language + ".json";
-
-	// get the parent dir of the file path
-	segments = filePath.split('/'); // split the path by slashes
-	segments.pop(); // remove the last segment (file name)
-	parentDir = segments.join('/'); // join the remaining segments with slashes
-	
-	// only read if the repo JSON file exists
-	if (fs.existsSync(repo_json_file)) {
-		readBuffer = fs.readFileSync(repo_json_file, 'utf-8');
-		readBufferJSON = JSON.parse(readBuffer);
-		writeBuffer = JSON.stringify(readBufferJSON, null, 4); // 4 spaces indentation
-	}
-
-	// check if the JSON file that im going to write exists
-	if (fs.existsSync(filePath)) {
-		return;
-	}
-
-	// create parent folder if not exists
-	if (!fs.existsSync(parentDir))
-	{
-		fs.mkdir(parentDir, { recursive : true }, (err) => {
-			if (err) {
-				console.error(err);
-			}
-			else
-			{
-				console.log(parentDir + " created");
-			}
-		})
-	}
-
-	// create file & write
-	fs.writeFileSync(filePath, writeBuffer, 'utf8');
-}
-
-// To get the current active editor language
-function getCurrentActiveEditorLanguage(): string {
-	let language;
-	let editor = vscode.window.activeTextEditor;
-	
-	if (editor) {
-		language = editor.document.languageId;
-	}
-	else
-	{
-		language = 'No language detected';
-	}
-
-	// they are more or less the same
-	if(language == 'c')
-		language = 'cpp'
-
-	return language;
 }

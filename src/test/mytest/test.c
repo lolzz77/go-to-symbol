@@ -24,7 +24,7 @@ test haha
 // #define LOG_VR_DELETE_FILE                  "\tmlog(\"ME\", TRACE0, \"%s: " VR_DELETE_FILE " next\", __FUNCTION__);\n"
 
 // #define VR_DELETE_FOLDER                    "vr_delete_folder"
-// #define LOG _VR_DELETE_FOLDER                    "\tCRITICAL_MLOG(\"ME\", \"%s: vr_delete_folder next\", __FUNCTION__);\n"
+// #define LOG_VR_DELETE_FOLDER                    "\tCRITICAL_MLOG(\"ME\", \"%s: vr_delete_folder next\", __FUNCTION__);\n"
 // #define LOG_VR_DELETE_FOLDER                "\tmlog(\"ME\", TRACE0, \"%s: " VR_DELETE_FOLDER " next\", __FUNCTION__);\n"
 
 // #define VR_DELETE_CP_RANGE_TYPES                      "vr_delete_cp_range_types"
@@ -175,7 +175,7 @@ test haha
 #ifdef MEME
 #define NIAMA 5
 #else
-#define NIAMA 1
+#define NIAMA
 #endif
 
 const char TEST[]               = "00";

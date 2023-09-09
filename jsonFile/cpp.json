@@ -57,7 +57,7 @@
         "before" : [""]
     },
     "global" : {
-        "comment1" : "match 1 newline, then match anything except ';' & newline, at least one. Then match ';'",
+        "comment1" : "match 1 newline. Then match return type. Then match variable name. Then match anything except ';' . Finally, match ';'",
         "whole" : ["\\n([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*[^;]+;", "g"],
         "operation" : "",
         "opening" : ["", ""],

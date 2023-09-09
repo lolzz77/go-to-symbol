@@ -18,6 +18,10 @@
         "title": "Go to Symbols: activate"
       },
       {
+        "command": "go-to-symbol.deactivate",
+        "title": "Go to Symbols: DE-activate"
+      },
+      {
         "command": "go-to-symbol.showPath",
         "title": "Go to Symbols: show path"
       }
