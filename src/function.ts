@@ -111,7 +111,6 @@ export function getRegexData():any {
 	// get language, path, and data
 	let language = getCurrentActiveEditorLanguage();
 	let JSONPath = getJSONPath(language);
-	JSONPath = getJSONPath(language);
 	// check & create JSON file if needed
 	createAndWriteFile(JSONPath, language);
 	let data = getJSONData(JSONPath);

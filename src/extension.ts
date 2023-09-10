@@ -96,19 +96,22 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Listen for selection
 	treeView.onDidChangeSelection(event => {
+		let settingPath = func.getJSONPath('setting');
+		func.createAndWriteFile(settingPath, 'setting');
+		let settingObj = func.getJSONData(settingPath);
+
 		// get the selected object
 		const selectedItems = event.selection as SymbolTreeItem[];
 		// get the collapsiblestate, i dont want to trigger this if parent is selected
 		const selectedItemCollapsibleState = selectedItems[0].collapsibleState;
 		const selectedLabel = selectedItems[0].label;
-		let editor = vscode.window.activeTextEditor;
 		const backgroundDecorationType = vscode.window.createTextEditorDecorationType({
 			// the last element is the opacity
-			backgroundColor: 'rgba(154, 154, 156, 0.2)', // grey
+			backgroundColor: settingObj.backgroundColor, // grey
 			// this opacity appleis to the text instead of the background color
 			// opacity: '0',
 			// this can be seen on minimap, the small block colors
-			overviewRulerColor: '#02fa0f', // green
+			overviewRulerColor: settingObj.overviewRulerColor, // green
 			// to show the block color on the right
 			overviewRulerLane: vscode.OverviewRulerLane.Full,
 			// minimapColor: 'red' // this color will be used in the minimap
