@@ -116,7 +116,10 @@ export function activate(context: vscode.ExtensionContext) {
 			overviewRulerLane: vscode.OverviewRulerLane.Full,
 			// minimapColor: 'red' // this color will be used in the minimap
 			});
-			
+		
+		// you have to update the editor
+		// else, it will keep using back the previous editor
+		let editor = vscode.window.activeTextEditor;
 		if(	editor == null ||
 			selectedItems.length == 0)
 		{
