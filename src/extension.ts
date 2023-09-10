@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as func from './function';
+import { arrayBuffer } from 'stream/consumers';
 
 /*
  problem
@@ -13,19 +14,22 @@ import * as func from './function';
 */
 
 
+// global variable
+// the size to hold number of active editors
+var ARR_SIZE = 2;
+
 interface symbolTreeInterface {
 	/*
-	initially, i want to do 
-		[filePath: string]: vscode.Uri;
-		[symbolTree: string]: vscode.TreeView<SymbolTreeItem>;
-	
-	But i get error for duplicates definition
+	note:
+	for interface,
+	u have to make sure the name in here,
+	tallied wit the name you gonna pass in
 	*/
 
-	// this interface will store the following
-	// [file path, [an array of symbols]]
-	[filePath: string]: vscode.Uri | SymbolTreeItem[];
-	
+	// URI - the file path of the active editor
+	filePath: string;
+	// the list of symbols for the file
+	symbolTreeItem: SymbolTreeItem[];
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -41,7 +45,7 @@ export function activate(context: vscode.ExtensionContext) {
 		return;
 
 	// get all the symbols of the current active editor
-	var symbolTreeItem:SymbolTreeItem[] = getSymbols(editor);
+	let symbolTreeItem:SymbolTreeItem[] = getSymbols(editor);
 	// Create a tree data provider for the view
 	// this variable, i believe is to create the sidebar, but not the list inside of it
 	const treeDataProvider:TreeDataProvider = new TreeDataProvider(symbolTreeItem);
@@ -51,12 +55,22 @@ export function activate(context: vscode.ExtensionContext) {
 	var decorationTypes: vscode.TextEditorDecorationType[] = [];
 	// an array that can be used to dispose item inside when needed
 	// to dispose it, call disposables.forEach(d => d.dispose());
-	var disposables: vscode.Disposable[] = [];
+	var disposables:vscode.Disposable[] = [];
 	// my extension array, to be placed into disposables array so dispose them
-	let goToSymbolArr: symbolTreeInterface[] = [];
+	// writing  goToSymbolArr:symbolTreeInterface[] = new Array(ARR_SIZE);
+	// will cause the goToSymbolArr.findIndex() crashes
+	// because if you do for(let x of goToSymbolArr))
+	// the `x` is undefined
+	// root cause, when you do goToSymbolArr.push()
+	// it pushes into the last element of array
+	// thus, when you do looping to search the array
+	// the 1st index is null/undefined
+	// solution: use .fill({filePath: "", symbolTreeItem: []})
+	let goToSymbolArr:symbolTreeInterface[] = new Array(ARR_SIZE).fill({filePath: "", symbolTreeItem: []});
 	
-	const uri:vscode.Uri = editor.document.uri;
-	goToSymbolArr.push({uri, symbolTreeItem});
+	const filePath:string = editor.document.uri.path;
+	// you have to use `{}` when pushing into this array
+	goToSymbolArr.push({filePath, symbolTreeItem});
 
 
 
@@ -66,7 +80,7 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.window.registerTreeDataProvider(
 		'my-view', // this one has to follow "view" section in package.json
 		treeDataProvider
-	  );
+	);
 	
 	// by putting this code, i dk, put or not put the tree will be printed still
 	// the only thing is, it assign to variable, and you use that variable for listening to clicked event
@@ -152,14 +166,47 @@ export function activate(context: vscode.ExtensionContext) {
 	// detect if you selected other editors (eg: different files)
 	vscode.window.onDidChangeActiveTextEditor(editor => {
 		// cleanup
-		// treeView.dispose();
 		func.resetDecoration(decorationTypes);
+
+		// if you debug
+		// it will come here twice (i dk why)
+		// the 1st time this editor will be null
+		// the 2nd time will have value
+		if(!editor)
+			return;
+
+		const filePath:string = editor.document.uri.path;
+		// check if the current editor exists in the array
+		// return value: index value if found, -1 if not fund
+		let existsIndex = goToSymbolArr.findIndex(element => element.filePath === filePath);
+
 		
-		if (editor) {
-			// treeDataProvider.refresh();
-			// if you changed, then execute the command again
-			// vscode.commands.executeCommand('go-to-symbol.activate');
+		// if exists, then we reuse the data
+		if(existsIndex >= 0)
+		{
+			// this will refresh the tree list
+			treeDataProvider.refresh(goToSymbolArr[existsIndex].symbolTreeItem);
+			return;
 		}
+
+
+		// else, create it
+		let symbolTreeItem:SymbolTreeItem[] = getSymbols(editor);
+		// add to array
+		// actually, since you use array.fill() above
+		// this if is 100% will run,
+		// which means, this checking serves no purpose
+		// just do array.shift() can ady
+		// but just leave it here
+		if(goToSymbolArr.length >= ARR_SIZE)
+		{
+			// this will remove the 1st element of array
+			goToSymbolArr.shift();
+		}
+		// this pushes will push to the last element of array
+		goToSymbolArr.push({filePath, symbolTreeItem});
+		treeDataProvider.refresh(symbolTreeItem);
+
 	});
 	
 	// register command into command pallete
@@ -169,6 +216,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 // this function will be triggered when you disable your extension
 export function deactivate() {
+	// treeView.dispose();
 
 }
 
