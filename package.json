@@ -14,8 +14,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "go-to-symbol.refresh",
-        "title": "Go to Symbols: refresh"
+        "command": "go-to-symbol.reset",
+        "title": "Go to Symbols: reset"
       },
       {
         "command": "go-to-symbol.showPath",

@@ -157,11 +157,15 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	let disposable1 = vscode.commands.registerCommand('go-to-symbol.refresh', () => {
+	let disposable1 = vscode.commands.registerCommand('go-to-symbol.reset', () => {
 		// to reset the array
 		func.resetDecoration(decorationTypes);
 		// i think array = []; is not necessary
 		goToSymbolArr.fill({filePath: "", symbolTreeItem: []});
+
+		// delete the JSON files as well
+		let path = vscode.env.appRoot + '/go-to-symbol/';
+		func.clearDirectory(path);
 	});
 
 
