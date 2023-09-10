@@ -13,12 +13,20 @@ import * as func from './function';
 */
 
 
-// interface symbolTreeInterface {
-// 	// each active editor has the file path name, this will store the file path
-// 	[filePath: string]: string;
-// 	// this is the tree list on the sidebar
-// 	[symbolTree: vscode.TreeView<SymbolTreeItem>]: vscode.TreeView<SymbolTreeItem>;
-// }
+interface symbolTreeInterface {
+	/*
+	initially, i want to do 
+		[filePath: string]: vscode.Uri;
+		[symbolTree: string]: vscode.TreeView<SymbolTreeItem>;
+	
+	But i get error for duplicates definition
+	*/
+
+	// this interface will store the following
+	// [file path, [an array of symbols]]
+	[filePath: string]: vscode.Uri | SymbolTreeItem[];
+	
+}
 
 export function activate(context: vscode.ExtensionContext) {
 	// the following code will run, once you press the sidebar logo
@@ -28,24 +36,27 @@ export function activate(context: vscode.ExtensionContext) {
 	// unless you trigger onDidChange... etc function
 	// and the activate function that you activate thru clicking the command in command pallete
 
-
 	let editor = vscode.window.activeTextEditor;
-	let symbolTreeItem;
-	if(editor)
-		symbolTreeItem = getSymbols(editor);
+	if(!editor)
+		return;
 
+	// get all the symbols of the current active editor
+	var symbolTreeItem:SymbolTreeItem[] = getSymbols(editor);
 	// Create a tree data provider for the view
 	// this variable, i believe is to create the sidebar, but not the list inside of it
-	const treeDataProvider = new MyTreeDataProvider(symbolTreeItem);
+	const treeDataProvider:TreeDataProvider = new TreeDataProvider(symbolTreeItem);
 	// this variable, will be the list that will be shown on the sidebar.
 	var treeView:vscode.TreeView<SymbolTreeItem>;
 	// for keeping track of decorations
 	var decorationTypes: vscode.TextEditorDecorationType[] = [];
 	// an array that can be used to dispose item inside when needed
 	// to dispose it, call disposables.forEach(d => d.dispose());
-	let disposables: vscode.Disposable[] = [];
+	var disposables: vscode.Disposable[] = [];
 	// my extension array, to be placed into disposables array so dispose them
-	// let goToSymbolArr: symbolTreeInterface[] = [];
+	let goToSymbolArr: symbolTreeInterface[] = [];
+	
+	const uri:vscode.Uri = editor.document.uri;
+	goToSymbolArr.push({uri, symbolTreeItem});
 
 
 
@@ -138,7 +149,6 @@ export function activate(context: vscode.ExtensionContext) {
 		func.showFilePath();
 	});
 
-	
 	// detect if you selected other editors (eg: different files)
 	vscode.window.onDidChangeActiveTextEditor(editor => {
 		// cleanup
@@ -146,7 +156,7 @@ export function activate(context: vscode.ExtensionContext) {
 		func.resetDecoration(decorationTypes);
 		
 		if (editor) {
-			treeDataProvider.refresh(editor);
+			// treeDataProvider.refresh();
 			// if you changed, then execute the command again
 			// vscode.commands.executeCommand('go-to-symbol.activate');
 		}
@@ -163,7 +173,7 @@ export function deactivate() {
 }
 
 // Define a class for the tree data provider
-class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
+class TreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 
 	// the data to hold the whole symbol trees
 	// eg:
@@ -202,13 +212,13 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 		return element;
 	}
 
-	// // A refresh method that updates the tree view data and fires the event
-	// refresh(data?: SymbolTreeItem[]): void {
-	// 	// Update the data source for the tree view
-	// 	this.data = data;
-	// 	// Fire the event to notify VS Code that the tree view has changed
-	// 	this._onDidChangeTreeData.fire();
-	// }
+	// A refresh method that updates the tree view data and fires the event
+	refresh(data?: SymbolTreeItem[]): void {
+		// Update the data source for the tree view
+		this.data = data;
+		// Fire the event to notify VS Code that the tree view has changed
+		this._onDidChangeTreeData.fire();
+	}
 
 }
 
