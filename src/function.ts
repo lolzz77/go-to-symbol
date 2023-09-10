@@ -1,15 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 
-export function resetDecoration(decorationTypes: vscode.TextEditorDecorationType[])
-{
-	// Reset all decoration types to their default state
-	for (const type of decorationTypes) {
-		type.dispose();
-	}
-	// delete all the elements
-	decorationTypes = [];
-}
+
 
 export function clearDirectory(path:string)
 {

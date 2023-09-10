@@ -18,6 +18,9 @@ import * as func from './function';
 var ARR_SIZE = 10;
 // i made this global so i can dispose it in deactivate function
 var treeView:vscode.TreeView<SymbolTreeItem>;
+// the parent tree. This will be 'function',
+// then inside 'function', has a lot of matched function patterns
+var treeArr:SymbolTreeItem[] = [];
 
 interface symbolTreeInterface {
 	/*
@@ -104,6 +107,52 @@ export function activate(context: vscode.ExtensionContext) {
 		// get the collapsiblestate, i dont want to trigger this if parent is selected
 		const selectedItemCollapsibleState = selectedItems[0].collapsibleState;
 		const selectedLabel = selectedItems[0].label;
+		const hasDecorated = selectedItems[0].hasDecorated;
+		// have to put as vscode.Range at behind else it will flag error
+		const range = selectedItems[0].range as vscode.Range;
+		const decoration = { range };
+
+		// you have to update the editor
+		// else, it will keep using back the previous editor
+		let editor = vscode.window.activeTextEditor;
+		if(	editor == null ||
+			selectedItems.length == 0)
+		{
+			return;
+		}
+
+		// if true, means, the user has clicked on an item that has been decorated
+		// thus, reset the decoration for this item
+		if(hasDecorated)
+		{
+			// for the moment, i dk how to reset the selected item decoartion yet
+			// for now, just return first
+
+			// need to jump to location
+			const newSelection = new vscode.Selection(range.start, range.start);
+			editor.selection = newSelection;
+			editor.revealRange(range);
+
+			// need to find a way to reset all these hasDecorated to false
+			// for(let parent of treeArr)
+			// {
+			// 	if(parent.children == undefined)
+			// 		continue;
+
+			// 	for(let child of parent.children)
+			// 		child.hasDecorated = false;
+			// }
+
+			return;
+		}
+
+		// means, this is parent tree, then, dont do any decoration, just exit
+		// expending/collapsing these parent will be handled by vscode
+		if (selectedItemCollapsibleState != vscode.TreeItemCollapsibleState.None)
+		{
+			return;
+		}
+
 		const backgroundDecorationType = vscode.window.createTextEditorDecorationType({
 			// the last element is the opacity
 			backgroundColor: settingObj.backgroundColor, // grey
@@ -115,41 +164,23 @@ export function activate(context: vscode.ExtensionContext) {
 			overviewRulerLane: vscode.OverviewRulerLane.Full,
 			// minimapColor: 'red' // this color will be used in the minimap
 			});
-		
-		// you have to update the editor
-		// else, it will keep using back the previous editor
-		let editor = vscode.window.activeTextEditor;
-		if(	editor == null ||
-			selectedItems.length == 0)
-		{
-			return;
-		}
-
-		// means, this is parent tree, then, dont do any decoration, just exit
-		// expending/collapsing these parent will be handled by vscode
-		if (selectedItemCollapsibleState != vscode.TreeItemCollapsibleState.None)
-		{
-			return;
-		}
-
 		// each decoratino made needs to be keep tracked, so tha tyou can dispose it later	
 		decorationTypes.push(backgroundDecorationType);
-		
+
 		if(selectedLabel == 'reset')
 		{
-			func.resetDecoration(decorationTypes);
+			resetDecoration(decorationTypes, treeArr);
 		}
 		else
 		{
+			
 			// decorate the selected items
-
-			// have to put as vscode.Range at behind else it will flag error
-			const range = selectedItems[0].range as vscode.Range;
-			const decoration = { range };
 			editor.setDecorations(backgroundDecorationType, [decoration]);
 
-			// move the cursor to the location
+			// modify the object value, inverse the value
+			event.selection[0].hasDecorated = !hasDecorated;
 
+			// move the cursor to the location
 			const newSelection = new vscode.Selection(range.start, range.start);
 			editor.selection = newSelection;
 			// Reveal the range in the editor
@@ -159,7 +190,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	let disposable1 = vscode.commands.registerCommand('go-to-symbol.reset', () => {
 		// to reset the array
-		func.resetDecoration(decorationTypes);
+		resetDecoration(decorationTypes, treeArr);
 		// i think array = []; is not necessary
 		goToSymbolArr.fill({filePath: "", symbolTreeItem: []});
 
@@ -176,7 +207,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// detect if you selected other editors (eg: different files)
 	vscode.window.onDidChangeActiveTextEditor(editor => {
 		// cleanup
-		func.resetDecoration(decorationTypes);
+		resetDecoration(decorationTypes, treeArr);
 
 		// if you debug
 		// it will come here twice (i dk why)
@@ -292,6 +323,9 @@ class SymbolTreeItem extends vscode.TreeItem {
 	// a tree can be expended further, revealing more trees
 	// these sub-trees are 'children'
 	children: SymbolTreeItem[]|undefined;
+	// use to keep track whether this item has been decorated
+	// dont wanna decorate it 2 times
+	hasDecorated: boolean|undefined;
 
 	constructor(
 		// this is the string that appear on the tree list
@@ -299,13 +333,15 @@ class SymbolTreeItem extends vscode.TreeItem {
 		// whether they collapse or not, hold `CTRL`, hover over TreeItemCollapsibleState to see more
 		public readonly collapsibleState: vscode.TreeItemCollapsibleState,
 		public readonly range?: vscode.Range|null,
-		children?: SymbolTreeItem[],
+		children?: SymbolTreeItem[]|undefined,
+		hasDecorated: boolean = false,
 		// public readonly id?: string,
 		// public readonly command?: vscode.Command,
 		// public readonly iconPath: string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon;
 	) {
 		super(label, collapsibleState);
 		this.children = children;
+		this.hasDecorated = hasDecorated;
 	}
 }
 
@@ -314,9 +350,6 @@ class SymbolTreeItem extends vscode.TreeItem {
 function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 	// this is the regex JSON data
 	var entries = func.getRegexData();
-	// the parent tree. This will be 'function',
-	// then inside 'function', has a lot of matched function patterns
-	var treeArr:SymbolTreeItem[] = [];
 	// the children. This will be the matched function patterns
 	// for the parent tree
 	var childTreeArr:SymbolTreeItem[] = [];
@@ -608,7 +641,9 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				childTreeArr.push(new SymbolTreeItem(
 					symbol_name, 
 					vscode.TreeItemCollapsibleState.None, 
-					range));
+					range,
+					undefined,
+					false));
 			}
 
 			else
@@ -814,7 +849,9 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				childTreeArr.push(new SymbolTreeItem(
 					symbol_name, 
 					vscode.TreeItemCollapsibleState.None, 
-					range));
+					range,
+					undefined,
+					false));
 			}
 		}
 
@@ -840,4 +877,23 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 
 	}
 	return treeArr;
+}
+
+function resetDecoration(decorationTypes: vscode.TextEditorDecorationType[], treeArr:SymbolTreeItem[])
+{
+	// Reset all decoration types to their default state
+	for (const type of decorationTypes) {
+		type.dispose();
+	}
+	// delete all the elements
+	decorationTypes = [];
+
+	for(let parent of treeArr)
+	{
+		if(parent.children == undefined)
+			continue;
+
+		for(let child of parent.children)
+			child.hasDecorated = false;
+	}
 }
