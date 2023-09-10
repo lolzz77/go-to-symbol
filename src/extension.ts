@@ -16,6 +16,8 @@ import { arrayBuffer } from 'stream/consumers';
 
 // global variable
 // the size to hold number of active editors
+// so that, everytime i switch file, it wont need to rerun the algorithm to extract the symbols
+// however, once array is maxed, then it will need to rerun the algorithm for the file that the array removed
 var ARR_SIZE = 10;
 // i made this global so i can dispose it in deactivate function
 var treeView:vscode.TreeView<SymbolTreeItem>;
