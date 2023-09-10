@@ -334,7 +334,17 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 			}
 			
 			/**********************************************************************
-			 to extract the function name
+			 * below is handling for operation that has 'depth' and no depth
+			 * some of them has similarity and thus i pull them out
+			 * eg: they both has this 'extract symbol name' operation
+			 * so i pull that out
+			 * then, the following handling will be different
+			 * thus will be separated by 'if operation == depth' and 'else'
+			 **********************************************************************/
+
+
+			/**********************************************************************
+			 to extract the symbol name
 			***********************************************************************/
 			// actually, the `match` is an array, match[1] holds the function name
 			// however, this algorithm applies got struct, enum those as well
@@ -741,7 +751,10 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 			}
 		}
 
-			
+		if(childTreeArr.length == 0)
+			childTreeArr.push(new SymbolTreeItem(
+				'null', 
+				vscode.TreeItemCollapsibleState.None));
 
 		/**********************************************************************
 		finally, push to array
@@ -753,7 +766,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 			// push to array, this will show the list of symbols later
 			treeArr.push(new SymbolTreeItem(
 				symbolType, 
-				vscode.TreeItemCollapsibleState.Collapsed, 
+				vscode.TreeItemCollapsibleState.Expanded, 
 				range,
 				childTreeArr));
 		}
