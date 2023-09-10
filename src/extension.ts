@@ -40,7 +40,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// this variable, will be the list that will be shown on the sidebar.
 	var treeView:vscode.TreeView<SymbolTreeItem>;
 	// for keeping track of decorations
-	const decorationTypes: vscode.TextEditorDecorationType[] = [];
+	var decorationTypes: vscode.TextEditorDecorationType[] = [];
 	// an array that can be used to dispose item inside when needed
 	// to dispose it, call disposables.forEach(d => d.dispose());
 	let disposables: vscode.Disposable[] = [];
@@ -56,8 +56,10 @@ export function activate(context: vscode.ExtensionContext) {
 		'my-view', // this one has to follow "view" section in package.json
 		treeDataProvider
 	  );
-
-	vscode.window.createTreeView<SymbolTreeItem>(
+	
+	// by putting this code, i dk, put or not put the tree will be printed still
+	// the only thing is, it assign to variable, and you use that variable for listening to clicked event
+	treeView = vscode.window.createTreeView<SymbolTreeItem>(
 		'my-view', 
 		{
 			treeDataProvider : treeDataProvider,
@@ -67,86 +69,68 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	);
 
+	// Listen for selection
+	treeView.onDidChangeSelection(event => {
+		// get the selected object
+		const selectedItems = event.selection as SymbolTreeItem[];
+		// get the collapsiblestate, i dont want to trigger this if parent is selected
+		const selectedItemCollapsibleState = selectedItems[0].collapsibleState;
+		const selectedLabel = selectedItems[0].label;
+		let editor = vscode.window.activeTextEditor;
+		const backgroundDecorationType = vscode.window.createTextEditorDecorationType({
+			// the last element is the opacity
+			backgroundColor: 'rgba(154, 154, 156, 0.2)', // grey
+			// this opacity appleis to the text instead of the background color
+			// opacity: '0',
+			// this can be seen on minimap, the small block colors
+			overviewRulerColor: '#02fa0f', // green
+			// to show the block color on the right
+			overviewRulerLane: vscode.OverviewRulerLane.Full,
+			// minimapColor: 'red' // this color will be used in the minimap
+			});
+			
+		if(	editor == null ||
+			selectedItems.length == 0)
+		{
+			return;
+		}
+
+		// means, this is parent tree, then, dont do any decoration, just exit
+		// expending/collapsing these parent will be handled by vscode
+		if (selectedItemCollapsibleState != vscode.TreeItemCollapsibleState.None)
+		{
+			return;
+		}
+
+		// each decoratino made needs to be keep tracked, so tha tyou can dispose it later	
+		decorationTypes.push(backgroundDecorationType);
+		
+		if(selectedLabel == 'reset')
+		{
+			func.resetDecoration(decorationTypes);
+		}
+		else
+		{
+			// decorate the selected items
+
+			// have to put as vscode.Range at behind else it will flag error
+			const range = selectedItems[0].range as vscode.Range;
+			const decoration = { range };
+			editor.setDecorations(backgroundDecorationType, [decoration]);
+
+			// move the cursor to the location
+
+			const newSelection = new vscode.Selection(range.start, range.start);
+			editor.selection = newSelection;
+			// Reveal the range in the editor
+			editor.revealRange(range);
+		}
+	});
+
 	let disposable1 = vscode.commands.registerCommand('go-to-symbol.activate', () => {
 		let editor = vscode.window.activeTextEditor;
 		if(!editor)
 			return;
-
-		// let currentFilePath = editor.document.uri.toString();
-		// // because my array uses interface, thus, have to use `find` method
-		// // if found, will return the whole element of that interface
-		// // else, will return undefined
-		// if(goToSymbolArr.find(e => e.filePath === currentFilePath))
-		// {
-		// 	goToSymbolArr[0].symbolTree.reveal()
-		// }
-
-		// create the list
-		treeView = vscode.window.createTreeView<SymbolTreeItem>('my-view', {
-			treeDataProvider : treeDataProvider,
-			showCollapseAll: true,
-			canSelectMany: true,
-			manageCheckboxStateManually: false,
-		});
-
-		// let goToSymbolData:symbolTreeInterface = {
-		// 	filePath : currentFilePath,
-		// 	symbolTree : ,
-
-
-		// }
-
-
-
-		// Listen for selection
-		treeView.onDidChangeSelection(event => {
-			// get the selected object
-			const selectedItems = event.selection as SymbolTreeItem[];
-			const selectedLabel = selectedItems[0].label;
-			let editor = vscode.window.activeTextEditor;
-			const backgroundDecorationType = vscode.window.createTextEditorDecorationType({
-				// the last element is the opacity
-				backgroundColor: 'rgba(154, 154, 156, 0.2)', // grey
-				// this opacity appleis to the text instead of the background color
-				// opacity: '0',
-				// this can be seen on minimap, the small block colors
-				overviewRulerColor: '#02fa0f', // green
-				// to show the block color on the right
-				overviewRulerLane: vscode.OverviewRulerLane.Full,
-				// minimapColor: 'red' // this color will be used in the minimap
-			  });
-			
-			// each decoratino made needs to be keep tracked, so tha tyou can dispose it later	
-			decorationTypes.push(backgroundDecorationType);
-			
-			if(	editor == null ||
-				selectedItems.length == 0)
-			{
-				return;
-			}
-			
-			if(selectedLabel == 'reset')
-			{
-				func.resetDecoration(decorationTypes);
-			}
-			else
-			{
-				// decorate the selected items
-
-				// have to put as vscode.Range at behind else it will flag error
-				const range = selectedItems[0].range as vscode.Range;
-				const decoration = { range };
-				editor.setDecorations(backgroundDecorationType, [decoration]);
-
-				// move the cursor to the location
-
-				const newSelection = new vscode.Selection(range.start, range.start);
-				editor.selection = newSelection;
-				// Reveal the range in the editor
-				editor.revealRange(range);
-			}
-		});
-		
 	});
 
 
@@ -162,9 +146,9 @@ export function activate(context: vscode.ExtensionContext) {
 		func.resetDecoration(decorationTypes);
 		
 		if (editor) {
+			treeDataProvider.refresh(editor);
 			// if you changed, then execute the command again
-			// treeDataProvider.refresh(editor);
-			vscode.commands.executeCommand('go-to-symbol.activate');
+			// vscode.commands.executeCommand('go-to-symbol.activate');
 		}
 	});
 	
@@ -181,6 +165,14 @@ export function deactivate() {
 // Define a class for the tree data provider
 class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 
+	// the data to hold the whole symbol trees
+	// eg:
+	// function
+	// - main()
+	// - read_line()
+	// macro
+	// - UPRINTF
+	// - AB_UPGRADE
 	private data: SymbolTreeItem[]|undefined;
 
 	constructor(data:any) {
@@ -191,7 +183,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 	private _onDidChangeTreeData: vscode.EventEmitter<SymbolTreeItem | undefined | null | void> = new vscode.EventEmitter<SymbolTreeItem | undefined | null | void>();
 	readonly onDidChangeTreeData: vscode.Event<SymbolTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
-	// Implement the getChildren method
+	// required, read the document
 	// the `element` will only be triggered when you expand the collapsed tree
 	getChildren(element?: SymbolTreeItem): vscode.ProviderResult<SymbolTreeItem[]> {
 		// element will be undefined for tree that doesn't collapse, that is, vscode.TreeItemCollapsibleState.None
@@ -204,28 +196,30 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 		return element.children;
 	}
 
-	// Implement the getTreeItem method
+	// required, read the document
 	getTreeItem(element: SymbolTreeItem): vscode.TreeItem {
 		// Return the element as a tree item
 		return element;
 	}
 
 	// // A refresh method that updates the tree view data and fires the event
-	// refresh(data?: SymbolTreeItem): void {
+	// refresh(data?: SymbolTreeItem[]): void {
 	// 	// Update the data source for the tree view
 	// 	this.data = data;
 	// 	// Fire the event to notify VS Code that the tree view has changed
 	// 	this._onDidChangeTreeData.fire();
 	// }
 
-
-
 }
 
 // this class holds the detail of list of symbols that regex matches
 // one symbol for 1 class
 class SymbolTreeItem extends vscode.TreeItem {
+	// to hold the subtree items.
+	// a tree can be expended further, revealing more trees
+	// these sub-trees are 'children'
 	children: SymbolTreeItem[]|undefined;
+
 	constructor(
 		// this is the string that appear on the tree list
 		public readonly label: string,
