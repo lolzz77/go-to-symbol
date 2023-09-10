@@ -16,7 +16,9 @@ import { arrayBuffer } from 'stream/consumers';
 
 // global variable
 // the size to hold number of active editors
-var ARR_SIZE = 2;
+var ARR_SIZE = 10;
+// i made this global so i can dispose it in deactivate function
+var treeView:vscode.TreeView<SymbolTreeItem>;
 
 interface symbolTreeInterface {
 	/*
@@ -50,12 +52,13 @@ export function activate(context: vscode.ExtensionContext) {
 	// this variable, i believe is to create the sidebar, but not the list inside of it
 	const treeDataProvider:TreeDataProvider = new TreeDataProvider(symbolTreeItem);
 	// this variable, will be the list that will be shown on the sidebar.
-	var treeView:vscode.TreeView<SymbolTreeItem>;
 	// for keeping track of decorations
 	var decorationTypes: vscode.TextEditorDecorationType[] = [];
+
 	// an array that can be used to dispose item inside when needed
 	// to dispose it, call disposables.forEach(d => d.dispose());
-	var disposables:vscode.Disposable[] = [];
+	// var disposables:vscode.Disposable[] = [];
+
 	// my extension array, to be placed into disposables array so dispose them
 	// writing  goToSymbolArr:symbolTreeInterface[] = new Array(ARR_SIZE);
 	// will cause the goToSymbolArr.findIndex() crashes
@@ -71,9 +74,6 @@ export function activate(context: vscode.ExtensionContext) {
 	const filePath:string = editor.document.uri.path;
 	// you have to use `{}` when pushing into this array
 	goToSymbolArr.push({filePath, symbolTreeItem});
-
-
-
 
 
 	// by putting this code, no need to trigger 'activate', it will auto load
@@ -152,10 +152,11 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	let disposable1 = vscode.commands.registerCommand('go-to-symbol.activate', () => {
-		let editor = vscode.window.activeTextEditor;
-		if(!editor)
-			return;
+	let disposable1 = vscode.commands.registerCommand('go-to-symbol.refresh', () => {
+		// to reset the array
+		func.resetDecoration(decorationTypes);
+		// i think array = []; is not necessary
+		goToSymbolArr.fill({filePath: "", symbolTreeItem: []});
 	});
 
 
@@ -180,7 +181,7 @@ export function activate(context: vscode.ExtensionContext) {
 		// return value: index value if found, -1 if not fund
 		let existsIndex = goToSymbolArr.findIndex(element => element.filePath === filePath);
 
-		
+
 		// if exists, then we reuse the data
 		if(existsIndex >= 0)
 		{
@@ -216,8 +217,13 @@ export function activate(context: vscode.ExtensionContext) {
 
 // this function will be triggered when you disable your extension
 export function deactivate() {
-	// treeView.dispose();
+	/* no need to dispose
+	1. array
+	2. const treeDataProvider:TreeDataProvider = new TreeDataProvider(symbolTreeItem);, provided you DIDNT use registerTreeDataProvider()
+	if you use registerTreeDataProvider, then vscode will dispose it for u
+	*/
 
+	treeView.dispose();
 }
 
 // Define a class for the tree data provider

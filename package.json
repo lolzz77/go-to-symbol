@@ -14,12 +14,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "go-to-symbol.activate",
-        "title": "Go to Symbols: activate"
-      },
-      {
-        "command": "go-to-symbol.deactivate",
-        "title": "Go to Symbols: DE-activate"
+        "command": "go-to-symbol.refresh",
+        "title": "Go to Symbols: refresh"
       },
       {
         "command": "go-to-symbol.showPath",
