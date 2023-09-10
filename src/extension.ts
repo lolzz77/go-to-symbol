@@ -1,8 +1,5 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
 import * as func from './function';
-import { arrayBuffer } from 'stream/consumers';
-
 /*
  problem
  1. if you happen to have pattern same name, like

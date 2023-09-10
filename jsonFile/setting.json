@@ -1,4 +1,6 @@
 {
-    "backgroundColor" : "rgba(154, 154, 156, 0.2)",
-    "overviewRulerColor" : "'02fa0f"
+    "comment1" : "Color for the pattern highlighting. Color - GREY. the last one is opacity",
+    "backgroundColor": "rgba(154, 154, 156, 0.2)",
+    "comment2" : "Color on sidebar of the minimap. Color - GREEN",
+    "overviewRulerColor": "#02fa0f"
 }
