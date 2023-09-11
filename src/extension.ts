@@ -325,6 +325,38 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 
 	const document = editor.document;
 	var text = document.getText();
+
+	// decided to not proceed with this method
+	// i wanna reuse the old algorithm, i thinked of a way to solve my prev problem
+	// this approach is good, it clear the text from top to bottom
+	// which makes it debugging more easy, you know which line comes next
+	// but i think this method require more effort in doing code change
+	// and perhaps the performance will be impacted as well
+	while(text.length > 0)
+	{
+		for (const [key, value] of entries) {
+			let symbolType = key;
+			let regex_whole = value.whole[0];
+			let flag_whole = value.whole[1];
+
+			let _regex_whole = new RegExp(regex_whole, flag_whole);
+			let result = _regex_whole.test(text);
+			// have to reset, else, it will continue to match the next pattern
+			// regex.test() will trigger this lastIndex as well
+			_regex_whole.lastIndex = 0;
+			let match;
+			if(!result)
+				continue;
+			match = _regex_whole.exec(text);
+			if(!match)
+				continue;
+			if(match.index != 0)
+				continue;
+			console.log("hi");
+		}
+		
+	}
+
 	for (const [key, value] of entries) {
 		childTreeArr = [];
 
