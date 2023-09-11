@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as func from './function';
+import { arrayBuffer } from 'stream/consumers';
 /*
  problem
  1. if you happen to have pattern same name, like
@@ -31,6 +32,13 @@ interface symbolTreeInterface {
 	filePath: string;
 	// the list of symbols for the file
 	symbolTreeItem: SymbolTreeItem[];
+}
+
+interface ListOfSymbolsInterface {
+	// the parent. Eg: 'function'
+	parent: string;
+	// their chidlren. Eg: 'main()', 'read_line()'
+	children: SymbolTreeItem[];
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -316,6 +324,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 	// the children. This will be the matched function patterns
 	// for the parent tree
 	var childTreeArr:SymbolTreeItem[] = [];
+	var listOfSymbolsArr:ListOfSymbolsInterface[] = [];
 
 	if(!entries)
 		return [new SymbolTreeItem('regex is null', vscode.TreeItemCollapsibleState.None)];
@@ -325,76 +334,42 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 
 	const document = editor.document;
 	var text = document.getText();
-
-	// decided to not proceed with this method
-	// i wanna reuse the old algorithm, i thinked of a way to solve my prev problem
-	// this approach is good, it clear the text from top to bottom
-	// which makes it debugging more easy, you know which line comes next
-	// but i think this method require more effort in doing code change
-	// and perhaps the performance will be impacted as well
 	while(text.length > 0)
 	{
+		let loopHasRemovedSometing = false;
 		for (const [key, value] of entries) {
-			let symbolType = key;
 			let regex_whole = value.whole[0];
 			let flag_whole = value.whole[1];
-
 			let _regex_whole = new RegExp(regex_whole, flag_whole);
-			let result = _regex_whole.test(text);
-			// have to reset, else, it will continue to match the next pattern
-			// regex.test() will trigger this lastIndex as well
-			_regex_whole.lastIndex = 0;
-			let match;
-			if(!result)
+			// fail safe check, if no regex, skip
+			if(regex_whole == '')
 				continue;
-			match = _regex_whole.exec(text);
+			let match = _regex_whole.exec(text);
+			let symbolType:string = key;
 			if(!match)
 				continue;
 			if(match.index != 0)
 				continue;
-			console.log("hi");
-		}
-		
-	}
 
-	for (const [key, value] of entries) {
-		childTreeArr = [];
 
-		let symbolType = key;
-		let operation = value.operation;
+			let operation = value.operation;
+			let start_index = 0;
+			let end_index = 0;
+			let to_replace = '';
+			let keys = Object.keys(value);
+			let keyword_to_search_for_symbol = null;
+			let function_opening = value.opening[0];
+			let function_closing = value.opening[1];
+			let symbol_name = '';
+			let range = null;
+			
+			// some need to search the symbol BEFORE the char
+			// some need to search the symbol AFTER the char
+			if(keys.includes("before"))
+				keyword_to_search_for_symbol = value.before;
+			else
+				keyword_to_search_for_symbol = value.after;
 
-		let start_index = 0;
-		let end_index = 0;
-		let to_replace = '';
-
-		let regex_whole = value.whole[0];
-		let flag_whole = value.whole[1];
-		let keys = Object.keys(value);
-		let keyword_to_search_for_symbol = null;
-		let function_opening = value.opening[0];
-		let function_closing = value.opening[1];
-
-		let symbol_name = '';
-		let range = null;
-		let match = null;
-		let _regex_whole = new RegExp(regex_whole, flag_whole);
-		
-		// fail safe check, if no regex, skip
-		if(regex_whole == '')
-			continue;
-
-		// some need to search the symbol BEFORE the char
-		// some need to search the symbol AFTER the char
-		if(keys.includes("before"))
-			keyword_to_search_for_symbol = value.before;
-		else
-			keyword_to_search_for_symbol = value.after;
-
-		while(match = _regex_whole.exec(text)) {
-			start_index = 0;
-			end_index = 0;
-			symbol_name = '';
-			range = null;
 			// for checking whether the current index has found the 1st character or not
 			let hasFountFirstChar = false;
 			let str = match.toString();
@@ -402,7 +377,6 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 			let index = 0;
 			let closest_index = 0;
 			let char = '';
-
 			let original_doc_text = '';
 			let original_doc_start = 0;
 			let original_doc_end = 0;
@@ -427,7 +401,6 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				// that's it for 'remove' operation, no need add into array
 				continue;
 			}
-			
 			/**********************************************************************
 			 * below is handling for operation that has 'depth' and no depth
 			 * some of them has similarity and thus i pull them out
@@ -464,6 +437,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				sub = str.substring(0, closest_index);
 			else
 				sub = str.substring(closest_index);
+
 
 			if( operation == 'depth')
 			{
@@ -616,7 +590,6 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				// you have to reset its lastIndex,
 				// else, the next regex wont able to find the next pattern cos the 'text'
 				// buffer has been modified
-				_regex_whole.lastIndex = 0;
 
 
 				/**********************************************************************
@@ -632,13 +605,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				{
 					symbol_name = 'anonymous'
 				}
-
-				childTreeArr.push(new SymbolTreeItem(
-					symbol_name, 
-					vscode.TreeItemCollapsibleState.None, 
-					range));
 			}
-
 			else
 			{
 				/**********************************************************************
@@ -837,35 +804,42 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				remove the text from buffered text
 				***********************************************************************/
 				text = text.replace(to_replace, '');
-				_regex_whole.lastIndex = 0;
+			}
 
-				childTreeArr.push(new SymbolTreeItem(
+
+			/**********************************************************************
+			finally, push to array
+			***********************************************************************/
+
+			// Find the index of the object with parent == symbolType
+			let parentSymbolIndex = listOfSymbolsArr.findIndex((obj) => obj.parent === symbolType);
+			// means parent found
+			if (parentSymbolIndex !== -1) {
+				// Push new children to the object at the index
+				listOfSymbolsArr[parentSymbolIndex].children.push(new SymbolTreeItem(
 					symbol_name, 
 					vscode.TreeItemCollapsibleState.None, 
 					range));
 			}
+			else // push new parent to array
+			{
+				listOfSymbolsArr.push({parent:symbolType, children:[new SymbolTreeItem(
+					symbol_name, 
+					vscode.TreeItemCollapsibleState.None, 
+					range)]});
+			}
+			loopHasRemovedSometing = true;
 		}
-
-		if(childTreeArr.length == 0)
-			childTreeArr.push(new SymbolTreeItem(
-				'null', 
-				vscode.TreeItemCollapsibleState.None));
-
-		/**********************************************************************
-		finally, push to array
-		***********************************************************************/
-		// dont print out 'comment' tree list
-		// the intention for 'comment' regex is to remove comments only
-		if (operation != 'remove')
+		if(loopHasRemovedSometing == false)
 		{
-			// push to array, this will show the list of symbols later
-			treeArr.push(new SymbolTreeItem(
-				symbolType, 
-				vscode.TreeItemCollapsibleState.Expanded, 
-				range,
-				childTreeArr));
+			let newlineIndex = text.indexOf('\n');
+			text = text.substring(newlineIndex+1);
 		}
-
+		
+	}
+	for(let array of listOfSymbolsArr)
+	{
+		treeArr.push(new SymbolTreeItem(array.parent, vscode.TreeItemCollapsibleState.Expanded, null, array.children));
 	}
 	return treeArr;
 }
