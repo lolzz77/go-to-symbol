@@ -77,10 +77,9 @@ export function activate(context: vscode.ExtensionContext) {
 	// the 1st index is null/undefined
 	// solution: use .fill({filePath: "", symbolTreeItem: []})
 	let goToSymbolArr:symbolTreeInterface[] = new Array(ARR_SIZE).fill({filePath: "", symbolTreeItem: []});
-	let test = new SymbolTreeItem('null', vscode.TreeItemCollapsibleState.None);
 	const filePath:string = editor.document.uri.path;
 	// you have to use `{}` when pushing into this array
-	goToSymbolArr.push({filePath, symbolTreeItem});
+	goToSymbolArr.push({filePath:filePath, symbolTreeItem:symbolTreeItem});
 
 
 	// by putting this code, no need to trigger 'activate', it will auto load
@@ -168,8 +167,19 @@ export function activate(context: vscode.ExtensionContext) {
 	let disposable1 = vscode.commands.registerCommand('go-to-symbol.refresh', () => {
 		// to reset the array
 		func.resetDecoration(decorationTypes);
-		// i think array = []; is not necessary
+		// dispose all items
+		for(const symbolTreeItemInterface of goToSymbolArr)
+		{
+			for (const children of symbolTreeItemInterface.symbolTreeItem)
+				children.dispose();
+			goToSymbolArr = [];
+		}
 		goToSymbolArr.fill({filePath: "", symbolTreeItem: []});
+		// just show any index of array item
+		treeDataProvider.refresh([]);
+		// delete the JSON files as well
+		let path = vscode.env.appRoot + '/go-to-symbol/';
+		func.clearDirectory(path);
 	});
 
 

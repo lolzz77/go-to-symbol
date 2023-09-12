@@ -11,6 +11,21 @@ export function resetDecoration(decorationTypes: vscode.TextEditorDecorationType
 	decorationTypes = [];
 }
 
+export function clearDirectory(path:string)
+{
+	// Check if the path exists
+	if (fs.existsSync(path)) {
+		// Check if the path is a file or a directory
+		if (fs.lstatSync(path).isFile()) {
+			// Delete the file
+			fs.unlinkSync(path);
+		} else {
+			// Delete the directory and its contents recursively
+			fs.rmSync(path, { recursive: true, force: true });
+		}
+	}
+}
+
 // Get the JSON File
 export function getJSONData(JSONPath: string): any {
 	let fileContents;
