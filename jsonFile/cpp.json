@@ -15,6 +15,13 @@
         "opening" : ["{", "}"],
         "before" : ["("]
     },
+    "union" : {
+        "comment1" : "",
+        "whole" : ["([typedef]*)\\s*union\\s*[a-zA-Z0-9_]*\\s*\\{", "g"],
+        "operation" : "depth",
+        "opening" : ["{", "}"],
+        "before" : ["{"]
+    },
     "struct" : {
         "comment1" : "",
         "whole" : ["([typedef]*)\\s*struct\\s*[a-zA-Z0-9_]*\\s*\\{", "g"],
@@ -36,9 +43,18 @@
         "opening" : ["", ""],
         "after" : ["define"]
     },
-    "comment" : {
-        "comment1" : "detects both `//` and multiline `/**/` comments",
-        "whole" : ["\\/\\/.*|\\/\\*[^*]*\\*+(?:[^\\/*][^*]*\\*+)*\\/\\n", "g"],
+    "comment1" : {
+        "comment1" : "detects `//`. This will match til newline, despite in the comment has `\n`, it still can match",
+        "whole" : ["\\/\\/.*", "g"],
+        "operation" : "remove",
+        "opening" : ["", ""],
+        "before" : [""],
+        "comment2" : "History - means old regex, not using it anymore, but just put here for memories. Detects both `//` and multiline `/**/` comments. however, this detects '//' first. This can cause problem when there's `//` inside `/**/`, then it will detects `//` isnide of it first",
+        "history" : ["\\/\\/.*|\\/\\*[^*]*\\*+(?:[^\\/*][^*]*\\*+)*\\/\\n", "g"]
+    },
+    "comment2" : {
+        "comment1" : "detects multiline `/**/` comments.",
+        "whole" : ["\\/\\*[^*]*\\*+(?:[^\\/*][^*]*\\*+)*\\/", "g"],
         "operation" : "remove",
         "opening" : ["", ""],
         "before" : [""]
@@ -58,8 +74,8 @@
         "before" : [""]
     },
     "global" : {
-        "comment1" : "Match return type. Then whitespace. Then match variable name. Then match anything except ';' . Finally, match ';'",
-        "whole" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*[^;]+;", "g"],
+        "comment1" : "Match return type. Then whitespace. Then match variable name. Then match anything except ';' (zero or more, for cases `int x;` will fail the regex). Finally, match ';'",
+        "whole" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*[^;]*;", "g"],
         "operation" : "",
         "opening" : ["", ""],
         "before" : ["=", ";"]

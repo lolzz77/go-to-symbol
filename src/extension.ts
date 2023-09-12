@@ -186,6 +186,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// to refresh tree only
 	let disposable3 = vscode.commands.registerCommand('go-to-symbol.refreshTree', () => {
+		// show empty list first
+		treeDataProvider.refresh([]);
 		// to reset the array
 		func.resetDecoration(decorationTypes);
 		// dispose all items
