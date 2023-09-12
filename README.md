@@ -13,6 +13,9 @@
 - `Go to symbol: reset`
 - Clear the array, delete all the (language).json & setting.json file
 - Will not re-extract the symbols, users have to run `Go to symbol: refresh tree` in order to re-trigger the extension to extract the symbols.
+3. If it doesn't support the langauge, you can write up your own (language).json file.
+4. You can refer existing (language).json on how to write that.
+5. It will create (language).json with empty content in the path shows by the command `Go to symbol: show path`
 
 # What
 Provide a list of symbols found in the current active editor
