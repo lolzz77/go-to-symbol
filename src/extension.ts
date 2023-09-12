@@ -164,7 +164,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	let disposable1 = vscode.commands.registerCommand('go-to-symbol.refresh', () => {
+	let disposable1 = vscode.commands.registerCommand('go-to-symbol.reset', () => {
 		// to reset the array
 		func.resetDecoration(decorationTypes);
 		// dispose all items
