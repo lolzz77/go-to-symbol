@@ -1,5 +1,6 @@
 {
   "name": "go-to-symbol",
+  "publisher": "preston-lo",
   "displayName": "go to symbol",
   "description": "to list down lists of symbols",
   "version": "3.4.0",
