@@ -1,7 +1,8 @@
 {
     "function" : {
-        "comment1" : "1st group matching is function return type, then compulsory white space, then function name, then option whitespace, then match (, then match anything not equal to ), then match match {.",
-        "whole" : ["([a-zA-Z0-9_*]*)\\s+([a-zA-Z0-9_*]*)\\s*\\([^)]*\\)\\s*\\{", "g"],
+        "comment0" : "1st group matching has to be `1 or more`, tho my 1st group matching is for `static` those kind. But, regex matches from lef to right. Thus, for function that doesn't have `static`, and if i put my 1st group matching to `zero or more`, it will matches the 1st group matching. Thus, you should NOT set 1st group matching to `zero or more`.",
+        "comment1" : "1st group matching is words like `static` etc (note: i put `1 or more`, please read above comment why), then is function return type, then compulsory white space, then function name, then option whitespace, then match (, then match anything not equal to ), then match match {.",
+        "whole" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*([a-zA-Z0-9_*]*)\\s*\\([^)]*\\)\\s*\\{", "g"],
         "comment2" : "this operation is to tell my code how should i handle it. Currently has 'depth', 'remove', ''. depth - i will perform depth search, will use 'opening' key. 'remove' - will perform operation to remove it from buffered text, will not print on the tree list. '' - will fall into else case",
         "operation" : "depth",
         "opening" : ["{", "}"],
@@ -16,14 +17,14 @@
     },
     "struct" : {
         "comment1" : "",
-        "whole" : ["struct\\s*[a-zA-Z0-9_]*\\s*\\{", "g"],
+        "whole" : ["([typedef]*)\\s*struct\\s*[a-zA-Z0-9_]*\\s*\\{", "g"],
         "operation" : "depth",
         "opening" : ["{", "}"],
         "before" : ["{"]
     },
     "enum" : {
         "comment1" : "",
-        "whole" : ["enum\\s+[^{}]*\\{", "g"],
+        "whole" : ["([typedef]*)\\s*enum\\s+[^{}]*\\{", "g"],
         "operation" : "depth",
         "opening" : ["{", "}"],
         "before" : ["{"]
@@ -37,7 +38,7 @@
     },
     "comment" : {
         "comment1" : "",
-        "whole" : ["\\/\\/.*|\\/\\*[^*]*\\*+(?:[^\\/*][^*]*\\*+)*\\/", "g"],
+        "whole" : ["\\/\\/.*|\\/\\*[^*]*\\*+(?:[^\\/*][^*]*\\*+)*\\/\\n", "g"],
         "operation" : "remove",
         "opening" : ["", ""],
         "before" : [""]
@@ -58,7 +59,7 @@
     },
     "global" : {
         "comment1" : "match 1 newline. Then match return type. Then match variable name. Then match anything except ';' . Finally, match ';'",
-        "whole" : ["\\n([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*[^;]+;", "g"],
+        "whole" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*[^;]+;", "g"],
         "operation" : "",
         "opening" : ["", ""],
         "before" : ["=", ";"]

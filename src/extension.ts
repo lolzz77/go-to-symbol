@@ -337,6 +337,13 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 	while(text.length > 0)
 	{
 		let loopHasRemovedSometing = false;
+
+		// remove starting newlines
+		while(text.startsWith('\n'))
+		{
+			text = text.substring(1);
+		}
+
 		for (const [key, value] of entries) {
 			let regex_whole = value.whole[0];
 			let flag_whole = value.whole[1];
@@ -350,7 +357,6 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				continue;
 			if(match.index != 0)
 				continue;
-
 
 			let operation = value.operation;
 			let start_index = 0;
@@ -397,9 +403,9 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				***********************************************************************/
 				text = text.replace(to_replace, '');
 				_regex_whole.lastIndex = 0;
-
+				loopHasRemovedSometing = true;
 				// that's it for 'remove' operation, no need add into array
-				continue;
+				break;
 			}
 			/**********************************************************************
 			 * below is handling for operation that has 'depth' and no depth
@@ -505,7 +511,9 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					index--;
 					char = text.charAt(index);
 				}
-				index++;
+				// foudn that this will cause it point to not valid char
+				// that is, after newline, it will point to next char again
+				// index++;
 				// save the start index
 				start_index = index;
 
@@ -735,7 +743,8 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					char = text.charAt(index);
 				}
 				// current char is newline, move to the next char
-				index++;
+				// update, found that it will point to next char of '#' for #define string
+				// index++;
 				// save start_index
 				start_index = index;
 
@@ -829,10 +838,18 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					range)]});
 			}
 			loopHasRemovedSometing = true;
+			// this is to make sure the regex starts all over again
+			// eg: i want it to scan function regex first, before scanning for function prototype regex
+			break;
 		}
 		if(loopHasRemovedSometing == false)
 		{
 			let newlineIndex = text.indexOf('\n');
+			let to_replace = text.substring(0, newlineIndex);
+			console.log('REMOVE : ' + to_replace);
+			// cannot do like text = text.replace(to_replace, '');
+			// because to_replace will be `''`, and, in the text buffer, it is `\n`
+			// have to put newlineIndex + 1, else, it will always be 0 and always start at beginning of text
 			text = text.substring(newlineIndex+1);
 		}
 		
