@@ -77,7 +77,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// the 1st index is null/undefined
 	// solution: use .fill({filePath: "", symbolTreeItem: []})
 	let goToSymbolArr:symbolTreeInterface[] = new Array(ARR_SIZE).fill({filePath: "", symbolTreeItem: []});
-	
+	let test = new SymbolTreeItem('null', vscode.TreeItemCollapsibleState.None);
 	const filePath:string = editor.document.uri.path;
 	// you have to use `{}` when pushing into this array
 	goToSymbolArr.push({filePath, symbolTreeItem});
@@ -214,6 +214,10 @@ export function activate(context: vscode.ExtensionContext) {
 		// but just leave it here
 		if(goToSymbolArr.length >= ARR_SIZE)
 		{
+			// dispose them first
+			// only dispose the children of 1st element
+			for (const child of goToSymbolArr[0].symbolTreeItem)
+				child.dispose();
 			// this will remove the 1st element of array
 			goToSymbolArr.shift();
 		}
@@ -291,6 +295,11 @@ class TreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 
 // this class holds the detail of list of symbols that regex matches
 // one symbol for 1 class
+
+/*
+TODO: U WANNA CHECK HOW TO DISPOSE THIS CLASS OBJECT PROPERLY
+*/
+
 class SymbolTreeItem extends vscode.TreeItem {
 	// to hold the subtree items.
 	// a tree can be expended further, revealing more trees
@@ -311,6 +320,32 @@ class SymbolTreeItem extends vscode.TreeItem {
 		super(label, collapsibleState);
 		this.children = children;
 	}
+
+	// TODO: attempting to dispose object properly
+	// my `children` will be undefined when running this code
+	/*
+			listOfSymbolsArr.push({
+			parent:key, 
+			children:[new SymbolTreeItem(
+				'null',
+				vscode.TreeItemCollapsibleState.None)
+			]
+		});
+	*/
+	// because, i didn't pass in any children
+	// thus, i should dispose `super` instead, cos this is what constructed in constructor
+	// however, TreeItem doesn't have `dispose` method
+	// so.. how to dispose this TreeItem?..
+	// it is told that, just dispose your class member resources
+	dispose() {
+		// super.dispose();
+		if (this.children) {
+			for (const child of this.children) {
+				child.dispose();
+			}
+			this.children = [];
+		}
+	}
 }
 
 
@@ -326,7 +361,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 	var listOfSymbolsArr:ListOfSymbolsInterface[] = [];
 	
 	if(!entries)
-	return [new SymbolTreeItem('regex is null', vscode.TreeItemCollapsibleState.None)];
+		return [new SymbolTreeItem('regex is null', vscode.TreeItemCollapsibleState.None)];
 
 	// button to reset decoration
 	treeArr.push(new SymbolTreeItem('reset', vscode.TreeItemCollapsibleState.None));
@@ -860,7 +895,10 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 			// this is to remove 'null' children from array
 			// because i intialized the array to have 'null' children
 			if(listOfSymbolsArr[parentSymbolIndex].children[0].label == 'null')
+			{
+				listOfSymbolsArr[parentSymbolIndex].children[0].dispose();
 				listOfSymbolsArr[parentSymbolIndex].children = [];
+			}
 			// Push new children to the object at the index
 			listOfSymbolsArr[parentSymbolIndex].children.push(new SymbolTreeItem(
 				symbol_name, 
