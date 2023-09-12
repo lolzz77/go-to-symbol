@@ -22,6 +22,10 @@
         "title": "Go to Symbols: reset"
       },
       {
+        "command": "go-to-symbol.refreshTree",
+        "title": "Go to Symbols: refresh tree"
+      },
+      {
         "command": "go-to-symbol.showPath",
         "title": "Go to Symbols: show path"
       }

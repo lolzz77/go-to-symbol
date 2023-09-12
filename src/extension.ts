@@ -164,6 +164,8 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
+	// to reset everything
+	// the tree, and the JSON file
 	let disposable1 = vscode.commands.registerCommand('go-to-symbol.reset', () => {
 		// to reset the array
 		func.resetDecoration(decorationTypes);
@@ -180,6 +182,32 @@ export function activate(context: vscode.ExtensionContext) {
 		// delete the JSON files as well
 		let path = vscode.env.appRoot + '/go-to-symbol/';
 		func.clearDirectory(path);
+	});
+
+	// to refresh tree only
+	let disposable3 = vscode.commands.registerCommand('go-to-symbol.refreshTree', () => {
+		// to reset the array
+		func.resetDecoration(decorationTypes);
+		// dispose all items
+		for(const symbolTreeItemInterface of goToSymbolArr)
+		{
+			for (const children of symbolTreeItemInterface.symbolTreeItem)
+				children.dispose();
+			goToSymbolArr = [];
+		}
+		goToSymbolArr.fill({filePath: "", symbolTreeItem: []});
+
+		// now re-get the symbols
+		let editor = vscode.window.activeTextEditor;
+		if(!editor)
+		{
+			treeDataProvider.refresh([]);
+			return;
+		}
+		let filePath:string = editor.document.uri.path;
+		let symbolTreeItem:SymbolTreeItem[] = getSymbols(editor);
+		goToSymbolArr.push({filePath:filePath, symbolTreeItem:symbolTreeItem});
+		treeDataProvider.refresh(symbolTreeItem);
 	});
 
 
@@ -240,6 +268,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// register command into command pallete
 	context.subscriptions.push(disposable1);
 	context.subscriptions.push(disposable2);
+	context.subscriptions.push(disposable3);
 }
 
 // this function will be triggered when you disable your extension
