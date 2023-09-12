@@ -34,7 +34,7 @@
       "activitybar": [
         {
           "id": "goToSymbolSidebar",
-          "title": "Sidebar",
+          "title": "Go To Symbol",
           "icon": "resources/google.svg"
         }
       ]
@@ -43,7 +43,7 @@
       "goToSymbolSidebar": [
         {
           "id": "goToSymbolView",
-          "name": "Symbol View"
+          "name": "Tree View"
         }
       ]
     }

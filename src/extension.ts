@@ -2,14 +2,13 @@ import * as vscode from 'vscode';
 import * as func from './function';
 /*
  problem
- 1. if you happen to have pattern same name, like
- #define abc 1
- #define abc
-
- and your pattern is the 2nd one, which is '#define abc'
- then, your algorithm will keep highlighting the 1st encounter of '#define abc', which is the 1st one
+ 1. for global variable
+ some can omit the `;` symbol
+ eg: int test = {
+	int x;
+ }
+ not sure about struct n enum
 */
-
 
 // global variable
 // the size to hold number of active editors
@@ -70,7 +69,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// thus, when you do looping to search the array
 	// the 1st index is null/undefined
 	// solution: use .fill({filePath: "", symbolTreeItem: []})
-	goToSymbolArr = new Array(ARR_SIZE).fill({filePath: "", symbolTreeItem: []});
+	goToSymbolArr = new Array(ARR_SIZE).fill({parent: "", children: []});
 	const filePath:string = editor.document.uri.path;
 	// you have to use `{}` when pushing into this array
 	goToSymbolArr.push({parent:filePath, children:symbolTreeItem});
@@ -180,12 +179,7 @@ export function activate(context: vscode.ExtensionContext) {
 		// to reset the array
 		func.resetDecoration(decorationTypes);
 		// dispose all items
-		for(const symbolTreeItemInterface of goToSymbolArr)
-		{
-			for (const children of symbolTreeItemInterface.children)
-				children.dispose();
-			goToSymbolArr = [];
-		}
+		disposeArray(goToSymbolArr);
 		goToSymbolArr.fill({parent: "", children: []});
 
 		// now re-get the symbols
@@ -220,9 +214,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 		const filePath:string = editor.document.uri.path;
 		// check if the current editor exists in the array
-		// return value: index value if found, -1 if not fund
+		// return value: index value if found, -1 if not found
 		let existsIndex = goToSymbolArr.findIndex(element => element.parent === filePath);
-
 
 		// if exists, then we reuse the data
 		if(existsIndex >= 0)
@@ -231,7 +224,6 @@ export function activate(context: vscode.ExtensionContext) {
 			treeDataProvider.refresh(goToSymbolArr[existsIndex].children);
 			return;
 		}
-
 
 		// else, create it
 		let symbolTreeItem:SymbolTreeItem[] = getSymbols(editor);
@@ -424,6 +416,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 			text = text.substring(1);
 
 		for (const [key, value] of entries) {
+			let ignoreCommentedCode = value.ignoreCommentedCode;
 			let regex_whole = value.whole[0];
 			let flag_whole = value.whole[1];
 			let _regex_whole = new RegExp(regex_whole, flag_whole);
@@ -434,7 +427,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 			let symbolType:string = key;
 			if(!match)
 				continue;
-			if(match.index != 0)
+			if(match.index!=0 && ignoreCommentedCode==false)
 				continue;
 
 			let operation = value.operation;
