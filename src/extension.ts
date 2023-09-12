@@ -323,14 +323,30 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 	var treeArr:SymbolTreeItem[] = [];
 	// the children. This will be the matched function patterns
 	// for the parent tree
-	var childTreeArr:SymbolTreeItem[] = [];
 	var listOfSymbolsArr:ListOfSymbolsInterface[] = [];
-
+	
 	if(!entries)
-		return [new SymbolTreeItem('regex is null', vscode.TreeItemCollapsibleState.None)];
+	return [new SymbolTreeItem('regex is null', vscode.TreeItemCollapsibleState.None)];
 
 	// button to reset decoration
 	treeArr.push(new SymbolTreeItem('reset', vscode.TreeItemCollapsibleState.None));
+
+	// push it to array first
+	// this is to ensure it will display according to the order you defined in language.JSON file
+	// eg: display functions first, global at last
+	for (const [key, value] of entries) {
+		let operation = value.operation;
+		// these regexes are mean for removing from text buffer only, dont add them into list of symbols
+		if(operation == 'remove')
+			continue;
+		listOfSymbolsArr.push({
+			parent:key, 
+			children:[new SymbolTreeItem(
+				'null',
+				vscode.TreeItemCollapsibleState.None)
+			]
+		});
+	}
 
 	const document = editor.document;
 	var text = document.getText();
@@ -340,9 +356,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 
 		// remove starting newlines
 		while(text.startsWith('\n'))
-		{
 			text = text.substring(1);
-		}
 
 		for (const [key, value] of entries) {
 			let regex_whole = value.whole[0];
@@ -590,8 +604,6 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				/**********************************************************************
 				remove the text from buffered text
 				***********************************************************************/
-
-
 				// remove the content that matched in the text buffer
 				// to make way for next regex
 				text = text.replace(to_replace, '');
@@ -599,12 +611,9 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				// else, the next regex wont able to find the next pattern cos the 'text'
 				// buffer has been modified
 
-
 				/**********************************************************************
-				finally, push to array
+				setup symbol name
 				***********************************************************************/
-
-
 				// for javascript, they have anonymous function
 				// if not match alphabets, set it to anonymous
 
@@ -820,38 +829,66 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 			finally, push to array
 			***********************************************************************/
 
+			/**********************************************************************
+			this code checks whether parent exists in array or not, 
+			then push to array accordingly
+			however, the checking is not necessary anymore
+			cos i have made sure that, i will initialize array to have parent, with null children
+			just leave it here in case i need to refer it back
+			***********************************************************************/
+			// // Find the index of the object with parent == symbolType
+			// let parentSymbolIndex = listOfSymbolsArr.findIndex((obj) => obj.parent === symbolType);
+			// // means parent found
+			// if (parentSymbolIndex !== -1) {
+			// 	// Push new children to the object at the index
+			// 	listOfSymbolsArr[parentSymbolIndex].children.push(new SymbolTreeItem(
+			// 		symbol_name, 
+			// 		vscode.TreeItemCollapsibleState.None, 
+			// 		range));
+			// }
+			// else // push new parent to array
+			// {
+			// 	listOfSymbolsArr.push({parent:symbolType, children:[new SymbolTreeItem(
+			// 		symbol_name, 
+			// 		vscode.TreeItemCollapsibleState.None, 
+			// 		range)]});
+			// }
+
+
 			// Find the index of the object with parent == symbolType
 			let parentSymbolIndex = listOfSymbolsArr.findIndex((obj) => obj.parent === symbolType);
-			// means parent found
-			if (parentSymbolIndex !== -1) {
-				// Push new children to the object at the index
-				listOfSymbolsArr[parentSymbolIndex].children.push(new SymbolTreeItem(
-					symbol_name, 
-					vscode.TreeItemCollapsibleState.None, 
-					range));
-			}
-			else // push new parent to array
-			{
-				listOfSymbolsArr.push({parent:symbolType, children:[new SymbolTreeItem(
-					symbol_name, 
-					vscode.TreeItemCollapsibleState.None, 
-					range)]});
-			}
+			// this is to remove 'null' children from array
+			// because i intialized the array to have 'null' children
+			if(listOfSymbolsArr[parentSymbolIndex].children[0].label == 'null')
+				listOfSymbolsArr[parentSymbolIndex].children = [];
+			// Push new children to the object at the index
+			listOfSymbolsArr[parentSymbolIndex].children.push(new SymbolTreeItem(
+				symbol_name, 
+				vscode.TreeItemCollapsibleState.None, 
+				range));
+
 			loopHasRemovedSometing = true;
+			// break from loop
 			// this is to make sure the regex starts all over again
 			// eg: i want it to scan function regex first, before scanning for function prototype regex
 			break;
 		}
-		if(loopHasRemovedSometing == false)
-		{
-			let newlineIndex = text.indexOf('\n');
-			let to_replace = text.substring(0, newlineIndex);
-			console.log('REMOVE : ' + to_replace);
-			// cannot do like text = text.replace(to_replace, '');
-			// because to_replace will be `''`, and, in the text buffer, it is `\n`
-			// have to put newlineIndex + 1, else, it will always be 0 and always start at beginning of text
-			text = text.substring(newlineIndex+1);
-		}
+
+		if(loopHasRemovedSometing == true)
+			continue;
+		// this is to handle if regex didn't remove any text
+		// then, it means the text is start with something that no regex matches
+		// or got regex matches, but is not at start of the text (my algorithm works the way it should matches text start at beginning of text)
+		// and i have to remove it
+		// else, will stuck in loop endlessly
+		// remove the line until the next encoutner of newline
+		let newlineIndex = text.indexOf('\n');
+		let to_replace = text.substring(0, newlineIndex);
+		console.log('REMOVE : ' + to_replace);
+		// cannot do like text = text.replace(to_replace, '');
+		// because to_replace will be `''`, and, in the text buffer, it is `\n`
+		// have to put newlineIndex + 1, else, it will always be 0 and always start at beginning of text
+		text = text.substring(newlineIndex+1);
 		
 	}
 	for(let array of listOfSymbolsArr)
