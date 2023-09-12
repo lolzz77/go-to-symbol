@@ -810,8 +810,13 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					char = text.charAt(index);
 				}
 				// current char is newline, move to the next char
-				// update, found that it will point to next char of '#' for #define string
-				// index++;
+				// update: if match.index is 0, means the pattern matched at the start of text
+				// thus, after this loop gonna have index increment, making it not pointing to valid whole pattern
+				// thus, add 1 more checking, match.index != 0
+				if(index==0)
+					index
+				else
+					index++;
 				// save start_index
 				start_index = index;
 

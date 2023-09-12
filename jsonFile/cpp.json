@@ -9,7 +9,7 @@
         "opening" : ["{", "}"],
         "comment4" : "Can be null. Can be either `before` or `after`. Can be multiple. If multiple, will search for the closest index. This is for cases that have either, eg: global variable, a symbol name can be before `=` or `;`. This tells my code, what symbol to look for to extract the symbol name.",
         "before" : ["("],
-        "comment5" : "true/false. True - will print out in the list even if it is commented. False - will not print out in the list if it is commented. This tells my code, if it is commented, ignore it, print it out onto the list",
+        "comment5" : "true/false. True - will print out in the list even if it is commented. False - will not print out in the list if it is commented. This tells my code, if it is commented, ignore it, print it out onto the list. Note: initially intended for MACRO regex. Havent test for other regex. Might be not working for others. Havent test.",
         "ignoreCommentedCode" : false
     },
     "class" : {
