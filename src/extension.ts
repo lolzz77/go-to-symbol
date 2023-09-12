@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as func from './function';
+import { arrayBuffer } from 'stream/consumers';
 /*
  problem
  1. if you happen to have pattern same name, like
@@ -31,6 +32,13 @@ interface symbolTreeInterface {
 	filePath: string;
 	// the list of symbols for the file
 	symbolTreeItem: SymbolTreeItem[];
+}
+
+interface ListOfSymbolsInterface {
+	// the parent. Eg: 'function'
+	parent: string;
+	// their chidlren. Eg: 'main()', 'read_line()'
+	children: SymbolTreeItem[];
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -69,7 +77,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// the 1st index is null/undefined
 	// solution: use .fill({filePath: "", symbolTreeItem: []})
 	let goToSymbolArr:symbolTreeInterface[] = new Array(ARR_SIZE).fill({filePath: "", symbolTreeItem: []});
-	
+	let test = new SymbolTreeItem('null', vscode.TreeItemCollapsibleState.None);
 	const filePath:string = editor.document.uri.path;
 	// you have to use `{}` when pushing into this array
 	goToSymbolArr.push({filePath, symbolTreeItem});
@@ -210,6 +218,10 @@ export function activate(context: vscode.ExtensionContext) {
 		// but just leave it here
 		if(goToSymbolArr.length >= ARR_SIZE)
 		{
+			// dispose them first
+			// only dispose the children of 1st element
+			for (const child of goToSymbolArr[0].symbolTreeItem)
+				child.dispose();
 			// this will remove the 1st element of array
 			goToSymbolArr.shift();
 		}
@@ -287,6 +299,11 @@ class TreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 
 // this class holds the detail of list of symbols that regex matches
 // one symbol for 1 class
+
+/*
+TODO: U WANNA CHECK HOW TO DISPOSE THIS CLASS OBJECT PROPERLY
+*/
+
 class SymbolTreeItem extends vscode.TreeItem {
 	// to hold the subtree items.
 	// a tree can be expended further, revealing more trees
@@ -307,6 +324,32 @@ class SymbolTreeItem extends vscode.TreeItem {
 		super(label, collapsibleState);
 		this.children = children;
 	}
+
+	// TODO: attempting to dispose object properly
+	// my `children` will be undefined when running this code
+	/*
+			listOfSymbolsArr.push({
+			parent:key, 
+			children:[new SymbolTreeItem(
+				'null',
+				vscode.TreeItemCollapsibleState.None)
+			]
+		});
+	*/
+	// because, i didn't pass in any children
+	// thus, i should dispose `super` instead, cos this is what constructed in constructor
+	// however, TreeItem doesn't have `dispose` method
+	// so.. how to dispose this TreeItem?..
+	// it is told that, just dispose your class member resources
+	dispose() {
+		// super.dispose();
+		if (this.children) {
+			for (const child of this.children) {
+				child.dispose();
+			}
+			this.children = [];
+		}
+	}
 }
 
 
@@ -319,54 +362,73 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 	var treeArr:SymbolTreeItem[] = [];
 	// the children. This will be the matched function patterns
 	// for the parent tree
-	var childTreeArr:SymbolTreeItem[] = [];
-
+	var listOfSymbolsArr:ListOfSymbolsInterface[] = [];
+	
 	if(!entries)
 		return [new SymbolTreeItem('regex is null', vscode.TreeItemCollapsibleState.None)];
 
 	// button to reset decoration
 	treeArr.push(new SymbolTreeItem('reset', vscode.TreeItemCollapsibleState.None));
 
+	// push it to array first
+	// this is to ensure it will display according to the order you defined in language.JSON file
+	// eg: display functions first, global at last
+	for (const [key, value] of entries) {
+		let operation = value.operation;
+		// these regexes are mean for removing from text buffer only, dont add them into list of symbols
+		if(operation == 'remove')
+			continue;
+		listOfSymbolsArr.push({
+			parent:key, 
+			children:[new SymbolTreeItem(
+				'null',
+				vscode.TreeItemCollapsibleState.None)
+			]
+		});
+	}
+
 	const document = editor.document;
 	var text = document.getText();
-	for (const [key, value] of entries) {
-		childTreeArr = [];
+	while(text.length > 0)
+	{
+		let loopHasRemovedSometing = false;
 
-		let symbolType = key;
-		let operation = value.operation;
+		// remove starting newlines
+		while(text.startsWith('\n'))
+			text = text.substring(1);
 
-		let start_index = 0;
-		let end_index = 0;
-		let to_replace = '';
+		for (const [key, value] of entries) {
+			let regex_whole = value.whole[0];
+			let flag_whole = value.whole[1];
+			let _regex_whole = new RegExp(regex_whole, flag_whole);
+			// fail safe check, if no regex, skip
+			if(regex_whole == '')
+				continue;
+			let match = _regex_whole.exec(text);
+			let symbolType:string = key;
+			if(!match)
+				continue;
+			if(match.index != 0)
+				continue;
 
-		let regex_whole = value.whole[0];
-		let flag_whole = value.whole[1];
-		let keys = Object.keys(value);
-		let keyword_to_search_for_symbol = null;
-		let function_opening = value.opening[0];
-		let function_closing = value.opening[1];
+			let operation = value.operation;
+			let start_index = 0;
+			let end_index = 0;
+			let to_replace = '';
+			let keys = Object.keys(value);
+			let keyword_to_search_for_symbol = null;
+			let function_opening = value.opening[0];
+			let function_closing = value.opening[1];
+			let symbol_name = '';
+			let range = null;
+			
+			// some need to search the symbol BEFORE the char
+			// some need to search the symbol AFTER the char
+			if(keys.includes("before"))
+				keyword_to_search_for_symbol = value.before;
+			else
+				keyword_to_search_for_symbol = value.after;
 
-		let symbol_name = '';
-		let range = null;
-		let match = null;
-		let _regex_whole = new RegExp(regex_whole, flag_whole);
-		
-		// fail safe check, if no regex, skip
-		if(regex_whole == '')
-			continue;
-
-		// some need to search the symbol BEFORE the char
-		// some need to search the symbol AFTER the char
-		if(keys.includes("before"))
-			keyword_to_search_for_symbol = value.before;
-		else
-			keyword_to_search_for_symbol = value.after;
-
-		while(match = _regex_whole.exec(text)) {
-			start_index = 0;
-			end_index = 0;
-			symbol_name = '';
-			range = null;
 			// for checking whether the current index has found the 1st character or not
 			let hasFountFirstChar = false;
 			let str = match.toString();
@@ -374,7 +436,6 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 			let index = 0;
 			let closest_index = 0;
 			let char = '';
-
 			let original_doc_text = '';
 			let original_doc_start = 0;
 			let original_doc_end = 0;
@@ -395,11 +456,10 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				***********************************************************************/
 				text = text.replace(to_replace, '');
 				_regex_whole.lastIndex = 0;
-
+				loopHasRemovedSometing = true;
 				// that's it for 'remove' operation, no need add into array
-				continue;
+				break;
 			}
-			
 			/**********************************************************************
 			 * below is handling for operation that has 'depth' and no depth
 			 * some of them has similarity and thus i pull them out
@@ -436,6 +496,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				sub = str.substring(0, closest_index);
 			else
 				sub = str.substring(closest_index);
+
 
 			if( operation == 'depth')
 			{
@@ -503,7 +564,9 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					index--;
 					char = text.charAt(index);
 				}
-				index++;
+				// foudn that this will cause it point to not valid char
+				// that is, after newline, it will point to next char again
+				// index++;
 				// save the start index
 				start_index = index;
 
@@ -580,22 +643,16 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				/**********************************************************************
 				remove the text from buffered text
 				***********************************************************************/
-
-
 				// remove the content that matched in the text buffer
 				// to make way for next regex
 				text = text.replace(to_replace, '');
 				// you have to reset its lastIndex,
 				// else, the next regex wont able to find the next pattern cos the 'text'
 				// buffer has been modified
-				_regex_whole.lastIndex = 0;
-
 
 				/**********************************************************************
-				finally, push to array
+				setup symbol name
 				***********************************************************************/
-
-
 				// for javascript, they have anonymous function
 				// if not match alphabets, set it to anonymous
 
@@ -604,13 +661,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				{
 					symbol_name = 'anonymous'
 				}
-
-				childTreeArr.push(new SymbolTreeItem(
-					symbol_name, 
-					vscode.TreeItemCollapsibleState.None, 
-					range));
 			}
-
 			else
 			{
 				/**********************************************************************
@@ -740,7 +791,8 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					char = text.charAt(index);
 				}
 				// current char is newline, move to the next char
-				index++;
+				// update, found that it will point to next char of '#' for #define string
+				// index++;
 				// save start_index
 				start_index = index;
 
@@ -809,35 +861,81 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				remove the text from buffered text
 				***********************************************************************/
 				text = text.replace(to_replace, '');
-				_regex_whole.lastIndex = 0;
-
-				childTreeArr.push(new SymbolTreeItem(
-					symbol_name, 
-					vscode.TreeItemCollapsibleState.None, 
-					range));
 			}
+
+
+			/**********************************************************************
+			finally, push to array
+			***********************************************************************/
+
+			/**********************************************************************
+			this code checks whether parent exists in array or not, 
+			then push to array accordingly
+			however, the checking is not necessary anymore
+			cos i have made sure that, i will initialize array to have parent, with null children
+			just leave it here in case i need to refer it back
+			***********************************************************************/
+			// // Find the index of the object with parent == symbolType
+			// let parentSymbolIndex = listOfSymbolsArr.findIndex((obj) => obj.parent === symbolType);
+			// // means parent found
+			// if (parentSymbolIndex !== -1) {
+			// 	// Push new children to the object at the index
+			// 	listOfSymbolsArr[parentSymbolIndex].children.push(new SymbolTreeItem(
+			// 		symbol_name, 
+			// 		vscode.TreeItemCollapsibleState.None, 
+			// 		range));
+			// }
+			// else // push new parent to array
+			// {
+			// 	listOfSymbolsArr.push({parent:symbolType, children:[new SymbolTreeItem(
+			// 		symbol_name, 
+			// 		vscode.TreeItemCollapsibleState.None, 
+			// 		range)]});
+			// }
+
+
+			// Find the index of the object with parent == symbolType
+			let parentSymbolIndex = listOfSymbolsArr.findIndex((obj) => obj.parent === symbolType);
+			// this is to remove 'null' children from array
+			// because i intialized the array to have 'null' children
+			if(listOfSymbolsArr[parentSymbolIndex].children[0].label == 'null')
+			{
+				listOfSymbolsArr[parentSymbolIndex].children[0].dispose();
+				listOfSymbolsArr[parentSymbolIndex].children = [];
+			}
+			// Push new children to the object at the index
+			listOfSymbolsArr[parentSymbolIndex].children.push(new SymbolTreeItem(
+				symbol_name, 
+				vscode.TreeItemCollapsibleState.None, 
+				range));
+
+			loopHasRemovedSometing = true;
+			// break from loop
+			// this is to make sure the regex starts all over again
+			// eg: i want it to scan function regex first, before scanning for function prototype regex
+			break;
 		}
 
-		if(childTreeArr.length == 0)
-			childTreeArr.push(new SymbolTreeItem(
-				'null', 
-				vscode.TreeItemCollapsibleState.None));
-
-		/**********************************************************************
-		finally, push to array
-		***********************************************************************/
-		// dont print out 'comment' tree list
-		// the intention for 'comment' regex is to remove comments only
-		if (operation != 'remove')
-		{
-			// push to array, this will show the list of symbols later
-			treeArr.push(new SymbolTreeItem(
-				symbolType, 
-				vscode.TreeItemCollapsibleState.Expanded, 
-				range,
-				childTreeArr));
-		}
-
+		if(loopHasRemovedSometing == true)
+			continue;
+		// this is to handle if regex didn't remove any text
+		// then, it means the text is start with something that no regex matches
+		// or got regex matches, but is not at start of the text (my algorithm works the way it should matches text start at beginning of text)
+		// and i have to remove it
+		// else, will stuck in loop endlessly
+		// remove the line until the next encoutner of newline
+		let newlineIndex = text.indexOf('\n');
+		let to_replace = text.substring(0, newlineIndex);
+		console.log('REMOVE : ' + to_replace);
+		// cannot do like text = text.replace(to_replace, '');
+		// because to_replace will be `''`, and, in the text buffer, it is `\n`
+		// have to put newlineIndex + 1, else, it will always be 0 and always start at beginning of text
+		text = text.substring(newlineIndex+1);
+		
+	}
+	for(let array of listOfSymbolsArr)
+	{
+		treeArr.push(new SymbolTreeItem(array.parent, vscode.TreeItemCollapsibleState.Expanded, null, array.children));
 	}
 	return treeArr;
 }

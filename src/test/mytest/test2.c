@@ -1,5 +1,5 @@
 // How to
-// ./allFileFewFuncExe repo/
+// ./allrepo
 /*
 
 test haha
@@ -18,6 +18,12 @@ test haha
 #include <regex.h>
 
 #include "include.h"
+
+int test[] = {
+    // hello
+    {5, 10},
+    {2, 33}
+}
 
 /***************************VR****************************************************************/
 // #define VR_DELETE_FILE                      "vr_delete_file"
