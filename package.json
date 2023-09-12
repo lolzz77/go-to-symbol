@@ -2,7 +2,11 @@
   "name": "go-to-symbol",
   "displayName": "go to symbol",
   "description": "to list down lists of symbols",
-  "version": "0.0.1",
+  "version": "3.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lolzz77/go-to-symbol.git"
+  },
   "engines": {
     "vscode": "^1.81.0"
   },
