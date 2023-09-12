@@ -315,3 +315,8 @@ typedef struct
 {
     int x;
 } haha_t;
+
+extern struct 
+{
+    int x;
+} haha_t;

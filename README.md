@@ -1,5 +1,19 @@
 # Go-to-Symbol
 
+# Info
+1. Currently supported language
+- C
+- CPP
+2. Commands
+- `Go to symbol: show path`
+- To show the path that the extension will write & read (language).json file at.
+- The setting.json for the extension will also be in this location.
+- `Go to symbol: refresh tree`
+- Clear the array, and re-extract the symbols in the current active editor
+- `Go to symbol: reset`
+- Clear the array, delete all the (language).json & setting.json file
+- Will not re-extract the symbols, users have to run `Go to symbol: refresh tree` in order to re-trigger the extension to extract the symbols.
+
 # What
 Provide a list of symbols found in the current active editor
 

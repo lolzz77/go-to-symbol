@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import * as func from './function';
-import { arrayBuffer } from 'stream/consumers';
 /*
  problem
  1. if you happen to have pattern same name, like
@@ -19,24 +18,19 @@ import { arrayBuffer } from 'stream/consumers';
 var ARR_SIZE = 10;
 // i made this global so i can dispose it in deactivate function
 var treeView:vscode.TreeView<SymbolTreeItem>;
+var goToSymbolArr:symbolTreeInterface[];
 
 interface symbolTreeInterface {
 	/*
 	note:
-	for interface,
-	u have to make sure the name in here,
-	tallied wit the name you gonna pass in
+	may be used by multiple array
+	i put multiple examples comments in each of the member
 	*/
 
 	// URI - the file path of the active editor
-	filePath: string;
-	// the list of symbols for the file
-	symbolTreeItem: SymbolTreeItem[];
-}
-
-interface ListOfSymbolsInterface {
 	// the parent. Eg: 'function'
 	parent: string;
+	// the list of symbols for the file
 	// their chidlren. Eg: 'main()', 'read_line()'
 	children: SymbolTreeItem[];
 }
@@ -76,22 +70,22 @@ export function activate(context: vscode.ExtensionContext) {
 	// thus, when you do looping to search the array
 	// the 1st index is null/undefined
 	// solution: use .fill({filePath: "", symbolTreeItem: []})
-	let goToSymbolArr:symbolTreeInterface[] = new Array(ARR_SIZE).fill({filePath: "", symbolTreeItem: []});
+	goToSymbolArr = new Array(ARR_SIZE).fill({filePath: "", symbolTreeItem: []});
 	const filePath:string = editor.document.uri.path;
 	// you have to use `{}` when pushing into this array
-	goToSymbolArr.push({filePath:filePath, symbolTreeItem:symbolTreeItem});
+	goToSymbolArr.push({parent:filePath, children:symbolTreeItem});
 
 
 	// by putting this code, no need to trigger 'activate', it will auto load
 	vscode.window.registerTreeDataProvider(
-		'my-view', // this one has to follow "view" section in package.json
+		'goToSymbolView', // this one has to follow "view" section in package.json
 		treeDataProvider
 	);
 	
 	// by putting this code, i dk, put or not put the tree will be printed still
 	// the only thing is, it assign to variable, and you use that variable for listening to clicked event
 	treeView = vscode.window.createTreeView<SymbolTreeItem>(
-		'my-view', 
+		'goToSymbolView', 
 		{
 			treeDataProvider : treeDataProvider,
 			showCollapseAll: true,
@@ -170,13 +164,8 @@ export function activate(context: vscode.ExtensionContext) {
 		// to reset the array
 		func.resetDecoration(decorationTypes);
 		// dispose all items
-		for(const symbolTreeItemInterface of goToSymbolArr)
-		{
-			for (const children of symbolTreeItemInterface.symbolTreeItem)
-				children.dispose();
-			goToSymbolArr = [];
-		}
-		goToSymbolArr.fill({filePath: "", symbolTreeItem: []});
+		disposeArray(goToSymbolArr);
+		goToSymbolArr.fill({parent: "", children: []});
 		// just show any index of array item
 		treeDataProvider.refresh([]);
 		// delete the JSON files as well
@@ -193,11 +182,11 @@ export function activate(context: vscode.ExtensionContext) {
 		// dispose all items
 		for(const symbolTreeItemInterface of goToSymbolArr)
 		{
-			for (const children of symbolTreeItemInterface.symbolTreeItem)
+			for (const children of symbolTreeItemInterface.children)
 				children.dispose();
 			goToSymbolArr = [];
 		}
-		goToSymbolArr.fill({filePath: "", symbolTreeItem: []});
+		goToSymbolArr.fill({parent: "", children: []});
 
 		// now re-get the symbols
 		let editor = vscode.window.activeTextEditor;
@@ -208,7 +197,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 		let filePath:string = editor.document.uri.path;
 		let symbolTreeItem:SymbolTreeItem[] = getSymbols(editor);
-		goToSymbolArr.push({filePath:filePath, symbolTreeItem:symbolTreeItem});
+		goToSymbolArr.push({parent:filePath, children:symbolTreeItem});
 		treeDataProvider.refresh(symbolTreeItem);
 	});
 
@@ -232,14 +221,14 @@ export function activate(context: vscode.ExtensionContext) {
 		const filePath:string = editor.document.uri.path;
 		// check if the current editor exists in the array
 		// return value: index value if found, -1 if not fund
-		let existsIndex = goToSymbolArr.findIndex(element => element.filePath === filePath);
+		let existsIndex = goToSymbolArr.findIndex(element => element.parent === filePath);
 
 
 		// if exists, then we reuse the data
 		if(existsIndex >= 0)
 		{
 			// this will refresh the tree list
-			treeDataProvider.refresh(goToSymbolArr[existsIndex].symbolTreeItem);
+			treeDataProvider.refresh(goToSymbolArr[existsIndex].children);
 			return;
 		}
 
@@ -256,13 +245,13 @@ export function activate(context: vscode.ExtensionContext) {
 		{
 			// dispose them first
 			// only dispose the children of 1st element
-			for (const child of goToSymbolArr[0].symbolTreeItem)
+			for (const child of goToSymbolArr[0].children)
 				child.dispose();
 			// this will remove the 1st element of array
 			goToSymbolArr.shift();
 		}
 		// this pushes will push to the last element of array
-		goToSymbolArr.push({filePath, symbolTreeItem});
+		goToSymbolArr.push({parent:filePath, children:symbolTreeItem});
 		treeDataProvider.refresh(symbolTreeItem);
 
 	});
@@ -280,7 +269,7 @@ export function deactivate() {
 	2. const treeDataProvider:TreeDataProvider = new TreeDataProvider(symbolTreeItem);, provided you DIDNT use registerTreeDataProvider()
 	if you use registerTreeDataProvider, then vscode will dispose it for u
 	*/
-
+	disposeArray(goToSymbolArr);
 	treeView.dispose();
 }
 
@@ -399,7 +388,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 	var treeArr:SymbolTreeItem[] = [];
 	// the children. This will be the matched function patterns
 	// for the parent tree
-	var listOfSymbolsArr:ListOfSymbolsInterface[] = [];
+	var listOfSymbolsArr:symbolTreeInterface[] = [];
 	
 	if(!entries)
 		return [new SymbolTreeItem('regex is null', vscode.TreeItemCollapsibleState.None)];
@@ -975,4 +964,19 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 		treeArr.push(new SymbolTreeItem(array.parent, vscode.TreeItemCollapsibleState.Expanded, null, array.children));
 	}
 	return treeArr;
+}
+
+// to dispose class object that stored in array
+function disposeArray(arr: symbolTreeInterface[])
+{
+	for (const type of arr)
+	{
+		let children = type.children;
+		if(children == undefined)
+			continue;
+		for(const child of children)
+			child.dispose();
+	}
+	// delete all the elements
+	arr = [];
 }

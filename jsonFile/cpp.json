@@ -24,14 +24,14 @@
     },
     "struct" : {
         "comment1" : "",
-        "whole" : ["([typedef]*)\\s*struct\\s*[a-zA-Z0-9_]*\\s*\\{", "g"],
+        "whole" : ["([typedef|extern]*)\\s*struct\\s*[a-zA-Z0-9_]*\\s*\\{", "g"],
         "operation" : "depth",
         "opening" : ["{", "}"],
         "before" : ["{"]
     },
     "enum" : {
         "comment1" : "",
-        "whole" : ["([typedef]*)\\s*enum\\s+[^{}]*\\{", "g"],
+        "whole" : ["([typedef|extern]*)\\s*enum\\s+[^{}]*\\{", "g"],
         "operation" : "depth",
         "opening" : ["{", "}"],
         "before" : ["{"]

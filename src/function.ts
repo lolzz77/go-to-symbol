@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 
+// for resetting the decoration applied to active editor
 export function resetDecoration(decorationTypes: vscode.TextEditorDecorationType[])
 {
 	// Reset all decoration types to their default state
@@ -11,6 +12,7 @@ export function resetDecoration(decorationTypes: vscode.TextEditorDecorationType
 	decorationTypes = [];
 }
 
+// to empty the directory
 export function clearDirectory(path:string)
 {
 	// Check if the path exists

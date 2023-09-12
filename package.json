@@ -33,17 +33,17 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "my-sidebar",
-          "title": "My Sidebar",
+          "id": "goToSymbolSidebar",
+          "title": "Sidebar",
           "icon": "resources/google.svg"
         }
       ]
     },
     "views": {
-      "my-sidebar": [
+      "goToSymbolSidebar": [
         {
-          "id": "my-view",
-          "name": "My View"
+          "id": "goToSymbolView",
+          "name": "Symbol View"
         }
       ]
     }
