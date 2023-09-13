@@ -86,12 +86,22 @@
         "before" : [""],
         "ignoreCommentedCode" : false
     },
-    "global" : {
+    "global1" : {
+        "comment1" : "This is for global vairbale that is an array, thus, it has depth.",
+        "comment2" : "1st group matches return type. Then compulsory whitespace. Then variable name. Then optional white space. Then optional whitespace. Then anything until `=` or newline. Then match `=`. Then optional whitespace. Then `{`",
+        "whole" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*[^=\\n]*=\\s*\\{", "g"],
+        "operation" : "depth",
+        "opening" : ["{", "}"],
+        "before" : ["="],
+        "ignoreCommentedCode" : false
+    },
+    "global2" : {
         "comment1" : "Match return type. Then whitespace. Then match variable name. Then match anything except ';' (zero or more, for cases `int x;` will fail the regex). Finally, match ';'",
+        "comment2" : "this regex has some flaw. Last part, it says match til you see `;` and `}`. If saw `}` first, then it will exit. Then it will match `;`. However, in some cases, a global variable may be an array, and inside the global variable, it conatins `}`. Then, after `}`, may contain other things, only then last part is `;`. However, good thing is that it wont stuck in a loop. Solution: I create antoher global regex above of this.",
         "whole" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*[^;}]*;", "g"],
         "operation" : "",
         "opening" : ["", ""],
         "before" : ["=", ";"],
-        "ignoreCommentedCode" : false
+        "ignoreCommentedCode" : false,
     }
 }

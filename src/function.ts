@@ -9,7 +9,7 @@ export function resetDecoration(decorationTypes: vscode.TextEditorDecorationType
 		type.dispose();
 	}
 	// delete all the elements
-	decorationTypes = [];
+	decorationTypes.length = 0;
 }
 
 // to empty the directory
