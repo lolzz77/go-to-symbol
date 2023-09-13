@@ -10,11 +10,6 @@ import * as func from './function';
  not sure about struct n enum
 */
 
-// global variable
-// the size to hold number of active editors
-// so that, everytime i switch file, it wont need to rerun the algorithm to extract the symbols
-// however, once array is maxed, then it will need to rerun the algorithm for the file that the array removed
-var ARR_SIZE = 10;
 // i made this global so i can dispose it in deactivate function
 var treeView:vscode.TreeView<SymbolTreeItem>;
 var goToSymbolArr:symbolTreeInterface[];
@@ -58,6 +53,12 @@ export function activate(context: vscode.ExtensionContext) {
 	// an array that can be used to dispose item inside when needed
 	// to dispose it, call disposables.forEach(d => d.dispose());
 	// var disposables:vscode.Disposable[] = [];
+
+	// create the setting.json file
+	let settingPath = func.getJSONPath('setting');
+	func.createAndWriteFile(settingPath, 'setting');
+	let settingObj = func.getJSONData(settingPath);
+	let ARR_SIZE = settingObj.arraySize;
 
 	// my extension array, to be placed into disposables array so dispose them
 	// writing  goToSymbolArr:symbolTreeInterface[] = new Array(ARR_SIZE);
@@ -164,7 +165,19 @@ export function activate(context: vscode.ExtensionContext) {
 		func.resetDecoration(decorationTypes);
 		// dispose all items
 		disposeArray(goToSymbolArr);
-		goToSymbolArr.fill({parent: "", children: []});
+
+		// re-assign the size
+		// cos, now the size is 0
+		// and you do goToSymbolArr.fill(), it fills nothing
+		// However, do not that JS uses dynamic array
+		// tho you didnt specify the array size, it will works whenever you do arr.push()
+		// and i think this is not needed
+		// i dk if like run this in a loop what will happen,
+		// goToSymbolArr = new Array(ARR_SIZE);
+		
+		// this one is also not needed, since now array is at size 0, filling doesn't cause anything
+		// goToSymbolArr.fill({parent: "", children: []});
+		
 		// just show any index of array item
 		treeDataProvider.refresh([]);
 		// delete the JSON files as well
@@ -172,15 +185,20 @@ export function activate(context: vscode.ExtensionContext) {
 		func.clearDirectory(path);
 	});
 
-	// to refresh tree only
+	// to refresh tree only, however, will reset the array as well
 	let disposable3 = vscode.commands.registerCommand('go-to-symbol.refreshTree', () => {
+		// re-create again, incase the setting file is deleted
+		let settingPath = func.getJSONPath('setting');
+		func.createAndWriteFile(settingPath, 'setting');
+		let settingObj = func.getJSONData(settingPath);
+		let ARR_SIZE = settingObj.arraySize;
+
 		// show empty list first
 		treeDataProvider.refresh([]);
 		// to reset the array
 		func.resetDecoration(decorationTypes);
 		// dispose all items
 		disposeArray(goToSymbolArr);
-		goToSymbolArr.fill({parent: "", children: []});
 
 		// now re-get the symbols
 		let editor = vscode.window.activeTextEditor;
@@ -191,6 +209,16 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 		let filePath:string = editor.document.uri.path;
 		let symbolTreeItem:SymbolTreeItem[] = getSymbols(editor);
+
+		while(goToSymbolArr.length > ARR_SIZE)
+		{
+			// just keep disposing the 1st child
+			// cos later will do arr.shift()
+			for (const child of goToSymbolArr[0].children)
+				child.dispose();
+			// this will remove the 1st element of array
+			goToSymbolArr.shift();
+		}
 		goToSymbolArr.push({parent:filePath, children:symbolTreeItem});
 		treeDataProvider.refresh(symbolTreeItem);
 	});
@@ -205,12 +233,38 @@ export function activate(context: vscode.ExtensionContext) {
 		// cleanup
 		func.resetDecoration(decorationTypes);
 
+		// re-create again, incase the setting file is deleted
+		let settingPath = func.getJSONPath('setting');
+		func.createAndWriteFile(settingPath, 'setting');
+		let settingObj = func.getJSONData(settingPath);
+		let ARR_SIZE = settingObj.arraySize;
+
 		// if you debug
 		// it will come here twice (i dk why)
 		// the 1st time this editor will be null
 		// the 2nd time will have value
 		if(!editor)
 			return;
+
+		// use `>` rather than `>=`
+		// i used arr = new Array(4) 
+		// then, arr.fill()
+		// the result will be arr.length = 5
+		// it has 0th index ~ 4th index array
+		// then, after this loop, will push new array
+		// thus, the arr.length will be 5
+		// i follow how arr = new Array(4) behave
+		// no need to handle if arr.length < ARR_SIZE, just keep pushing new element
+		// JS uses dynamic array
+		while(goToSymbolArr.length > ARR_SIZE)
+		{
+			// dispose them first
+			// only dispose the children of 1st element
+			for (const child of goToSymbolArr[0].children)
+				child.dispose();
+			// this will remove the 1st element of array
+			goToSymbolArr.shift();
+		}
 
 		const filePath:string = editor.document.uri.path;
 		// check if the current editor exists in the array
@@ -227,21 +281,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 		// else, create it
 		let symbolTreeItem:SymbolTreeItem[] = getSymbols(editor);
-		// add to array
-		// actually, since you use array.fill() above
-		// this if is 100% will run,
-		// which means, this checking serves no purpose
-		// just do array.shift() can ady
-		// but just leave it here
-		if(goToSymbolArr.length >= ARR_SIZE)
-		{
-			// dispose them first
-			// only dispose the children of 1st element
-			for (const child of goToSymbolArr[0].children)
-				child.dispose();
-			// this will remove the 1st element of array
-			goToSymbolArr.shift();
-		}
+
+
 		// this pushes will push to the last element of array
 		goToSymbolArr.push({parent:filePath, children:symbolTreeItem});
 		treeDataProvider.refresh(symbolTreeItem);
@@ -965,16 +1006,46 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 }
 
 // to dispose class object that stored in array
+/* 
+	Note 1:
+	after running this function
+	// the child of child of the array is diposed
+	// the parent array - goToSymbolArr's children are not disposed
+	// i dk if is right
+	// they should be diposed as well
+	// i rmb i learn that you should only dispose class's member
+	// so it should be correct, cos i seee in debugger, the children of the class object is disposed
+
+	Note 2:
+	// it is noted that arr = [], will modify the reference instead of the actual array
+	// if you do arr.length = 0, then this is modifying the actual array
+	// javasript is weird
+	// try verify again with chatgpt
+*/
 function disposeArray(arr: symbolTreeInterface[])
 {
-	for (const type of arr)
+	for (const symbolTreeInterface of arr)
 	{
-		let children = type.children;
+		let children = symbolTreeInterface.children;
 		if(children == undefined)
 			continue;
-		for(const child of children)
+		for(let child of children)
+		{
 			child.dispose();
+			// by right, u should set them to null
+			// this is to remove refernece to object
+			// in JS, if object has no reference,
+			// it will automatically detected by gargabe collector and dispose them
+			// however, doing this would need u to change the interface children:(SymbolTreeItem|null)[]
+			// doing so, you have a lot of code change
+			// you can just simply set the array to = [];
+			// it works the same
+			// said chatgpt
+			// child = null;
+		}
 	}
+	
 	// delete all the elements
-	arr = [];
+	// arr = []; // this one actually creates new empty array and assign it to the variable. This modifies the reference instead of actual object
+	arr.length = 0; // this works 
 }
