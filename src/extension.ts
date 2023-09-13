@@ -602,8 +602,8 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				// get the substring, starting from the given start index
 				symbol_name = sub.substring(index + 1);
 				// remove white spaces
-				while(symbol_name.includes('\\s+'))
-					symbol_name = symbol_name.replace('\\s+', '');
+				while(symbol_name.includes(' '))
+					symbol_name = symbol_name.replace(' ', '');
 				// remove '\n' characters
 				while(symbol_name.includes('\n'))
 					symbol_name = symbol_name.replace('\n', '');
@@ -847,7 +847,15 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					sub_sub = sub.substring(start_index, end_substring + start_index);
 					symbol_name = sub_sub;
 				}
-
+				// remove white spaces
+				while(symbol_name.includes(' '))
+					symbol_name = symbol_name.replace(' ', '');
+				// remove '\n' characters
+				while(symbol_name.includes('\n'))
+					symbol_name = symbol_name.replace('\n', '');
+				// remove '*' characters
+				while(symbol_name.includes('*'))
+					symbol_name = symbol_name.replace('*', '');
 				/**********************************************************************
 				to get the whole pattern
 				***********************************************************************/

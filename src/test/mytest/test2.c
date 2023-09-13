@@ -239,6 +239,8 @@ int main (int argc, char* argv[]);
 // For test_powercut() function definition
 // I want to write the function definition for once, in a file that i want, and before encoutnering the 1st function in the file
 static int is_first_function = TRUE; 
+static int        is_first_function2       = TRUE; 
+static int *is_first_function3 = TRUE; 
 static int testest; 
 int test3[]={
     0x00
