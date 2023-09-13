@@ -185,7 +185,7 @@ export function activate(context: vscode.ExtensionContext) {
 		func.clearDirectory(path);
 	});
 
-	// to refresh tree only, however, will reset the array as well
+	// to refresh tree only, only the current active editor's tree
 	let disposable3 = vscode.commands.registerCommand('go-to-symbol.refreshTree', () => {
 		// re-create again, incase the setting file is deleted
 		let settingPath = func.getJSONPath('setting');
@@ -195,25 +195,35 @@ export function activate(context: vscode.ExtensionContext) {
 
 		// show empty list first
 		treeDataProvider.refresh([]);
-		// to reset the array
-		func.resetDecoration(decorationTypes);
-		// dispose all items
-		disposeArray(goToSymbolArr);
 
 		// now re-get the symbols
 		let editor = vscode.window.activeTextEditor;
 		if(!editor)
+			return;
+		let symbolTreeItem:SymbolTreeItem[] = getSymbols(editor);
+		const filePath:string = editor.document.uri.path;
+		let existsIndex = goToSymbolArr.findIndex(element => element.parent === filePath);
+		// if exists, re-update the array
+		if(existsIndex >= 0)
 		{
-			treeDataProvider.refresh([]);
+			for(let child of goToSymbolArr[existsIndex].children)
+				child.dispose();
+			// discard / de-reference all the array elements
+			// to allow JS to garbage collect it
+			goToSymbolArr[existsIndex].children = [];
+			// now push the new symbols to it
+			goToSymbolArr[existsIndex].children = symbolTreeItem;
+			// refresh the tree
+			treeDataProvider.refresh(goToSymbolArr[existsIndex].children);
 			return;
 		}
-		let filePath:string = editor.document.uri.path;
-		let symbolTreeItem:SymbolTreeItem[] = getSymbols(editor);
-
+		// if not exists, push to array
+		// this happens when you run `reset` command to delete everything
+		// then straight run `refresh tree` command to update the tree
+		// however, still put arr size check for fail-safe scenario
 		while(goToSymbolArr.length > ARR_SIZE)
 		{
-			// just keep disposing the 1st child
-			// cos later will do arr.shift()
+			// dispose 1st element in a loop
 			for (const child of goToSymbolArr[0].children)
 				child.dispose();
 			// this will remove the 1st element of array
