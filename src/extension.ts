@@ -602,9 +602,14 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				// get the substring, starting from the given start index
 				symbol_name = sub.substring(index + 1);
 				// remove white spaces
-				symbol_name = symbol_name.replace('\\s*', '');
+				while(symbol_name.includes('\\s+'))
+					symbol_name = symbol_name.replace('\\s+', '');
 				// remove '\n' characters
-				symbol_name = symbol_name.replace('\n', '');
+				while(symbol_name.includes('\n'))
+					symbol_name = symbol_name.replace('\n', '');
+				// remove '*' characters
+				while(symbol_name.includes('*'))
+					symbol_name = symbol_name.replace('*', '');
 				
 
 
