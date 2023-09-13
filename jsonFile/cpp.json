@@ -102,6 +102,6 @@
         "operation" : "",
         "opening" : ["", ""],
         "before" : ["=", ";"],
-        "ignoreCommentedCode" : false,
+        "ignoreCommentedCode" : false
     }
 }
