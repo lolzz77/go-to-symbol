@@ -2,7 +2,9 @@
     "function" : {
         "comment0" : "1st group matching has to be `1 or more`, tho my 1st group matching is for `static` those kind. But, regex matches from lef to right. Thus, for function that doesn't have `static`, and if i put my 1st group matching to `zero or more`, it will matches the 1st group matching. Thus, you should NOT set 1st group matching to `zero or more`. You should treat the 1st matching as `return type`. Thus, if you found a new function has more symbols before the `return type`, add them before the `(` in the regex, and put them `zero or more`.",
         "comment1" : "CANNOT be null. 1st group matching is `inline|static` etc  (note: i put `1 or more`, please read above comment why). Then is words like `unsigned` etc. Then is function return type like `int`. Then compulsory white space. Then function name, then optional whitespace. Then match `(`, then match anything not equal to ), then match match {.",
-        "whole" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*([a-zA-Z0-9_*]*)\\s*([a-zA-Z0-9_*]*)\\s*\\([^)]*\\)\\s*\\{", "g"],
+        "regexes" : [
+            ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*([a-zA-Z0-9_*]*)\\s*([a-zA-Z0-9_*]*)\\s*\\([^)]*\\)\\s*\\{", "g"]
+        ],
         "comment2" : "Can be null. This operation is to tell my code how should i handle it. Currently has 'depth', 'remove', ''. depth - i will perform depth search, will use 'opening' key. 'remove' - will perform operation to remove it from buffered text, will not print on the tree list. '' - will fall into else case",
         "operation" : "depth",
         "comment3" : "Can be null. This tells my code, what is the opening & closing symbols. For depth searching.",
@@ -14,7 +16,9 @@
     },
     "class" : {
         "comment1" : "",
-        "whole" : ["^\\s*class\\s+\\w+\\s*\\{", "gm"],
+        "regexes" : [
+            ["^\\s*class\\s+\\w+\\s*\\{", "gm"]
+        ],
         "operation" : "depth",
         "opening" : ["{", "}"],
         "before" : ["("],
@@ -22,7 +26,9 @@
     },
     "union" : {
         "comment1" : "",
-        "whole" : ["([typedef]*)\\s*union\\s*[a-zA-Z0-9_]*\\s*\\{", "g"],
+        "regexes" : [
+            ["([typedef]*)\\s*union\\s*[a-zA-Z0-9_]*\\s*\\{", "g"]
+        ],
         "operation" : "depth",
         "opening" : ["{", "}"],
         "before" : ["{"],
@@ -30,7 +36,9 @@
     },
     "struct" : {
         "comment1" : "",
-        "whole" : ["([typedef|extern]*)\\s*struct\\s*[a-zA-Z0-9_]*\\s*\\{", "g"],
+        "regexes" : [
+            ["([typedef|extern]*)\\s*struct\\s*[a-zA-Z0-9_]*\\s*\\{", "g"]
+        ],
         "operation" : "depth",
         "opening" : ["{", "}"],
         "before" : ["{"],
@@ -38,7 +46,9 @@
     },
     "enum" : {
         "comment1" : "",
-        "whole" : ["([typedef|extern]*)\\s*enum\\s+[^{}]*\\{", "g"],
+        "regexes" : [
+            ["([typedef|extern]*)\\s*enum\\s+[^{}]*\\{", "g"]
+        ],
         "operation" : "depth",
         "opening" : ["{", "}"],
         "before" : ["{"],
@@ -46,7 +56,9 @@
     },
     "macro" : {
         "comment1" : "",
-        "whole" : ["#define\\s+([^\\n]+)\\n", "g"],
+        "regexes" : [
+            ["#define\\s+([^\\n]+)\\n", "g"]
+        ],
         "operation" : "",
         "opening" : ["", ""],
         "after" : ["define"],
@@ -54,7 +66,9 @@
     },
     "guard1": {
         "comment1": "",
-        "whole": ["(#ifdef)\\s+([^\\n]+)\\n", "g"],
+        "regexes": [
+            ["(#ifdef)\\s+([^\\n]+)\\n", "g"]
+        ],
         "operation": "",
         "opening": ["", ""],
         "after": ["ifdef"],
@@ -62,7 +76,9 @@
     },
     "guard2": {
         "comment1": "",
-        "whole": ["(#if|#elif)\\s*([^defined])([^\\n]+)\\n", "g"],
+        "regexes": [
+            ["(#if|#elif)\\s*([^defined])([^\\n]+)\\n", "g"]
+        ],
         "operation": "",
         "opening": ["", ""],
         "after": ["defined"],
@@ -70,7 +86,9 @@
     },
     "comment1" : {
         "comment1" : "detects `//`. This will match til newline, despite in the comment has `\n`, it still can match",
-        "whole" : ["\\/\\/.*", "g"],
+        "regexes" : [
+            ["\\/\\/.*", "g"]
+        ],
         "operation" : "remove",
         "opening" : ["", ""],
         "before" : [""],
@@ -80,7 +98,9 @@
     },
     "comment2" : {
         "comment1" : "detects multiline `/**/` comments.",
-        "whole" : ["\\/\\*[^*]*\\*+(?:[^\\/*][^*]*\\*+)*\\/", "g"],
+        "regexes" : [
+            ["\\/\\*[^*]*\\*+(?:[^\\/*][^*]*\\*+)*\\/", "g"]
+        ],
         "operation" : "remove",
         "opening" : ["", ""],
         "before" : [""],
@@ -88,7 +108,9 @@
     },
     "function_prototype" : {
         "comment1" : "1st group matching is 'static' those kind (will be optional for this). 2nd group is function return type. 3rd group is function name. Then match parenthesis. Then match ';'",
-        "whole" : ["([a-zA-Z0-9_*]*)\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*\\([^)]*\\)\\s*;", "g"],
+        "regexes" : [
+            ["([a-zA-Z0-9_*]*)\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*\\([^)]*\\)\\s*;", "g"]
+        ],
         "operation" : "remove",
         "opening" : [""],
         "before" : [""],
@@ -96,7 +118,9 @@
     },
     "include" : {
         "comment1" : "",
-        "whole" : ["#include\\s+([^\\n]+)\\s*\\n", "g"],
+        "regexes" : [
+            ["#include\\s+([^\\n]+)\\s*\\n", "g"]
+        ],
         "operation" : "remove",
         "opening" : [""],
         "before" : [""],
@@ -105,7 +129,9 @@
     "global1" : {
         "comment1" : "This is for global vairbale that is an array, thus, it has depth.",
         "comment2" : "1st group matches return type. Then compulsory whitespace. Then variable name. Then optional white space. Then optional whitespace. Then anything until `=` or newline. Then match `=`. Then optional whitespace. Then `{`",
-        "whole" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*[^=\\n]*=\\s*\\{", "g"],
+        "regexes" : [
+            ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*[^=\\n]*=\\s*\\{", "g"]
+        ],
         "operation" : "depth",
         "opening" : ["{", "}"],
         "before" : ["="],
@@ -114,7 +140,9 @@
     "global2" : {
         "comment1" : "Match return type. Then whitespace. Then match variable name. Then match anything except ';' (zero or more, for cases `int x;` will fail the regex). Finally, match ';'",
         "comment2" : "this regex has some flaw. Last part, it says match til you see `;` and `}`. If saw `}` first, then it will exit. Then it will match `;`. However, in some cases, a global variable may be an array, and inside the global variable, it conatins `}`. Then, after `}`, may contain other things, only then last part is `;`. However, good thing is that it wont stuck in a loop. Solution: I create antoher global regex above of this.",
-        "whole" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*[^;}]*;", "g"],
+        "regexes" : [
+            ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*[^;}]*;", "g"]
+        ],
         "operation" : "",
         "opening" : ["", ""],
         "before" : ["=", ";"],
