@@ -52,6 +52,22 @@
         "after" : ["define"],
         "ignoreCommentedCode" : true
     },
+    "guard1": {
+        "comment1": "",
+        "whole": ["(#ifdef)\\s+([^\\n]+)\\n", "g"],
+        "operation": "",
+        "opening": ["", ""],
+        "after": ["ifdef"],
+        "ignoreCommentedCode": false
+    },
+    "guard2": {
+        "comment1": "",
+        "whole": ["(#if|#elif)\\s*([^defined])([^\\n]+)\\n", "g"],
+        "operation": "",
+        "opening": ["", ""],
+        "after": ["defined"],
+        "ignoreCommentedCode": false
+    },
     "comment1" : {
         "comment1" : "detects `//`. This will match til newline, despite in the comment has `\n`, it still can match",
         "whole" : ["\\/\\/.*", "g"],
