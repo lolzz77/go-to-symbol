@@ -70,6 +70,10 @@ int test2[] = {
     {2, 33}
 }
 
+// test same variable name, would it able to highlight each of them individually
+int x = 5;
+int x = 5;
+
 /***************************VR****************************************************************/
 // #define VR_DELETE_FILE                      "vr_delete_file"
 // #define LOG_VR_DELETE_FILE                  "\tmlog(\"ME\", TRACE0, \"%s: " VR_DELETE_FILE " next\", __FUNCTION__);\n"
