@@ -269,6 +269,8 @@ typedef enum me2
 ***************/
 static int read_line (char* file_to_open)
 {
+    #define TEST TEST
+    #define HELLO HELLO
     char line_read[MAX_READ_SIZE_PER_LINE] = {'\0'};
     unsigned int old_file_size = 0;
     FILE* fp = NULL;
