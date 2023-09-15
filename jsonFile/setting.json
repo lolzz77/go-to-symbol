@@ -4,5 +4,5 @@
     "comment2" : "Color on sidebar of the minimap. Color - GREEN",
     "overviewRulerColor": "#02fa0f",
     "coment3" : "Array size to hold active editor. 10 - Array able to hold 10 active editors's symbols. So when going back to previous active editor, it wont need to re-extract the symbols again. User can trigger `reset`, or change active editor to trigger this array size changes.",
-    "arraySize" : 10
+    "arraySize" : 35
 }
