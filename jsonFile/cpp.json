@@ -10,8 +10,7 @@
                 "comment3" : "Can be null. This tells my code, what is the opening & closing symbols. For depth searching.",
                 "opening" : ["{", "}"],
                 "comment4" : "Can be null. Can be multiple. Will choose the closest one. symbolToLookForBeforeTheName - the symbol to look for when extracting the symbol name. This symbol shall appear BEFORE the symbol name. Eg: for function name, the symbol before function name is whitespace. symbolToLookForAfterTheName - the symbol to look for when extracting the symbol name. This symbol shall appear AFTER the symbol name. Eg: for function name, the symbol after function name is either whitespace or `(`",
-                "symbolToLookForBeforeTheName" : [" "],
-                "symbolToLookForAfterTheName" : [" ", "("],
+                "symbolNameRegex" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*([a-zA-Z0-9_*]*)\\s*([a-zA-Z0-9_*]*)\\s*\\("],
                 "comment5" : "true/false. True - will print out in the list even if it is commented. False - will not print out in the list if it is commented. This tells my code, if it is commented, ignore it, print it out onto the list. Note: initially intended for MACRO regex. Havent test for other regex. Might be not working for others. Havent test.",
                 "ignoreCommentedCode" : false
             }
