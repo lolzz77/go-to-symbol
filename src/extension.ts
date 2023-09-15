@@ -511,6 +511,21 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 		// if the parent's children is 0, remove the parent
 		if(entries[parentIndex][1].regexes.length != 0)
 			continue;
+		/* Cannot do like
+			// remove the element of array, 
+			// the following index is not shifted
+			// eg: [1, 2, 3]
+			// result: [1, [removed], 2]
+			delete entries[parentIndex];
+			// set it to null
+			// result: [1, null, 2] 
+			entries[parentIndex] = null;
+			// remove the indexed array, the following will be shifted
+			// result: [1, 2]
+			entries.splice(parentIndex, 1);
+
+			This will cause the `parentIndex` and `index` in the for loop not tallied with yoru current array
+		*/
 		delete entries[parentIndex];
 		entries[parentIndex] = null;
 	}
@@ -556,7 +571,6 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 			{
 				delete entries[parentIndex];
 				entries[parentIndex] = null;
-				entries.splice(parentIndex, 1);
 			}
 
 			let regexStr = regexEntries.regex[0];
@@ -1065,6 +1079,24 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 		}
 	}
 
+
+	// check & remove 1 more time
+	length = 0;
+	lastIndex = 0;
+	while(length < entries.length)
+	{
+		if(entries[length]!=null)
+		{
+			length++;
+			lastIndex = length;
+			continue;
+		}
+		entries.splice(lastIndex, 1);
+		length=lastIndex;
+	}
+
+	// free buffer
+	copyOfEntries = null;
 	let original_doc_last_index_offset = 0;
 	while(text.length > 0)
 	{
