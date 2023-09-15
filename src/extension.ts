@@ -1116,6 +1116,17 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				// fail safe check, if no regex, skip
 				if(regexStr == '')
 					continue;
+				/**
+				 * Note:
+				 * match will be an array
+				 * Depending on how you define the `group` in your regex, 
+				 * (grou is defined by wrapping regex in `()` symbol)
+				 * Then, it will has array for each of these groups
+				 * 1st index is always the whole regex
+				 * 2nd index is the grouping
+				 * Thus, you can extract symbol name by getting the array index
+				 * Provided you defined the group regex correctly
+				 */
 				let match = regex.exec(text);
 				let symbolType:string = key;
 				if(!match)
