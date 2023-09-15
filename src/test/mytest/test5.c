@@ -10,6 +10,10 @@
 // #if (defined WORD) // This line is missing the defined operator inside the parentheses. It should be #if defined(WORD).
 #ifndef TEST
 
+#if (ME == VALUE)
+errno = run_test(5);
+#endif
+
 
     // "guard": {
     //     "comment1": "",
