@@ -14,6 +14,11 @@
 errno = run_test(5);
 #endif
 
+#if TEST
+#elif TEST2
+#else
+#endif
+
 
     // "guard": {
     //     "comment1": "",

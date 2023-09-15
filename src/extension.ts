@@ -9,13 +9,7 @@ import * as func from './function';
  }
  not sure about struct n enum
 
- 2. new feature - add line number
-
- 3. for "ignorecommentedcode", it will run the regex for the `whole` document first
- only then it able to run the next regex
- So, if `#define` is in function
- it will extract the `#define` in function first, then only extract function
- thus causing problem
+ 2. need to highlight the whole `#if #elif #endif` guarding
 */
 
 // i made this global so i can dispose it in deactivate function
