@@ -9,8 +9,9 @@
                 "operation" : "depth",
                 "comment3" : "Can be null. This tells my code, what is the opening & closing symbols. For depth searching.",
                 "opening" : ["{", "}"],
-                "comment4" : "Can be null. Can be either `before` or `after`. Can be multiple. If multiple, will search for the closest index. This is for cases that have either, eg: global variable, a symbol name can be before `=` or `;`. This tells my code, what symbol to look for to extract the symbol name.",
-                "before" : ["("],
+                "comment4" : "Can be null. Can be multiple. Will choose the closest one. symbolToLookForBeforeTheName - the symbol to look for when extracting the symbol name. This symbol shall appear BEFORE the symbol name. Eg: for function name, the symbol before function name is whitespace. symbolToLookForAfterTheName - the symbol to look for when extracting the symbol name. This symbol shall appear AFTER the symbol name. Eg: for function name, the symbol after function name is either whitespace or `(`",
+                "symbolToLookForBeforeTheName" : [" "],
+                "symbolToLookForAfterTheName" : [" ", "("],
                 "comment5" : "true/false. True - will print out in the list even if it is commented. False - will not print out in the list if it is commented. This tells my code, if it is commented, ignore it, print it out onto the list. Note: initially intended for MACRO regex. Havent test for other regex. Might be not working for others. Havent test.",
                 "ignoreCommentedCode" : false
             }
@@ -23,7 +24,8 @@
                 "regex" : ["^\\s*class\\s+\\w+\\s*\\{", "gm"],
                 "operation" : "depth",
                 "opening" : ["{", "}"],
-                "before" : ["("],
+                "symbolToLookForBeforeTheName" : [""],
+                "symbolToLookForAfterTheName" : [""],
                 "ignoreCommentedCode" : false
             }
         ]
@@ -35,7 +37,8 @@
                 "regex" : ["([typedef]*)\\s*union\\s*[a-zA-Z0-9_]*\\s*\\{", "g"],
                 "operation" : "depth",
                 "opening" : ["{", "}"],
-                "before" : ["{"],
+                "symbolToLookForBeforeTheName" : ["{", "\\n", " "],
+                "symbolToLookForAfterTheName" : ["union"],
                 "ignoreCommentedCode" : false
             }
         ]
@@ -47,7 +50,8 @@
                 "regex" : ["([typedef|extern]*)\\s*struct\\s*[a-zA-Z0-9_]*\\s*\\{", "g"],
                 "operation" : "depth",
                 "opening" : ["{", "}"],
-                "before" : ["{"],
+                "symbolToLookForBeforeTheName" : ["{", "\\n", " "],
+                "symbolToLookForAfterTheName" : ["struct"],
                 "ignoreCommentedCode" : false
             }
         ]
@@ -59,7 +63,8 @@
                 "regex" : ["([typedef|extern]*)\\s*enum\\s+[^{}]*\\{", "g"],
                 "operation" : "depth",
                 "opening" : ["{", "}"],
-                "before" : ["{"],
+                "symbolToLookForBeforeTheName" : ["{", "\\n", " "],
+                "symbolToLookForAfterTheName" : ["enum"],
                 "ignoreCommentedCode" : false
             }
         ]
@@ -71,7 +76,8 @@
                 "regex" : ["#define\\s+([^\\n]+)\\n", "g"],
                 "operation" : "",
                 "opening" : ["", ""],
-                "after" : ["define"],
+                "symbolToLookForBeforeTheName" : ["define"],
+                "symbolToLookForAfterTheName" : [" "],
                 "ignoreCommentedCode" : true
             }
         ]
@@ -83,7 +89,8 @@
                 "regex": ["(#ifdef|#ifndef)\\s+([a-zA-Z0-9_*]+)([^\\n]*)\\n", "g"],
                 "operation": "",
                 "opening": ["", ""],
-                "after": ["def"],
+                "symbolToLookForBeforeTheName" : ["def"],
+                "symbolToLookForAfterTheName" : [" ", "\\n"],
                 "ignoreCommentedCode": true
             },
             {
@@ -91,7 +98,8 @@
                 "regex": ["(#elif|#if)\\s+([^defined]*)\\s*([^\\(\\n]+)\\(([^\\)]+)\\)", "g"],
                 "operation": "",
                 "opening": ["", ""],
-                "after": [")"],
+                "symbolToLookForBeforeTheName" : ["("],
+                "symbolToLookForAfterTheName" : [")"],
                 "ignoreCommentedCode": true
             },
             {
@@ -99,7 +107,8 @@
                 "regex": ["(#if)\\s+([^defined]*)\\s*([^\\n]+)\\n", "g"],
                 "operation": "",
                 "opening": ["", ""],
-                "after": ["defined"],
+                "symbolToLookForBeforeTheName" : [" ", "("],
+                "symbolToLookForAfterTheName" : ["defined"],
                 "ignoreCommentedCode": true
             }
         ]
@@ -111,7 +120,8 @@
                 "regex" : ["\\s*\/\/.*", "g"],
                 "operation" : "remove",
                 "opening" : ["", ""],
-                "before" : [""],
+                "symbolToLookForBeforeTheName" : [""],
+                "symbolToLookForAfterTheName" : [""],
                 "ignoreCommentedCode" : false,
                 "comment2" : "History - means old regex, not using it anymore, but just put here for memories. Detects both `//` and multiline `/**/` comments. however, this detects '//' first. This can cause problem when there's `//` inside `/**/`, then it will detects `//` isnide of it first",
                 "history" : ["\\/\\/.*|\\/\\*[^*]*\\*+(?:[^\\/*][^*]*\\*+)*\\/\\n", "g"]
@@ -121,7 +131,8 @@
                 "regex" : ["\\s*\/\\*[^*]*\\*+(?:[^\/*][^*]*\\*+)*\/", "g"],
                 "operation" : "remove",
                 "opening" : ["", ""],
-                "before" : [""],
+                "symbolToLookForBeforeTheName" : [""],
+                "symbolToLookForAfterTheName" : [""],
                 "ignoreCommentedCode" : false
             }
         ]
@@ -133,7 +144,8 @@
                 "regex" : ["([a-zA-Z0-9_*]*)\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*\\([^)]*\\)\\s*;", "g"],
                 "operation" : "remove",
                 "opening" : [""],
-                "before" : [""],
+                "symbolToLookForBeforeTheName" : [""],
+                "symbolToLookForAfterTheName" : [""],
                 "ignoreCommentedCode" : false
             }
         ]
@@ -145,7 +157,8 @@
                 "regex" : ["#include\\s+([^\\n]+)\\s*\\n", "g"],
                 "operation" : "remove",
                 "opening" : [""],
-                "before" : [""],
+                "symbolToLookForBeforeTheName" : [""],
+                "symbolToLookForAfterTheName" : [""],
                 "ignoreCommentedCode" : false
             }
         ]
@@ -158,7 +171,8 @@
                 "regex" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*[^=\\n]*=\\s*\\{", "g"],
                 "operation" : "depth",
                 "opening" : ["{", "}"],
-                "before" : ["="],
+                "symbolToLookForBeforeTheName" : [" "],
+                "symbolToLookForAfterTheName" : ["="],
                 "ignoreCommentedCode" : false
             },
             {
@@ -167,7 +181,8 @@
                 "regex" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*[^;}]*;", "g"],
                 "operation" : "",
                 "opening" : ["", ""],
-                "before" : ["=", ";"],
+                "symbolToLookForBeforeTheName" : [""],
+                "symbolToLookForAfterTheName" : ["=", ";"],
                 "ignoreCommentedCode" : false
             }
         ]
