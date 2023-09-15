@@ -72,7 +72,7 @@
                 "operation" : "",
                 "opening" : ["", ""],
                 "after" : ["define"],
-                "ignoreCommentedCode" : false
+                "ignoreCommentedCode" : true
             }
         ]
     },
