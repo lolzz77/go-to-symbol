@@ -25,3 +25,7 @@
     //         " ", "("
     //     ],
     //     "ignoreCommentedCode": true
+
+    /*
+        test
+    */

@@ -501,8 +501,8 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 			let hasMatch = regex.test(text);
 			if(hasMatch)
 				continue;
-			// remove the 1st element
-			entries[parentIndex][1].regexes.shift();
+			// remove the index-th element, remove 1 array size
+			entries[parentIndex][1].regexes.splice(index, 1);
 			// reset the index, else, it will continue to match pattern from last matched index
 			// doing `let regex` will reset the lastIndex, however, i just leave it here, just in case
 			regex.lastIndex = 0;
@@ -526,10 +526,12 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 			lastIndex = length;
 			continue;
 		}
-		if(lastIndex==0)
-			entries.shift();
-		else
-			entries.splice(lastIndex, 1); // shift() always remove 1st array. This remove start from lastIndex-th index, remove 1 array
+		// shift() always remove 1st array. This remove start from lastIndex-th index, remove 1 array
+		// splice will ensure that, the following array index will shift
+		// eg: array has 3 indexes
+		// if remove 2nd index
+		// the 3rd index will shift to 2nd index
+		entries.splice(lastIndex, 1);
 		length=lastIndex;
 	}
 
@@ -592,7 +594,6 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				let index = 0;
 				let closest_index = 0;
 				let char = '';
-				let original_doc_text = '';
 				let original_doc_start = 0;
 				let original_doc_end = 0;
 				let start = null; // rename to smethg better, this is for start = document.positionAt(original_doc_start)

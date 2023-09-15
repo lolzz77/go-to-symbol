@@ -99,8 +99,8 @@
     "comment" : {
         "regexes" : [
             {
-                "comment1" : "detects `//`. This will match til newline, despite in the comment has `\n`, it still can match",
-                "regex" : ["\\/\\/.*", "g"],
+                "comment1" : "detects `//`. This will match til newline, despite in the comment has `\n`, it still can match. Note: to escape `/`(forward slash), you only need one `backslash`, not two",
+                "regex" : ["\\s*\/\/.*", "g"],
                 "operation" : "remove",
                 "opening" : ["", ""],
                 "before" : [""],
@@ -110,7 +110,7 @@
             },
             {
                 "comment1" : "detects multiline `/**/` comments.",
-                "regex" : ["\\/\\*[^*]*\\*+(?:[^\\/*][^*]*\\*+)*\\/", "g"],
+                "regex" : ["\\s*\/\\*[^*]*\\*+(?:[^\/*][^*]*\\*+)*\/", "g"],
                 "operation" : "remove",
                 "opening" : ["", ""],
                 "before" : [""],
