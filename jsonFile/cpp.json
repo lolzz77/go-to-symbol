@@ -2,16 +2,37 @@
     "function" : {
         "regexes" : [
             {
-                "comment0" : "1st group matching has to be `1 or more`, tho my 1st group matching is for `static` those kind. But, regex matches from lef to right. Thus, for function that doesn't have `static`, and if i put my 1st group matching to `zero or more`, it will matches the 1st group matching. Thus, you should NOT set 1st group matching to `zero or more`. You should treat the 1st matching as `return type`. Thus, if you found a new function has more symbols before the `return type`, add them before the `(` in the regex, and put them `zero or more`.",
-                "comment1" : "CANNOT be null. 1st group matching is `inline|static` etc  (note: i put `1 or more`, please read above comment why). Then is words like `unsigned` etc. Then is function return type like `int`. Then compulsory white space. Then function name, then optional whitespace. Then match `(`, then match anything not equal to ), then match match {.",
-                "regex" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*([a-zA-Z0-9_*]*)\\s*([a-zA-Z0-9_*]*)\\s*\\([^)]*\\)\\s*\\{", "g"],
+                "comment6" : "Sample: int main () {",
+                "comment7" : "Have to put `^` to indicate start of string. My algorithm will made sure every pattern begins start of string. After matching them, will remove matched string from the text. If you dont put this `^`, it will match pattern at non-starting index. Thus, for sample like `static int main(){`, this regex will still match. Which by right I have another regex to match that.",
+                "regex" : ["^\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*(\\([^\\)]+\\))\\s*[^\\{]*\\{","g"],
+                "comment4" : "The regex matched will result in array. Based on number of groups you defined in your regex, this number tells my code which array index I should take. This is intended to print out the symbol name. Index 0 is always the whole regex. Index 1 starts your 1st group matching.",
+                "symbolNameIndex" : 2,
                 "comment2" : "Can be null. This operation is to tell my code how should i handle it. Currently has 'depth', 'remove', ''. depth - i will perform depth search, will use 'opening' key. 'remove' - will perform operation to remove it from buffered text, will not print on the tree list. '' - will fall into else case",
                 "operation" : "depth",
-                "comment3" : "Can be null. This tells my code, what is the opening & closing symbols. For depth searching.",
+                "comment3" : "Can be null. Only appplies if your operation is `depth`. This tells my code, what is the opening & closing symbols. For depth searching.",
                 "opening" : ["{", "}"],
-                "comment4" : "Can be null. Can be multiple. Will choose the closest one. symbolToLookForBeforeTheName - the symbol to look for when extracting the symbol name. This symbol shall appear BEFORE the symbol name. Eg: for function name, the symbol before function name is whitespace. symbolToLookForAfterTheName - the symbol to look for when extracting the symbol name. This symbol shall appear AFTER the symbol name. Eg: for function name, the symbol after function name is either whitespace or `(`",
-                "symbolNameRegex" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*([a-zA-Z0-9_*]*)\\s*([a-zA-Z0-9_*]*)\\s*\\("],
                 "comment5" : "true/false. True - will print out in the list even if it is commented. False - will not print out in the list if it is commented. This tells my code, if it is commented, ignore it, print it out onto the list. Note: initially intended for MACRO regex. Havent test for other regex. Might be not working for others. Havent test.",
+                "ignoreCommentedCode" : false,
+                "comment0" : "1st group matching has to be `1 or more`, tho my 1st group matching is for `static` those kind. But, regex matches from lef to right. Thus, for function that doesn't have `static`, and if i put my 1st group matching to `zero or more`, it will matches the 1st group matching. Thus, you should NOT set 1st group matching to `zero or more`. You should treat the 1st matching as `return type`. Thus, if you found a new function has more symbols before the `return type`, add them before the `(` in the regex, and put them `zero or more`.",
+                "comment1" : "CANNOT be null. 1st group matching is `inline|static` etc  (note: i put `1 or more`, please read above comment why). Then is words like `unsigned` etc. Then is function return type like `int`. Then compulsory white space. Then function name, then optional whitespace. Then match `(`, then match anything not equal to ), then match match {.",
+                "history" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*([a-zA-Z0-9_*]*)\\s*([a-zA-Z0-9_*]*)\\s*\\([^)]*\\)\\s*\\{", "g"]
+            },
+            {
+                "comment6" : "Sample: static int main () {",
+                "regex" : ["^\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*(\\([^\\)]+\\))\\s*[^\\{]*\\{", "g"],
+                "comment4" : "The regex matched will result in array. Based on number of groups you defined in your regex, this number tells my code which array index I should take. This is intended to print out the symbol name.",
+                "symbolNameIndex" : 3,
+                "operation" : "depth",
+                "opening" : ["{", "}"],
+                "ignoreCommentedCode" : false
+            },
+            {
+                "comment6" : "Sample: static unsigned int main () {",
+                "regex" : ["^\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*(\\([^\\)]+\\))\\s*[^\\{]*\\{", "g"],
+                "comment4" : "The regex matched will result in array. Based on number of groups you defined in your regex, this number tells my code which array index I should take. This is intended to print out the symbol name.",
+                "symbolNameIndex" : 4,
+                "operation" : "depth",
+                "opening" : ["{", "}"],
                 "ignoreCommentedCode" : false
             }
         ]
@@ -23,8 +44,6 @@
                 "regex" : ["^\\s*class\\s+\\w+\\s*\\{", "gm"],
                 "operation" : "depth",
                 "opening" : ["{", "}"],
-                "symbolToLookForBeforeTheName" : [""],
-                "symbolToLookForAfterTheName" : [""],
                 "ignoreCommentedCode" : false
             }
         ]
@@ -32,12 +51,21 @@
     "union" : {
         "regexes" : [
             {
-                "comment1" : "",
-                "regex" : ["([typedef]*)\\s*union\\s*[a-zA-Z0-9_]*\\s*\\{", "g"],
+                "comment1" : "Sample: union UnionName { A, B, C }",
+                "comment2" : "Sample: union { A, B, C }",
+                "regex" : ["^\\s*(union)\\s+([a-zA-Z0-9_]*)\\s*\\{", "g"],
+                "symbolNameIndex" : 2,
                 "operation" : "depth",
                 "opening" : ["{", "}"],
-                "symbolToLookForBeforeTheName" : ["{", "\\n", " "],
-                "symbolToLookForAfterTheName" : ["union"],
+                "ignoreCommentedCode" : false
+            },
+            {
+                "comment1" : "Sample: typdef union UnionName { A, B, C }",
+                "comment2" : "Sample: typdef union { A, B, C }",
+                "regex" : ["^\\s*(typedef)\\s+(union)\\s+([a-zA-Z0-9_]*)\\s*\\{", "g"],
+                "symbolNameIndex" : 3,
+                "operation" : "depth",
+                "opening" : ["{", "}"],
                 "ignoreCommentedCode" : false
             }
         ]
@@ -45,12 +73,21 @@
     "struct" : {
         "regexes" : [
             {
-                "comment1" : "",
-                "regex" : ["([typedef|extern]*)\\s*struct\\s*[a-zA-Z0-9_]*\\s*\\{", "g"],
+                "comment1" : "Sample: struct StructName { int x, int y }",
+                "comment2" : "Sample: struct { int x, int y }",
+                "regex" : ["^\\s*(struct)\\s+([a-zA-Z0-9_]*)\\s*\\{", "g"],
+                "symbolNameIndex" : 2,
                 "operation" : "depth",
                 "opening" : ["{", "}"],
-                "symbolToLookForBeforeTheName" : ["{", "\\n", " "],
-                "symbolToLookForAfterTheName" : ["struct"],
+                "ignoreCommentedCode" : false
+            },
+            {
+                "comment1" : "Sample: typedef struct StructName { int x, int y }",
+                "comment2" : "Sample: typedef struct { int x, int y }",
+                "regex" : ["^\\s*([typedef|extern]+)\\s+(struct)\\s+([a-zA-Z0-9_]*)\\s*\\{", "g"],
+                "symbolNameIndex" : 3,
+                "operation" : "depth",
+                "opening" : ["{", "}"],
                 "ignoreCommentedCode" : false
             }
         ]
@@ -58,12 +95,20 @@
     "enum" : {
         "regexes" : [
             {
-                "comment1" : "",
-                "regex" : ["([typedef|extern]*)\\s*enum\\s+[^{}]*\\{", "g"],
+                "comment1" : "Sample: enum EnumName { A, B, C }",
+                "comment2" : "Sample: enum { A, B, C }",
+                "regex" : ["^\\s*(enum)\\s+([a-zA-Z0-9_]*)\\s*\\{", "g"],
+                "symbolNameIndex" : 2,
                 "operation" : "depth",
                 "opening" : ["{", "}"],
-                "symbolToLookForBeforeTheName" : ["{", "\\n", " "],
-                "symbolToLookForAfterTheName" : ["enum"],
+                "ignoreCommentedCode" : false
+            },
+            {
+                "comment1" : "Sample: typedef enum EnumName { A, B, C }",
+                "regex" : ["^\\s*([typedef|extern]+)\\s+(enum)\\s+([a-zA-Z0-9_]*)\\s*\\{", "g"],
+                "symbolNameIndex" : 3,
+                "operation" : "depth",
+                "opening" : ["{", "}"],
                 "ignoreCommentedCode" : false
             }
         ]
@@ -71,44 +116,13 @@
     "macro" : {
         "regexes" : [
             {
-                "comment1" : "",
-                "regex" : ["#define\\s+([^\\n]+)\\n", "g"],
+                "comment1" : "Sample : #define MACRO x-2",
+                "comment2" : "I will make sure to put last newline in the text.",
+                "regex" : ["^\\s*(#define)\\s+([a-zA-Z0-9_*]+)\\s+([^\\n]+)\\n", "g"],
+                "symbolNameIndex" : 2,
                 "operation" : "",
                 "opening" : ["", ""],
-                "symbolToLookForBeforeTheName" : ["define"],
-                "symbolToLookForAfterTheName" : [" "],
                 "ignoreCommentedCode" : true
-            }
-        ]
-    },
-    "guard": {
-        "regexes" : [
-            {
-                "comment1": "Match #ifdef|#ifndef words. 1st group match #ifdef|#ifndef. Then whitespace. Then the macro name. Then anything but newline. Then newline. Note: These regexes might not able to detect if this macro happened to put at end of document, without a newline at the end. Solution: We can modify the buffered text, put `newline` at the end of document",
-                "regex": ["(#ifdef|#ifndef)\\s+([a-zA-Z0-9_*]+)([^\\n]*)\\n", "g"],
-                "operation": "",
-                "opening": ["", ""],
-                "symbolToLookForBeforeTheName" : ["def"],
-                "symbolToLookForAfterTheName" : [" ", "\\n"],
-                "ignoreCommentedCode": true
-            },
-            {
-                "comment1": "match define that uses () depth. 1st group match #if|#elif. Then whitespace. Then anything as long as not `defined`, cos sometime they put `!` in between. Then optional whitespace. Then anything except `(` and newline. Then `(`. TODO: Need fix the symbol naming",
-                "regex": ["(#elif|#if)\\s+([^defined]*)\\s*([^\\(\\n]+)\\(([^\\)]+)\\)", "g"],
-                "operation": "",
-                "opening": ["", ""],
-                "symbolToLookForBeforeTheName" : ["("],
-                "symbolToLookForAfterTheName" : [")"],
-                "ignoreCommentedCode": true
-            },
-            {
-                "comment1": "match define that didnt use () depth",
-                "regex": ["(#if)\\s+([^defined]*)\\s*([^\\n]+)\\n", "g"],
-                "operation": "",
-                "opening": ["", ""],
-                "symbolToLookForBeforeTheName" : [" ", "("],
-                "symbolToLookForAfterTheName" : ["defined"],
-                "ignoreCommentedCode": true
             }
         ]
     },
@@ -116,22 +130,20 @@
         "regexes" : [
             {
                 "comment1" : "detects `//`. This will match til newline, despite in the comment has `\n`, it still can match. Note: to escape `/`(forward slash), you only need one `backslash`, not two",
-                "regex" : ["\\s*\/\/.*", "g"],
+                "regex" : ["^\\s*\\s*\/\/.*", "g"],
+                "symbolNameIndex" : 0,
                 "operation" : "remove",
                 "opening" : ["", ""],
-                "symbolToLookForBeforeTheName" : [""],
-                "symbolToLookForAfterTheName" : [""],
                 "ignoreCommentedCode" : false,
                 "comment2" : "History - means old regex, not using it anymore, but just put here for memories. Detects both `//` and multiline `/**/` comments. however, this detects '//' first. This can cause problem when there's `//` inside `/**/`, then it will detects `//` isnide of it first",
                 "history" : ["\\/\\/.*|\\/\\*[^*]*\\*+(?:[^\\/*][^*]*\\*+)*\\/\\n", "g"]
             },
             {
                 "comment1" : "detects multiline `/**/` comments.",
-                "regex" : ["\\s*\/\\*[^*]*\\*+(?:[^\/*][^*]*\\*+)*\/", "g"],
+                "regex" : ["^\\s*\\s*\/\\*[^*]*\\*+(?:[^\/*][^*]*\\*+)*\/", "g"],
+                "symbolNameIndex" : 0,
                 "operation" : "remove",
                 "opening" : ["", ""],
-                "symbolToLookForBeforeTheName" : [""],
-                "symbolToLookForAfterTheName" : [""],
                 "ignoreCommentedCode" : false
             }
         ]
@@ -139,12 +151,12 @@
     "function_prototype" : {
         "regexes" : [
             {
-                "comment1" : "1st group matching is 'static' those kind (will be optional for this). 2nd group is function return type. 3rd group is function name. Then match parenthesis. Then match ';'",
-                "regex" : ["([a-zA-Z0-9_*]*)\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*\\([^)]*\\)\\s*;", "g"],
+                "comment1" : "Sample: static? unsigned? int main ();",
+                "comment2" : "Question mark means can be either present or not present. It can detect all",
+                "regex" : ["^\\s*([a-zA-Z0-9_*]*)\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*\\([^)]*\\)\\s*;", "g"],
+                "symbolNameIndex" : 0,
                 "operation" : "remove",
-                "opening" : [""],
-                "symbolToLookForBeforeTheName" : [""],
-                "symbolToLookForAfterTheName" : [""],
+                "opening" : ["", ""],
                 "ignoreCommentedCode" : false
             }
         ]
@@ -152,12 +164,11 @@
     "include" : {
         "regexes" : [
             {
-                "comment1" : "",
-                "regex" : ["#include\\s+([^\\n]+)\\s*\\n", "g"],
+                "comment1" : "Sample: #include <stdio.h>, #include 'myHeader.h'",
+                "regex" : ["^\\s*(#include)\\s+([^\\n]+)\\s*\\n", "g"],
+                "symbolNameIndex" : 0,
                 "operation" : "remove",
-                "opening" : [""],
-                "symbolToLookForBeforeTheName" : [""],
-                "symbolToLookForAfterTheName" : [""],
+                "opening" : ["", ""],
                 "ignoreCommentedCode" : false
             }
         ]
@@ -165,23 +176,39 @@
     "global" : {
         "regexes" : [
             {
-                "comment1" : "This is for global vairbale that is an array, thus, it has depth. Note: These global variable, can omit the `;` at the end.",
-                "comment2" : "1st group matches return type. Then compulsory whitespace. Then variable name. Then optional white space. Then optional whitespace. Then anything until `=` or newline. Then match `=`. Then optional whitespace. Then `{`",
-                "regex" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*[^=\\n]*=\\s*\\{", "g"],
+                "comment1" : "Sample: int VariableName[] = { [1,2], [3,4] }",
+                "regex" : ["^\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*\\([[^\\]*]\\])\\s*=\\s*\\{", "g"],
+                "symbolNameIndex" : 2,
                 "operation" : "depth",
                 "opening" : ["{", "}"],
-                "symbolToLookForBeforeTheName" : [" "],
-                "symbolToLookForAfterTheName" : ["="],
+                "ignoreCommentedCode" : false
+            },
+            {
+                "comment1" : "Sample: static int VariableName[] = { [1,2], [3,4] }",
+                "regex" : ["^\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*\\([[^\\]*]\\])\\s*=\\s*\\{", "g"],
+                "symbolNameIndex" : 3,
+                "operation" : "depth",
+                "opening" : ["{", "}"],
                 "ignoreCommentedCode" : false
             },
             {
                 "comment1" : "Match return type. Then whitespace. Then match variable name. Then match anything except ';' (zero or more, for cases `int x;` will fail the regex). Finally, match ';'",
                 "comment2" : "this regex has some flaw. Last part, it says match til you see `;` and `}`. If saw `}` first, then it will exit. Then it will match `;`. However, in some cases, a global variable may be an array, and inside the global variable, it conatins `}`. Then, after `}`, may contain other things, only then last part is `;`. However, good thing is that it wont stuck in a loop. Solution: I create antoher global regex above of this.",
-                "regex" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*[^;}]*;", "g"],
+                "comment3" : "Sample: int VariableName;",
+                "comment4" : "Sample: int VariableName = 5;",
+                "regex" : ["^\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*[^;]*;[^\\n]*\\n", "g"],
+                "symbolNameIndex" : 2,
                 "operation" : "",
                 "opening" : ["", ""],
-                "symbolToLookForBeforeTheName" : [""],
-                "symbolToLookForAfterTheName" : ["=", ";"],
+                "ignoreCommentedCode" : false
+            },
+            {
+                "comment3" : "Sample: static int VariableName;",
+                "comment4" : "Sample: static int VariableName = 5;",
+                "regex" : ["^\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*[^;]*;[^\\n]*\\n", "g"],
+                "symbolNameIndex" : 3,
+                "operation" : "",
+                "opening" : ["", ""],
                 "ignoreCommentedCode" : false
             }
         ]
