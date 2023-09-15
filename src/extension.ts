@@ -482,616 +482,616 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 	// we dont need to waste resources to keep check it
 	// eg: a header file, doesn't have function body defined, 
 	// thus, can remove this regex from array
-	let copyOfEntries = JSON.parse(JSON.stringify(entries)) as typeof entries;
-	// this way, it shows the current index, and the value of the array
-	for(const [parentIndex,[key, value]] of copyOfEntries.entries())
-	{
-		let regexesArray = value.regexes;
-		for(const [index, regexEntries] of regexesArray.entries())
-		{
-			let regexStr = regexEntries.regex[0];
-			let flag = regexEntries.regex[1];
-			let regex = new RegExp(regexStr, flag);
-			// one flaw: if pattern is commented. It will still return true.
-			let hasMatch = regex.test(text);
-			if(hasMatch)
-				continue;
-			// remove the index-th element, remove 1 array size
-			entries[parentIndex][1].regexes.splice(index, 1);
-			// reset the index, else, it will continue to match pattern from last matched index
-			// doing `let regex` will reset the lastIndex, however, i just leave it here, just in case
-			regex.lastIndex = 0;
-		}
-		// if the parent's children is 0, remove the parent
-		if(entries[parentIndex][1].regexes.length != 0)
-			continue;
-		/* Cannot do like
-			// remove the element of array, 
-			// the following index is not shifted
-			// eg: [1, 2, 3]
-			// result: [1, [removed], 2]
-			delete entries[parentIndex];
-			// set it to null
-			// result: [1, null, 2] 
-			entries[parentIndex] = null;
-			// remove the indexed array, the following will be shifted
-			// result: [1, 2]
-			entries.splice(parentIndex, 1);
+	// let copyOfEntries = JSON.parse(JSON.stringify(entries)) as typeof entries;
+	// // this way, it shows the current index, and the value of the array
+	// for(const [parentIndex,[key, value]] of copyOfEntries.entries())
+	// {
+	// 	let regexesArray = value.regexes;
+	// 	for(const [index, regexEntries] of regexesArray.entries())
+	// 	{
+	// 		let regexStr = regexEntries.regex[0];
+	// 		let flag = regexEntries.regex[1];
+	// 		let regex = new RegExp(regexStr, flag);
+	// 		// one flaw: if pattern is commented. It will still return true.
+	// 		let hasMatch = regex.test(text);
+	// 		if(hasMatch)
+	// 			continue;
+	// 		// remove the index-th element, remove 1 array size
+	// 		entries[parentIndex][1].regexes.splice(index, 1);
+	// 		// reset the index, else, it will continue to match pattern from last matched index
+	// 		// doing `let regex` will reset the lastIndex, however, i just leave it here, just in case
+	// 		regex.lastIndex = 0;
+	// 	}
+	// 	// if the parent's children is 0, remove the parent
+	// 	if(entries[parentIndex][1].regexes.length != 0)
+	// 		continue;
+	// 	/* Cannot do like
+	// 		// remove the element of array, 
+	// 		// the following index is not shifted
+	// 		// eg: [1, 2, 3]
+	// 		// result: [1, [removed], 2]
+	// 		delete entries[parentIndex];
+	// 		// set it to null
+	// 		// result: [1, null, 2] 
+	// 		entries[parentIndex] = null;
+	// 		// remove the indexed array, the following will be shifted
+	// 		// result: [1, 2]
+	// 		entries.splice(parentIndex, 1);
 
-			This will cause the `parentIndex` and `index` in the for loop not tallied with yoru current array
-		*/
-		delete entries[parentIndex];
-		entries[parentIndex] = null;
-	}
+	// 		This will cause the `parentIndex` and `index` in the for loop not tallied with yoru current array
+	// 	*/
+	// 	delete entries[parentIndex];
+	// 	entries[parentIndex] = null;
+	// }
 
 	// this code snippet is to remove `null` element in the json object
 	let length = 0; // to keep track array size, to break out of loop
 	let lastIndex = 0; // without this, it will always remove 1st element of array
 	// cannot use for loop, after removing array, it will disturb the for iteration
-	while(length < entries.length)
-	{
-		if(entries[length]!=null)
-		{
-			length++;
-			lastIndex = length;
-			continue;
-		}
-		// shift() always remove 1st array. This remove start from lastIndex-th index, remove 1 array
-		// splice will ensure that, the following array index will shift
-		// eg: array has 3 indexes
-		// if remove 2nd index
-		// the 3rd index will shift to 2nd index
-		entries.splice(lastIndex, 1);
-		length=lastIndex;
-	}
+	// while(length < entries.length)
+	// {
+	// 	if(entries[length]!=null)
+	// 	{
+	// 		length++;
+	// 		lastIndex = length;
+	// 		continue;
+	// 	}
+	// 	// shift() always remove 1st array. This remove start from lastIndex-th index, remove 1 array
+	// 	// splice will ensure that, the following array index will shift
+	// 	// eg: array has 3 indexes
+	// 	// if remove 2nd index
+	// 	// the 3rd index will shift to 2nd index
+	// 	entries.splice(lastIndex, 1);
+	// 	length=lastIndex;
+	// }
 
 	// recapture this newly constructed JSON object
 	// to handle commented code later
-	copyOfEntries = JSON.parse(JSON.stringify(entries)) as typeof entries;
+	// copyOfEntries = JSON.parse(JSON.stringify(entries)) as typeof entries;
 
 	/****************************************
 	 * For handling ignore commented code option
 	 * literally running the same alsogirthm, just a few adjustment
 	 ***************************************/
-	for (const [parentIndex,[key, value]] of copyOfEntries.entries()) {
-		let regexesArray = value.regexes;
-		for(const [index,regexEntries] of regexesArray.entries())
-		{
-			let ignoreCommentedCode = regexEntries.ignoreCommentedCode;
-			if(ignoreCommentedCode==false)
-				continue;
-			entries[parentIndex][1].regexes.splice(index, 1);
-			if(entries[parentIndex][1].regexes.length==0)
-			{
-				delete entries[parentIndex];
-				entries[parentIndex] = null;
-			}
+	// for (const [parentIndex,[key, value]] of copyOfEntries.entries()) {
+	// 	let regexesArray = value.regexes;
+	// 	for(const [index,regexEntries] of regexesArray.entries())
+	// 	{
+	// 		let ignoreCommentedCode = regexEntries.ignoreCommentedCode;
+	// 		if(ignoreCommentedCode==false)
+	// 			continue;
+	// 		entries[parentIndex][1].regexes.splice(index, 1);
+	// 		if(entries[parentIndex][1].regexes.length==0)
+	// 		{
+	// 			delete entries[parentIndex];
+	// 			entries[parentIndex] = null;
+	// 		}
 
-			let regexStr = regexEntries.regex[0];
-			// fail safe check, if no regex, skip
-			if(regexStr == '')
-				continue;
-			let flag = regexEntries.regex[1];
-			let regex = new RegExp(regexStr, flag);
-			let match;
-			let symbolType:string = key;
-			while(match = regex.exec(text))
-			{
-				let operation = regexEntries.operation;
-				let start_index = 0;
-				let end_index = 0;
-				let to_replace = '';
-				let keys = Object.keys(regexEntries);
-				let keyword_to_search_for_symbol = null;
-				let function_opening = regexEntries.opening[0];
-				let function_closing = regexEntries.opening[1];
-				let symbol_name = '';
-				let range = null;
+	// 		let regexStr = regexEntries.regex[0];
+	// 		// fail safe check, if no regex, skip
+	// 		if(regexStr == '')
+	// 			continue;
+	// 		let flag = regexEntries.regex[1];
+	// 		let regex = new RegExp(regexStr, flag);
+	// 		let match;
+	// 		let symbolType:string = key;
+	// 		while(match = regex.exec(text))
+	// 		{
+	// 			let operation = regexEntries.operation;
+	// 			let start_index = 0;
+	// 			let end_index = 0;
+	// 			let to_replace = '';
+	// 			let keys = Object.keys(regexEntries);
+	// 			let keyword_to_search_for_symbol = null;
+	// 			let function_opening = regexEntries.opening[0];
+	// 			let function_closing = regexEntries.opening[1];
+	// 			let symbol_name = '';
+	// 			let range = null;
 				
-				// some need to search the symbol BEFORE the char
-				// some need to search the symbol AFTER the char
-				if(keys.includes("before"))
-					keyword_to_search_for_symbol = regexEntries.before;
-				else
-					keyword_to_search_for_symbol = regexEntries.after;
+	// 			// some need to search the symbol BEFORE the char
+	// 			// some need to search the symbol AFTER the char
+	// 			if(keys.includes("before"))
+	// 				keyword_to_search_for_symbol = regexEntries.before;
+	// 			else
+	// 				keyword_to_search_for_symbol = regexEntries.after;
 	
-				// for checking whether the current index has found the 1st character or not
-				let hasFountFirstChar = false;
-				let str = match[0].toString();
-				let sub = '';
-				let index = 0;
-				let closest_index = 0;
-				let char = '';
-				let start = null; // rename to smethg better, this is for start = document.positionAt(original_doc_start)
-				let end = null;
+	// 			// for checking whether the current index has found the 1st character or not
+	// 			let hasFountFirstChar = false;
+	// 			let str = match[0].toString();
+	// 			let sub = '';
+	// 			let index = 0;
+	// 			let closest_index = 0;
+	// 			let char = '';
+	// 			let start = null; // rename to smethg better, this is for start = document.positionAt(original_doc_start)
+	// 			let end = null;
 				
-				// actually not needed, but put here, fail-safe check
-				if (operation == 'remove')
-				{
-					// this operation is for detecting symbols ignoring commented lines
-					// do not remove shits
-					break;
-				}
-				/**********************************************************************
-				 * below is handling for operation that has 'depth' and no depth
-				 * some of them has similarity and thus i pull them out
-				 * eg: they both has this 'extract symbol name' operation
-				 * so i pull that out
-				 * then, the following handling will be different
-				 * thus will be separated by 'if operation == depth' and 'else'
-				 **********************************************************************/
+	// 			// actually not needed, but put here, fail-safe check
+	// 			if (operation == 'remove')
+	// 			{
+	// 				// this operation is for detecting symbols ignoring commented lines
+	// 				// do not remove shits
+	// 				break;
+	// 			}
+	// 			/**********************************************************************
+	// 			 * below is handling for operation that has 'depth' and no depth
+	// 			 * some of them has similarity and thus i pull them out
+	// 			 * eg: they both has this 'extract symbol name' operation
+	// 			 * so i pull that out
+	// 			 * then, the following handling will be different
+	// 			 * thus will be separated by 'if operation == depth' and 'else'
+	// 			 **********************************************************************/
 	
 	
-				/**********************************************************************
-				 to extract the symbol name
-				***********************************************************************/
-				// actually, the `match` is an array, match[1] holds the function name
-				// however, this algorithm applies got struct, enum those as well
-				// thus, tho you can do symbol_name = match[1]
-				// is better do manually, so that it applies to all cases
+	// 			/**********************************************************************
+	// 			 to extract the symbol name
+	// 			***********************************************************************/
+	// 			// actually, the `match` is an array, match[1] holds the function name
+	// 			// however, this algorithm applies got struct, enum those as well
+	// 			// thus, tho you can do symbol_name = match[1]
+	// 			// is better do manually, so that it applies to all cases
 	
-				for(let keyword of keyword_to_search_for_symbol)
-				{
-					// save the 1st index first, else, later math.min, it will always 0
-					// if indexOf cannot find the symbol, it will return -1
-					// thus, check <=0 is better
-					if(closest_index <= 0)
-						closest_index = str.indexOf(keyword);
-					else if(keys.includes("before"))
-						closest_index = Math.min(closest_index, str.indexOf(keyword));
-					else
-						closest_index = Math.max(closest_index, str.indexOf(keyword));
-				}
+	// 			for(let keyword of keyword_to_search_for_symbol)
+	// 			{
+	// 				// save the 1st index first, else, later math.min, it will always 0
+	// 				// if indexOf cannot find the symbol, it will return -1
+	// 				// thus, check <=0 is better
+	// 				if(closest_index <= 0)
+	// 					closest_index = str.indexOf(keyword);
+	// 				else if(keys.includes("before"))
+	// 					closest_index = Math.min(closest_index, str.indexOf(keyword));
+	// 				else
+	// 					closest_index = Math.max(closest_index, str.indexOf(keyword));
+	// 			}
 	
-				// given keyword, get substring
-				if(keys.includes("before"))
-					sub = str.substring(0, closest_index);
-				else
-					sub = str.substring(closest_index);
+	// 			// given keyword, get substring
+	// 			if(keys.includes("before"))
+	// 				sub = str.substring(0, closest_index);
+	// 			else
+	// 				sub = str.substring(closest_index);
 	
 	
-				if( operation == 'depth')
-				{
-					/**********************************************************************
-					 still trying to extract the function name
-					***********************************************************************/
+	// 			if( operation == 'depth')
+	// 			{
+	// 				/**********************************************************************
+	// 				 still trying to extract the function name
+	// 				***********************************************************************/
 	
-					index = sub.length - 1; // point to the last character
-					// Loop through the string backwards
-					while (index >= 0) 
-					{
-						let char = sub.charAt(index); // Get the character at the current index
-						if (char == " " && hasFountFirstChar) 
-						{ 	// Check if the character is a white space
-							break;
-						}
-						/*
-						* because there are some cases like this
-						* int main (...)
-						* there's white space before the `(`
-						*/
-						else if (!isNaN(Number(char)) && char != " ") // isNaN = is not a number
-						{
-							hasFountFirstChar = true;
-						}
-						else if ((char.match(/[a-z]/i)) && char != " ") // if is alphabet
-						{
-							hasFountFirstChar = true;
-						}
-						index--;
-					}
-					// + 1, because the current index is pointing to white spaces
-					// get the substring, starting from the given start index
-					symbol_name = sub.substring(index + 1);
-					// remove white spaces
-					while(symbol_name.includes(' '))
-						symbol_name = symbol_name.replace(' ', '');
-					// remove '\n' characters
-					while(symbol_name.includes('\n'))
-						symbol_name = symbol_name.replace('\n', '');
-					// remove '*' characters
-					while(symbol_name.includes('*'))
-						symbol_name = symbol_name.replace('*', '');
+	// 				index = sub.length - 1; // point to the last character
+	// 				// Loop through the string backwards
+	// 				while (index >= 0) 
+	// 				{
+	// 					let char = sub.charAt(index); // Get the character at the current index
+	// 					if (char == " " && hasFountFirstChar) 
+	// 					{ 	// Check if the character is a white space
+	// 						break;
+	// 					}
+	// 					/*
+	// 					* because there are some cases like this
+	// 					* int main (...)
+	// 					* there's white space before the `(`
+	// 					*/
+	// 					else if (!isNaN(Number(char)) && char != " ") // isNaN = is not a number
+	// 					{
+	// 						hasFountFirstChar = true;
+	// 					}
+	// 					else if ((char.match(/[a-z]/i)) && char != " ") // if is alphabet
+	// 					{
+	// 						hasFountFirstChar = true;
+	// 					}
+	// 					index--;
+	// 				}
+	// 				// + 1, because the current index is pointing to white spaces
+	// 				// get the substring, starting from the given start index
+	// 				symbol_name = sub.substring(index + 1);
+	// 				// remove white spaces
+	// 				while(symbol_name.includes(' '))
+	// 					symbol_name = symbol_name.replace(' ', '');
+	// 				// remove '\n' characters
+	// 				while(symbol_name.includes('\n'))
+	// 					symbol_name = symbol_name.replace('\n', '');
+	// 				// remove '*' characters
+	// 				while(symbol_name.includes('*'))
+	// 					symbol_name = symbol_name.replace('*', '');
 					
 	
 	
-					/**********************************************************************
-					find the whole function body, using depth method
-					***********************************************************************/
+	// 				/**********************************************************************
+	// 				find the whole function body, using depth method
+	// 				***********************************************************************/
 	
 	
-					// First, make sure the regex that matches the pattern,
-					// matches the whole thing properly, like, at the start of the string
+	// 				// First, make sure the regex that matches the pattern,
+	// 				// matches the whole thing properly, like, at the start of the string
 					
 	
-					/**********************************************************************
-					search the function backwards
-					***********************************************************************/
+	// 				/**********************************************************************
+	// 				search the function backwards
+	// 				***********************************************************************/
 	
-					index = match.index;
-					char = text.charAt(index);
+	// 				index = match.index;
+	// 				char = text.charAt(index);
 	
-					// match.index == 0 refers that this is the beginning of the document,
-					// you can go backwards anymore, this is the 1st index of document
-					// i wanted it to stop when match new line '\n', but apparently, it just ''
-					// above is for if you do document.getText(new vscode.Range(pos, pos.translate(0, 1))); 
-					// but if you use text.charAt(), then it is "\n"
-					while(index != 0 && char != "\n")
-					{
-						index--;
-						char = text.charAt(index);
-					}
-					// foudn that this will cause it point to not valid char
-					// that is, after newline, it will point to next char again
-					// index++;
-					// save the start index
-					start_index = index;
-	
-	
-					/**********************************************************************
-					now, search the rest of the function forward
-					***********************************************************************/
+	// 				// match.index == 0 refers that this is the beginning of the document,
+	// 				// you can go backwards anymore, this is the 1st index of document
+	// 				// i wanted it to stop when match new line '\n', but apparently, it just ''
+	// 				// above is for if you do document.getText(new vscode.Range(pos, pos.translate(0, 1))); 
+	// 				// but if you use text.charAt(), then it is "\n"
+	// 				while(index != 0 && char != "\n")
+	// 				{
+	// 					index--;
+	// 					char = text.charAt(index);
+	// 				}
+	// 				// foudn that this will cause it point to not valid char
+	// 				// that is, after newline, it will point to next char again
+	// 				// index++;
+	// 				// save the start index
+	// 				start_index = index;
 	
 	
-					// my regex only match until the 1st opening, thus, set depth starting at 1
-					// i cannot do regex that matches whole function body
-					// the best i can do is match til the 1st encounter of '}'
-					let depth = 1;
-					// these ranges are used for highlighting the background
-					index = match.index + match[0].length;
-					char = text.charAt(index);
-					while (depth != 0 && index <= text.length) 
-					{
-						if(char === function_opening)
-							depth++;
-						else if(char === function_closing)
-							depth--;
+	// 				/**********************************************************************
+	// 				now, search the rest of the function forward
+	// 				***********************************************************************/
+	
+	
+	// 				// my regex only match until the 1st opening, thus, set depth starting at 1
+	// 				// i cannot do regex that matches whole function body
+	// 				// the best i can do is match til the 1st encounter of '}'
+	// 				let depth = 1;
+	// 				// these ranges are used for highlighting the background
+	// 				index = match.index + match[0].length;
+	// 				char = text.charAt(index);
+	// 				while (depth != 0 && index <= text.length) 
+	// 				{
+	// 					if(char === function_opening)
+	// 						depth++;
+	// 					else if(char === function_closing)
+	// 						depth--;
 						
-						// increment of index has to put before any oepration that will break the function
-						index++;
+	// 					// increment of index has to put before any oepration that will break the function
+	// 					index++;
 						
-						if(depth==0)
-							break;
+	// 					if(depth==0)
+	// 						break;
 					
-						char = text.charAt(index);
-					}
+	// 					char = text.charAt(index);
+	// 				}
 					
 					
-					// match until the newline, or until end of document
-					char = text.charAt(index);
-					while(char != "\n" && index <= text.length)
-					{
-						index++;
-						char = text.charAt(index);
-					}
-					end_index = index;
-					to_replace = text.substring(start_index, end_index)
+	// 				// match until the newline, or until end of document
+	// 				char = text.charAt(index);
+	// 				while(char != "\n" && index <= text.length)
+	// 				{
+	// 					index++;
+	// 					char = text.charAt(index);
+	// 				}
+	// 				end_index = index;
+	// 				to_replace = text.substring(start_index, end_index)
 	
-					/**********************************************************************
-					then, check whether to push to array or not
-					***********************************************************************/
+	// 				/**********************************************************************
+	// 				then, check whether to push to array or not
+	// 				***********************************************************************/
 	
-					// above has handling for duplicate regex
-					// however, that only detects what the regex matches
-					// you had another loop to handle to match whole pattern (eg whole function)
-					// thus, this to ensure the whole pattern is present in the current text buffer
-					// else, it means this pattern has been removed from the buffer
-					// and shall not reset the _regex_whole.lastIndex to 0
-					if(!text.includes(to_replace))
-						continue;
+	// 				// above has handling for duplicate regex
+	// 				// however, that only detects what the regex matches
+	// 				// you had another loop to handle to match whole pattern (eg whole function)
+	// 				// thus, this to ensure the whole pattern is present in the current text buffer
+	// 				// else, it means this pattern has been removed from the buffer
+	// 				// and shall not reset the _regex_whole.lastIndex to 0
+	// 				if(!text.includes(to_replace))
+	// 					continue;
 	
 	
-					/**********************************************************************
-					Given the pattern, get the original document position
-					***********************************************************************/
-					// because currently your 'text' has been modified
-					// where, you erased those that matched pattern,
-					// to make way for next regex to detect pattern
-					// to not make the regex detect duplicate pattern
+	// 				/**********************************************************************
+	// 				Given the pattern, get the original document position
+	// 				***********************************************************************/
+	// 				// because currently your 'text' has been modified
+	// 				// where, you erased those that matched pattern,
+	// 				// to make way for next regex to detect pattern
+	// 				// to not make the regex detect duplicate pattern
 	
-					start = document.positionAt(start_index);
-					end = document.positionAt(end_index);
-					range = new vscode.Range(start, end);
+	// 				start = document.positionAt(start_index);
+	// 				end = document.positionAt(end_index);
+	// 				range = new vscode.Range(start, end);
 	
-					/**********************************************************************
-					setup symbol name
-					***********************************************************************/
-					// for javascript, they have anonymous function
-					// if not match alphabets, set it to anonymous
+	// 				/**********************************************************************
+	// 				setup symbol name
+	// 				***********************************************************************/
+	// 				// for javascript, they have anonymous function
+	// 				// if not match alphabets, set it to anonymous
 	
-					// or, if the name is same as symbol type, also set it to anonymous
-					if(!symbol_name.match(/[a-z]/i) || symbol_name == symbolType)
-					{
-						symbol_name = 'anonymous'
-					}
-				}
-				else
-				{
-					/**********************************************************************
-					 still trying to extract the function name
-					***********************************************************************/
+	// 				// or, if the name is same as symbol type, also set it to anonymous
+	// 				if(!symbol_name.match(/[a-z]/i) || symbol_name == symbolType)
+	// 				{
+	// 					symbol_name = 'anonymous'
+	// 				}
+	// 			}
+	// 			else
+	// 			{
+	// 				/**********************************************************************
+	// 				 still trying to extract the function name
+	// 				***********************************************************************/
 	
-					// handling for extracting symbol name given word appear 'before' the symbol
-					if(keys.includes("before"))
-					{
-						index = sub.length - 1; // point to the last character
-						// Loop through the string backwards
-						while (index >= 0) 
-						{
-							let char = sub.charAt(index); // Get the character at the current index
-							if (char == " " && hasFountFirstChar)
-							{ 	// Check if the character is a white space
+	// 				// handling for extracting symbol name given word appear 'before' the symbol
+	// 				if(keys.includes("before"))
+	// 				{
+	// 					index = sub.length - 1; // point to the last character
+	// 					// Loop through the string backwards
+	// 					while (index >= 0) 
+	// 					{
+	// 						let char = sub.charAt(index); // Get the character at the current index
+	// 						if (char == " " && hasFountFirstChar)
+	// 						{ 	// Check if the character is a white space
 	
-								// there are cases where ppl put more than 1 whitespaces
-								while(char == " ")
-								{
-									index--;
-									char = sub.charAt(index);
-								}
-								index++; // current char is prev char of the whitespace, move back forward 1 character
-								break;
-							}
-							else if(char == "\n")
-							{
-								break;
-							}
-							else if (!isNaN(Number(char)) && char != " ") // isNaN = is not a number
-							{
-								hasFountFirstChar = true;
-							}
-							else if ((char.match(/[a-z]/i)) && char != " ") // if is alphabet
-							{
-								hasFountFirstChar = true;
-							}
-							index--;
-						}
-						// save the start index
-						start_index = index;
+	// 							// there are cases where ppl put more than 1 whitespaces
+	// 							while(char == " ")
+	// 							{
+	// 								index--;
+	// 								char = sub.charAt(index);
+	// 							}
+	// 							index++; // current char is prev char of the whitespace, move back forward 1 character
+	// 							break;
+	// 						}
+	// 						else if(char == "\n")
+	// 						{
+	// 							break;
+	// 						}
+	// 						else if (!isNaN(Number(char)) && char != " ") // isNaN = is not a number
+	// 						{
+	// 							hasFountFirstChar = true;
+	// 						}
+	// 						else if ((char.match(/[a-z]/i)) && char != " ") // if is alphabet
+	// 						{
+	// 							hasFountFirstChar = true;
+	// 						}
+	// 						index--;
+	// 					}
+	// 					// save the start index
+	// 					start_index = index;
 	
-						// get the substring, starting from the given start index
-						symbol_name = sub.substring(start_index);
-					}
-					// handling for extracting symbol name given word appear 'after' the symbol
-					else
-					{
-						index = 0; // point to the first character
-						// Loop through the string forward
-						while (index < sub.length) 
-						{
-							let char = sub.charAt(index); // Get the character at the current index
-							if (char == " " && hasFountFirstChar)  
-							{ 	// Check if the character is a white space
+	// 					// get the substring, starting from the given start index
+	// 					symbol_name = sub.substring(start_index);
+	// 				}
+	// 				// handling for extracting symbol name given word appear 'after' the symbol
+	// 				else
+	// 				{
+	// 					index = 0; // point to the first character
+	// 					// Loop through the string forward
+	// 					while (index < sub.length) 
+	// 					{
+	// 						let char = sub.charAt(index); // Get the character at the current index
+	// 						if (char == " " && hasFountFirstChar)  
+	// 						{ 	// Check if the character is a white space
 	
-								// there are cases where ppl put more than 1 whitespaces
-								while(char == " ")
-								{
-									index++;
-									char = sub.charAt(index);
-								}
-								// not needed, above loop made sure the current char is not whitespace
-								// i++; // current char is whitespace, move to the character
-								break;
-							}
-							else if(char == "\n")
-							{
-								break;
-							}
-							else if (!isNaN(Number(char)) && char != " ") // isNaN = is not a number
-							{
-								hasFountFirstChar = true;
-							}
-							else if ((char.match(/[a-z]/i)) && char != " ") // if is alphabet
-							{
-								hasFountFirstChar = true;
-							}
-							index++;
-						}
-						// save the start index
-						start_index = index;
+	// 							// there are cases where ppl put more than 1 whitespaces
+	// 							while(char == " ")
+	// 							{
+	// 								index++;
+	// 								char = sub.charAt(index);
+	// 							}
+	// 							// not needed, above loop made sure the current char is not whitespace
+	// 							// i++; // current char is whitespace, move to the character
+	// 							break;
+	// 						}
+	// 						else if(char == "\n")
+	// 						{
+	// 							break;
+	// 						}
+	// 						else if (!isNaN(Number(char)) && char != " ") // isNaN = is not a number
+	// 						{
+	// 							hasFountFirstChar = true;
+	// 						}
+	// 						else if ((char.match(/[a-z]/i)) && char != " ") // if is alphabet
+	// 						{
+	// 							hasFountFirstChar = true;
+	// 						}
+	// 						index++;
+	// 					}
+	// 					// save the start index
+	// 					start_index = index;
 	
-						// for 'after' case, you need to handle how to extract the symbol name
+	// 					// for 'after' case, you need to handle how to extract the symbol name
 						
-						// sub_sub may refer to substring of the substring
-						// get the string from the start_index
-						// cannot skip this, if you straight do sub.indexof(" ")
-						// then it will detect the 1st white space
-						// eg: #define A 1
-						// there are 2 white spaces
-						// what you want is extract "A" out, 1st white space ady handled from loop above
-						// then this is to handle the 2nd white space
-						let sub_sub = sub.substring(start_index);
+	// 					// sub_sub may refer to substring of the substring
+	// 					// get the string from the start_index
+	// 					// cannot skip this, if you straight do sub.indexof(" ")
+	// 					// then it will detect the 1st white space
+	// 					// eg: #define A 1
+	// 					// there are 2 white spaces
+	// 					// what you want is extract "A" out, 1st white space ady handled from loop above
+	// 					// then this is to handle the 2nd white space
+	// 					let sub_sub = sub.substring(start_index);
 	
 	
-						// this is to handle cases that, they dont have whitespace as the end
-						// instead, is a newline at the end
-						let end_substring = sub_sub.indexOf(" ");
-						if (end_substring < 0)
-							end_substring = sub_sub.indexOf("\n");
+	// 					// this is to handle cases that, they dont have whitespace as the end
+	// 					// instead, is a newline at the end
+	// 					let end_substring = sub_sub.indexOf(" ");
+	// 					if (end_substring < 0)
+	// 						end_substring = sub_sub.indexOf("\n");
 						
 						
-						// only get until the next white space
-						// have to add the start_index, because you're substring-ing the 'sub' varaible
-						// and the sub_sub variable has the start_index cut off, from the code above 
-						sub_sub = sub.substring(start_index, end_substring + start_index);
-						symbol_name = sub_sub;
-					}
-					// remove white spaces
-					while(symbol_name.includes(' '))
-						symbol_name = symbol_name.replace(' ', '');
-					// remove '\n' characters
-					while(symbol_name.includes('\n'))
-						symbol_name = symbol_name.replace('\n', '');
-					// remove '*' characters
-					while(symbol_name.includes('*'))
-						symbol_name = symbol_name.replace('*', '');
-					/**********************************************************************
-					to get the whole pattern
-					***********************************************************************/
-					// 1. loop backwards
-					// 2. loop forwards
+	// 					// only get until the next white space
+	// 					// have to add the start_index, because you're substring-ing the 'sub' varaible
+	// 					// and the sub_sub variable has the start_index cut off, from the code above 
+	// 					sub_sub = sub.substring(start_index, end_substring + start_index);
+	// 					symbol_name = sub_sub;
+	// 				}
+	// 				// remove white spaces
+	// 				while(symbol_name.includes(' '))
+	// 					symbol_name = symbol_name.replace(' ', '');
+	// 				// remove '\n' characters
+	// 				while(symbol_name.includes('\n'))
+	// 					symbol_name = symbol_name.replace('\n', '');
+	// 				// remove '*' characters
+	// 				while(symbol_name.includes('*'))
+	// 					symbol_name = symbol_name.replace('*', '');
+	// 				/**********************************************************************
+	// 				to get the whole pattern
+	// 				***********************************************************************/
+	// 				// 1. loop backwards
+	// 				// 2. loop forwards
 	
-					/**********************************************************************
-					loop backwards
-					***********************************************************************/
-					// match until newline, or start of document
-					index = match.index;
-					char = text.charAt(index);
-					while(index != 0 && char != "\n")
-					{
-						index--;
-						char = text.charAt(index);
-					}
-					// current char is newline, move to the next char
-					// update: if match.index is 0, means the pattern matched at the start of text
-					// thus, after this loop gonna have index increment, making it not pointing to valid whole pattern
-					// thus, add 1 more checking, match.index != 0
-					if(index==0)
-						index
-					else
-						index++;
-					// save start_index
-					start_index = index;
+	// 				/**********************************************************************
+	// 				loop backwards
+	// 				***********************************************************************/
+	// 				// match until newline, or start of document
+	// 				index = match.index;
+	// 				char = text.charAt(index);
+	// 				while(index != 0 && char != "\n")
+	// 				{
+	// 					index--;
+	// 					char = text.charAt(index);
+	// 				}
+	// 				// current char is newline, move to the next char
+	// 				// update: if match.index is 0, means the pattern matched at the start of text
+	// 				// thus, after this loop gonna have index increment, making it not pointing to valid whole pattern
+	// 				// thus, add 1 more checking, match.index != 0
+	// 				if(index==0)
+	// 					index
+	// 				else
+	// 					index++;
+	// 				// save start_index
+	// 				start_index = index;
 	
-					/**********************************************************************
-					loop forwards
-					***********************************************************************/
-					// match until the newline, or until end of document
-					// if detected '\\n, newline that is preceded with another '\', then dont stop,
-					// continue, until match '\n' that has no '\' precede
-					// -1, cos the current index is pointing to the next char of what my regex has matched.
-					// That is, my regex macthed til \n, but the index will point to the next char of the \n
-					index = match.index + match[0].length -1;
-					char = text.charAt(index);
+	// 				/**********************************************************************
+	// 				loop forwards
+	// 				***********************************************************************/
+	// 				// match until the newline, or until end of document
+	// 				// if detected '\\n, newline that is preceded with another '\', then dont stop,
+	// 				// continue, until match '\n' that has no '\' precede
+	// 				// -1, cos the current index is pointing to the next char of what my regex has matched.
+	// 				// That is, my regex macthed til \n, but the index will point to the next char of the \n
+	// 				index = match.index + match[0].length -1;
+	// 				char = text.charAt(index);
 	
-					// Purpose: to match til newline or end of document
-					// Cases: after `;` symbol. It has white spaces behind
-					// for global vairable handling, global variable can be tricky
-					// my regex matches until `;`, and i dont wanna match it til newline
-					// what if it's the last line of document and it doesn't have newlines after that
-					// thus, the best is, use code to handle to match til newline or end of document
-					while(char!="\n" && index<=text.length)
-					{
-						index++;
-						char=text.charAt(index);
-					}
+	// 				// Purpose: to match til newline or end of document
+	// 				// Cases: after `;` symbol. It has white spaces behind
+	// 				// for global vairable handling, global variable can be tricky
+	// 				// my regex matches until `;`, and i dont wanna match it til newline
+	// 				// what if it's the last line of document and it doesn't have newlines after that
+	// 				// thus, the best is, use code to handle to match til newline or end of document
+	// 				while(char!="\n" && index<=text.length)
+	// 				{
+	// 					index++;
+	// 					char=text.charAt(index);
+	// 				}
 
-					// this ugly nested is to handle "\\n" detection
-					// kekeke
-					// basically, if detects "\\n", means not real newline
-					// only when detect "\n", is real newline
-					let prev_char = text.charAt(index - 1); // previous char of the current index
-					if(prev_char == "\\")
-					{
-						index ++;
-						char = text.charAt(index);
-						prev_char = text.charAt(index - 1);
-						while(char != "\n" && index <= text.length)
-						{
-							index++;
-							char = text.charAt(index);
-							prev_char = text.charAt(index - 1);
-							if(char == "\n")
-							{
-								if(prev_char == "\\")
-								{
-									index++;
-									char = text.charAt(index);
-								}
-							}
+	// 				// this ugly nested is to handle "\\n" detection
+	// 				// kekeke
+	// 				// basically, if detects "\\n", means not real newline
+	// 				// only when detect "\n", is real newline
+	// 				let prev_char = text.charAt(index - 1); // previous char of the current index
+	// 				if(prev_char == "\\")
+	// 				{
+	// 					index ++;
+	// 					char = text.charAt(index);
+	// 					prev_char = text.charAt(index - 1);
+	// 					while(char != "\n" && index <= text.length)
+	// 					{
+	// 						index++;
+	// 						char = text.charAt(index);
+	// 						prev_char = text.charAt(index - 1);
+	// 						if(char == "\n")
+	// 						{
+	// 							if(prev_char == "\\")
+	// 							{
+	// 								index++;
+	// 								char = text.charAt(index);
+	// 							}
+	// 						}
 	
-						}
-					}
-					// save end_index
-					end_index = index;
-					// get the whole pattern
-					// i guess substring 2nd argument is not included?.. like python slice()
-					// i dk...
-					to_replace = text.substring(start_index, end_index + 1)
+	// 					}
+	// 				}
+	// 				// save end_index
+	// 				end_index = index;
+	// 				// get the whole pattern
+	// 				// i guess substring 2nd argument is not included?.. like python slice()
+	// 				// i dk...
+	// 				to_replace = text.substring(start_index, end_index + 1)
 	
-					/**********************************************************************
-					then, check whether to push to array or not
-					***********************************************************************/
-					if(!text.includes(to_replace))
-						continue;
+	// 				/**********************************************************************
+	// 				then, check whether to push to array or not
+	// 				***********************************************************************/
+	// 				if(!text.includes(to_replace))
+	// 					continue;
 	
-					/**********************************************************************
-					Given the pattern, get the original document position
-					***********************************************************************/
-					start = document.positionAt(start_index);
-					end = document.positionAt(end_index);
-					range = new vscode.Range(start, end);
-				}
-				let temp_symbol_name = symbol_name;
-				let line = editor.document.lineAt(start).lineNumber + 1;
-				symbol_name = line + ': ' + temp_symbol_name; 
-	
-	
-				/**********************************************************************
-				finally, push to array
-				***********************************************************************/
-	
-				/**********************************************************************
-				this code checks whether parent exists in array or not, 
-				then push to array accordingly
-				however, the checking is not necessary anymore
-				cos i have made sure that, i will initialize array to have parent, with null children
-				just leave it here in case i need to refer it back
-				***********************************************************************/
-				// // Find the index of the object with parent == symbolType
-				// let parentSymbolIndex = listOfSymbolsArr.findIndex((obj) => obj.parent === symbolType);
-				// // means parent found
-				// if (parentSymbolIndex !== -1) {
-				// 	// Push new children to the object at the index
-				// 	listOfSymbolsArr[parentSymbolIndex].children.push(new SymbolTreeItem(
-				// 		symbol_name, 
-				// 		vscode.TreeItemCollapsibleState.None, 
-				// 		range));
-				// }
-				// else // push new parent to array
-				// {
-				// 	listOfSymbolsArr.push({parent:symbolType, children:[new SymbolTreeItem(
-				// 		symbol_name, 
-				// 		vscode.TreeItemCollapsibleState.None, 
-				// 		range)]});
-				// }
+	// 				/**********************************************************************
+	// 				Given the pattern, get the original document position
+	// 				***********************************************************************/
+	// 				start = document.positionAt(start_index);
+	// 				end = document.positionAt(end_index);
+	// 				range = new vscode.Range(start, end);
+	// 			}
+	// 			let temp_symbol_name = symbol_name;
+	// 			let line = editor.document.lineAt(start).lineNumber + 1;
+	// 			symbol_name = line + ': ' + temp_symbol_name; 
 	
 	
-				// Find the index of the object with parent == symbolType
-				let parentSymbolIndex = listOfSymbolsArr.findIndex((obj) => obj.parent === symbolType);
-				// this is to remove 'null' children from array
-				// because i intialized the array to have 'null' children
-				if(listOfSymbolsArr[parentSymbolIndex].children[0].label == 'null')
-				{
-					listOfSymbolsArr[parentSymbolIndex].children[0].dispose();
-					listOfSymbolsArr[parentSymbolIndex].children = [];
-				}
-				// Push new children to the object at the index
-				listOfSymbolsArr[parentSymbolIndex].children.push(new SymbolTreeItem(
-					symbol_name, 
-					vscode.TreeItemCollapsibleState.None, 
-					range));
-			}
-		}
-	}
+	// 			/**********************************************************************
+	// 			finally, push to array
+	// 			***********************************************************************/
+	
+	// 			/**********************************************************************
+	// 			this code checks whether parent exists in array or not, 
+	// 			then push to array accordingly
+	// 			however, the checking is not necessary anymore
+	// 			cos i have made sure that, i will initialize array to have parent, with null children
+	// 			just leave it here in case i need to refer it back
+	// 			***********************************************************************/
+	// 			// // Find the index of the object with parent == symbolType
+	// 			// let parentSymbolIndex = listOfSymbolsArr.findIndex((obj) => obj.parent === symbolType);
+	// 			// // means parent found
+	// 			// if (parentSymbolIndex !== -1) {
+	// 			// 	// Push new children to the object at the index
+	// 			// 	listOfSymbolsArr[parentSymbolIndex].children.push(new SymbolTreeItem(
+	// 			// 		symbol_name, 
+	// 			// 		vscode.TreeItemCollapsibleState.None, 
+	// 			// 		range));
+	// 			// }
+	// 			// else // push new parent to array
+	// 			// {
+	// 			// 	listOfSymbolsArr.push({parent:symbolType, children:[new SymbolTreeItem(
+	// 			// 		symbol_name, 
+	// 			// 		vscode.TreeItemCollapsibleState.None, 
+	// 			// 		range)]});
+	// 			// }
+	
+	
+	// 			// Find the index of the object with parent == symbolType
+	// 			let parentSymbolIndex = listOfSymbolsArr.findIndex((obj) => obj.parent === symbolType);
+	// 			// this is to remove 'null' children from array
+	// 			// because i intialized the array to have 'null' children
+	// 			if(listOfSymbolsArr[parentSymbolIndex].children[0].label == 'null')
+	// 			{
+	// 				listOfSymbolsArr[parentSymbolIndex].children[0].dispose();
+	// 				listOfSymbolsArr[parentSymbolIndex].children = [];
+	// 			}
+	// 			// Push new children to the object at the index
+	// 			listOfSymbolsArr[parentSymbolIndex].children.push(new SymbolTreeItem(
+	// 				symbol_name, 
+	// 				vscode.TreeItemCollapsibleState.None, 
+	// 				range));
+	// 		}
+	// 	}
+	// }
 
 
 	// check & remove 1 more time
-	length = 0;
-	lastIndex = 0;
-	while(length < entries.length)
-	{
-		if(entries[length]!=null)
-		{
-			length++;
-			lastIndex = length;
-			continue;
-		}
-		entries.splice(lastIndex, 1);
-		length=lastIndex;
-	}
+	// length = 0;
+	// lastIndex = 0;
+	// while(length < entries.length)
+	// {
+	// 	if(entries[length]!=null)
+	// 	{
+	// 		length++;
+	// 		lastIndex = length;
+	// 		continue;
+	// 	}
+	// 	entries.splice(lastIndex, 1);
+	// 	length=lastIndex;
+	// }
 
 	// free buffer
-	copyOfEntries = null;
+	// copyOfEntries = null;
 	let original_doc_last_index_offset = 0;
 	// proceed to ignoreCommentedCode==false handling
 	while(text.length > 0)
@@ -1133,25 +1133,18 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					continue;
 				if(match.index!=0)
 					continue;
-	
+				
+				let symbolNameIndex = regexEntries.symbolNameIndex;
+				let symbol_name = match[symbolNameIndex];
 				let operation = regexEntries.operation;
 				let start_index = 0;
 				let end_index = 0;
 				let to_replace = '';
 				let keys = Object.keys(regexEntries);
-				let keyword_to_search_for_symbol = null;
 				let function_opening = regexEntries.opening[0];
 				let function_closing = regexEntries.opening[1];
-				let symbol_name = '';
 				let range = null;
 				
-				// some need to search the symbol BEFORE the char
-				// some need to search the symbol AFTER the char
-				if(keys.includes("before"))
-					keyword_to_search_for_symbol = regexEntries.before;
-				else
-					keyword_to_search_for_symbol = regexEntries.after;
-	
 				// for checking whether the current index has found the 1st character or not
 				let hasFountFirstChar = false;
 				let str = match[0].toString();
@@ -1192,115 +1185,15 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				 * thus will be separated by 'if operation == depth' and 'else'
 				 **********************************************************************/
 	
-	
-				/**********************************************************************
-				 to extract the symbol name
-				***********************************************************************/
-				// actually, the `match` is an array, match[1] holds the function name
-				// however, this algorithm applies got struct, enum those as well
-				// thus, tho you can do symbol_name = match[1]
-				// is better do manually, so that it applies to all cases
-	
-				for(let keyword of keyword_to_search_for_symbol)
-				{
-					// save the 1st index first, else, later math.min, it will always 0
-					// if indexOf cannot find the symbol, it will return -1
-					// thus, check <=0 is better
-					if(closest_index <= 0)
-						closest_index = str.indexOf(keyword);
-					else if(keys.includes("before"))
-						closest_index = Math.min(closest_index, str.indexOf(keyword));
-					else
-						closest_index = Math.max(closest_index, str.indexOf(keyword));
-				}
-	
-				// given keyword, get substring
-				if(keys.includes("before"))
-					sub = str.substring(0, closest_index);
-				else
-					sub = str.substring(closest_index);
-	
-	
 				if( operation == 'depth')
 				{
-					/**********************************************************************
-					 still trying to extract the function name
-					***********************************************************************/
-	
-					index = sub.length - 1; // point to the last character
-					// Loop through the string backwards
-					while (index >= 0) 
-					{
-						let char = sub.charAt(index); // Get the character at the current index
-						if (char == " " && hasFountFirstChar) 
-						{ 	// Check if the character is a white space
-							break;
-						}
-						/*
-						* because there are some cases like this
-						* int main (...)
-						* there's white space before the `(`
-						*/
-						else if (!isNaN(Number(char)) && char != " ") // isNaN = is not a number
-						{
-							hasFountFirstChar = true;
-						}
-						else if ((char.match(/[a-z]/i)) && char != " ") // if is alphabet
-						{
-							hasFountFirstChar = true;
-						}
-						index--;
-					}
-					// + 1, because the current index is pointing to white spaces
-					// get the substring, starting from the given start index
-					symbol_name = sub.substring(index + 1);
-					// remove white spaces
-					while(symbol_name.includes(' '))
-						symbol_name = symbol_name.replace(' ', '');
-					// remove '\n' characters
-					while(symbol_name.includes('\n'))
-						symbol_name = symbol_name.replace('\n', '');
-					// remove '*' characters
-					while(symbol_name.includes('*'))
-						symbol_name = symbol_name.replace('*', '');
-					
-	
-	
 					/**********************************************************************
 					find the whole function body, using depth method
 					***********************************************************************/
 	
 	
-					// First, make sure the regex that matches the pattern,
-					// matches the whole thing properly, like, at the start of the string
-					
-	
 					/**********************************************************************
-					search the function backwards
-					***********************************************************************/
-	
-					index = match.index;
-					char = text.charAt(index);
-	
-					// match.index == 0 refers that this is the beginning of the document,
-					// you can go backwards anymore, this is the 1st index of document
-					// i wanted it to stop when match new line '\n', but apparently, it just ''
-					// above is for if you do document.getText(new vscode.Range(pos, pos.translate(0, 1))); 
-					// but if you use text.charAt(), then it is "\n"
-					while(index != 0 && char != "\n")
-					{
-						index--;
-						char = text.charAt(index);
-					}
-					// foudn that this will cause it point to not valid char
-					// that is, after newline, it will point to next char again
-					// index++;
-					// save the start index
-					start_index = index;
-	
-	
-					/**********************************************************************
-					now, search the rest of the function forward
+					search the rest of the function forward
 					***********************************************************************/
 	
 	
@@ -1335,23 +1228,10 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 						index++;
 						char = text.charAt(index);
 					}
+					start_index = match.index;
 					end_index = index;
 					to_replace = text.substring(start_index, end_index)
 					original_doc_last_index_offset += to_replace.length;
-	
-					/**********************************************************************
-					then, check whether to push to array or not
-					***********************************************************************/
-	
-					// above has handling for duplicate regex
-					// however, that only detects what the regex matches
-					// you had another loop to handle to match whole pattern (eg whole function)
-					// thus, this to ensure the whole pattern is present in the current text buffer
-					// else, it means this pattern has been removed from the buffer
-					// and shall not reset the _regex_whole.lastIndex to 0
-					if(!text.includes(to_replace))
-						continue;
-	
 	
 					/**********************************************************************
 					Given the pattern, get the original document position
@@ -1392,150 +1272,9 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				else
 				{
 					/**********************************************************************
-					 still trying to extract the function name
-					***********************************************************************/
-	
-					// handling for extracting symbol name given word appear 'before' the symbol
-					if(keys.includes("before"))
-					{
-						index = sub.length - 1; // point to the last character
-						// Loop through the string backwards
-						while (index >= 0) 
-						{
-							let char = sub.charAt(index); // Get the character at the current index
-							if (char == " " && hasFountFirstChar)
-							{ 	// Check if the character is a white space
-	
-								// there are cases where ppl put more than 1 whitespaces
-								while(char == " ")
-								{
-									index--;
-									char = sub.charAt(index);
-								}
-								index++; // current char is prev char of the whitespace, move back forward 1 character
-								break;
-							}
-							else if(char == "\n")
-							{
-								break;
-							}
-							else if (!isNaN(Number(char)) && char != " ") // isNaN = is not a number
-							{
-								hasFountFirstChar = true;
-							}
-							else if ((char.match(/[a-z]/i)) && char != " ") // if is alphabet
-							{
-								hasFountFirstChar = true;
-							}
-							index--;
-						}
-						// save the start index
-						start_index = index;
-	
-						// get the substring, starting from the given start index
-						symbol_name = sub.substring(start_index);
-					}
-					// handling for extracting symbol name given word appear 'after' the symbol
-					else
-					{
-						index = 0; // point to the first character
-						// Loop through the string forward
-						while (index < sub.length) 
-						{
-							let char = sub.charAt(index); // Get the character at the current index
-							if (char == " " && hasFountFirstChar)  
-							{ 	// Check if the character is a white space
-	
-								// there are cases where ppl put more than 1 whitespaces
-								while(char == " ")
-								{
-									index++;
-									char = sub.charAt(index);
-								}
-								// not needed, above loop made sure the current char is not whitespace
-								// i++; // current char is whitespace, move to the character
-								break;
-							}
-							else if(char == "\n")
-							{
-								break;
-							}
-							else if (!isNaN(Number(char)) && char != " ") // isNaN = is not a number
-							{
-								hasFountFirstChar = true;
-							}
-							else if ((char.match(/[a-z]/i)) && char != " ") // if is alphabet
-							{
-								hasFountFirstChar = true;
-							}
-							index++;
-						}
-						// save the start index
-						start_index = index;
-	
-						// for 'after' case, you need to handle how to extract the symbol name
-						
-						// sub_sub may refer to substring of the substring
-						// get the string from the start_index
-						// cannot skip this, if you straight do sub.indexof(" ")
-						// then it will detect the 1st white space
-						// eg: #define A 1
-						// there are 2 white spaces
-						// what you want is extract "A" out, 1st white space ady handled from loop above
-						// then this is to handle the 2nd white space
-						let sub_sub = sub.substring(start_index);
-	
-	
-						// this is to handle cases that, they dont have whitespace as the end
-						// instead, is a newline at the end
-						let end_substring = sub_sub.indexOf(" ");
-						if (end_substring < 0)
-							end_substring = sub_sub.indexOf("\n");
-						
-						
-						// only get until the next white space
-						// have to add the start_index, because you're substring-ing the 'sub' varaible
-						// and the sub_sub variable has the start_index cut off, from the code above 
-						sub_sub = sub.substring(start_index, end_substring + start_index);
-						symbol_name = sub_sub;
-					}
-					// remove white spaces
-					while(symbol_name.includes(' '))
-						symbol_name = symbol_name.replace(' ', '');
-					// remove '\n' characters
-					while(symbol_name.includes('\n'))
-						symbol_name = symbol_name.replace('\n', '');
-					// remove '*' characters
-					while(symbol_name.includes('*'))
-						symbol_name = symbol_name.replace('*', '');
-					/**********************************************************************
 					to get the whole pattern
 					***********************************************************************/
-					// 1. loop backwards
-					// 2. loop forwards
-	
-					/**********************************************************************
-					loop backwards
-					***********************************************************************/
-					// match until newline, or start of document
-					index = match.index;
-					char = text.charAt(index);
-					while(index != 0 && char != "\n")
-					{
-						index--;
-						char = text.charAt(index);
-					}
-					// current char is newline, move to the next char
-					// update: if match.index is 0, means the pattern matched at the start of text
-					// thus, after this loop gonna have index increment, making it not pointing to valid whole pattern
-					// thus, add 1 more checking, match.index != 0
-					if(index==0)
-						index
-					else
-						index++;
-					// save start_index
-					start_index = index;
-	
+
 					/**********************************************************************
 					loop forwards
 					***********************************************************************/
@@ -1586,18 +1325,13 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 						}
 					}
 					// save end_index
+					start_index = match.index;
 					end_index = index;
 					// get the whole pattern
 					// i guess substring 2nd argument is not included?.. like python slice()
 					// i dk...
 					to_replace = text.substring(start_index, end_index + 1)
 					original_doc_last_index_offset += to_replace.length;
-	
-					/**********************************************************************
-					then, check whether to push to array or not
-					***********************************************************************/
-					if(!text.includes(to_replace))
-						continue;
 	
 					/**********************************************************************
 					Given the pattern, get the original document position
@@ -1607,7 +1341,6 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					start = document.positionAt(original_doc_start);
 					end = document.positionAt(original_doc_end);
 					range = new vscode.Range(start, end);
-	
 	
 					/**********************************************************************
 					remove the text from buffered text
@@ -1624,32 +1357,6 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				/**********************************************************************
 				finally, push to array
 				***********************************************************************/
-	
-				/**********************************************************************
-				this code checks whether parent exists in array or not, 
-				then push to array accordingly
-				however, the checking is not necessary anymore
-				cos i have made sure that, i will initialize array to have parent, with null children
-				just leave it here in case i need to refer it back
-				***********************************************************************/
-				// // Find the index of the object with parent == symbolType
-				// let parentSymbolIndex = listOfSymbolsArr.findIndex((obj) => obj.parent === symbolType);
-				// // means parent found
-				// if (parentSymbolIndex !== -1) {
-				// 	// Push new children to the object at the index
-				// 	listOfSymbolsArr[parentSymbolIndex].children.push(new SymbolTreeItem(
-				// 		symbol_name, 
-				// 		vscode.TreeItemCollapsibleState.None, 
-				// 		range));
-				// }
-				// else // push new parent to array
-				// {
-				// 	listOfSymbolsArr.push({parent:symbolType, children:[new SymbolTreeItem(
-				// 		symbol_name, 
-				// 		vscode.TreeItemCollapsibleState.None, 
-				// 		range)]});
-				// }
-	
 	
 				// Find the index of the object with parent == symbolType
 				let parentSymbolIndex = listOfSymbolsArr.findIndex((obj) => obj.parent === symbolType);
@@ -1701,7 +1408,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 	}
 	// free buffer
 	entries = null;
-	copyOfEntries = null;
+	// copyOfEntries = null;
 	return treeArr;
 }
 
