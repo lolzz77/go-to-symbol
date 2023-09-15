@@ -608,8 +608,6 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				let index = 0;
 				let closest_index = 0;
 				let char = '';
-				let original_doc_start = 0;
-				let original_doc_end = 0;
 				let start = null; // rename to smethg better, this is for start = document.positionAt(original_doc_start)
 				let end = null;
 				
@@ -1029,6 +1027,9 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					end = document.positionAt(end_index);
 					range = new vscode.Range(start, end);
 				}
+				let temp_symbol_name = symbol_name;
+				let line = editor.document.lineAt(start).lineNumber + 1;
+				symbol_name = line + ': ' + temp_symbol_name; 
 	
 	
 				/**********************************************************************
@@ -1098,6 +1099,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 	// free buffer
 	copyOfEntries = null;
 	let original_doc_last_index_offset = 0;
+	// proceed to ignoreCommentedCode==false handling
 	while(text.length > 0)
 	{
 		let loopHasRemovedSometing = false;
@@ -1607,6 +1609,11 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					***********************************************************************/
 					text = text.replace(to_replace, '');
 				}
+				// get the line number base don the original document
+				let temp_symbol_name = symbol_name;
+				// have to + 1, the number it shows is decreased by 1, i dk why
+				let line = editor.document.lineAt(start).lineNumber + 1;
+				symbol_name = line + ': ' + temp_symbol_name; 
 	
 	
 				/**********************************************************************
@@ -1687,6 +1694,9 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 	{
 		treeArr.push(new SymbolTreeItem(array.parent, vscode.TreeItemCollapsibleState.Expanded, null, array.children));
 	}
+	// free buffer
+	entries = null;
+	copyOfEntries = null;
 	return treeArr;
 }
 
