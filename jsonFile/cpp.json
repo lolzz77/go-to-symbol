@@ -87,7 +87,7 @@
                 "ignoreCommentedCode": false
             },
             {
-                "comment1": "match define that uses () depth. 1st group match #if|#elif. Then whitespace. Then anything as long as not `defined`, cos sometime they put `!` in between. Then optional whitespace. Then anything except `(` and newline. Then `(`",
+                "comment1": "match define that uses () depth. 1st group match #if|#elif. Then whitespace. Then anything as long as not `defined`, cos sometime they put `!` in between. Then optional whitespace. Then anything except `(` and newline. Then `(`. TODO: Need fix the symbol naming",
                 "regex": ["(#elif|#if)\\s+([^defined]*)\\s*([^\\(\\n]+)\\(", "g"],
                 "operation": "depth",
                 "opening": ["(", ")"],
