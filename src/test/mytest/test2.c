@@ -242,6 +242,8 @@ int main (int argc, char* argv[]);
 /*---------------GLOBAL VARIABLE----------------------*/
 // For test_powercut() function definition
 // I want to write the function definition for once, in a file that i want, and before encoutnering the 1st function in the file
+
+// note: putting whitespace behind could test how well ur algorithm handle highligting
 static int is_first_function = TRUE; 
 static int        is_first_function2       = TRUE; 
 static int *is_first_function3 = TRUE; 
@@ -1278,3 +1280,8 @@ typedef struct
 {
     int x;
 } haha_t;
+int test2[] = {
+    // hello
+    {5, 10},
+    {2, 33}
+}

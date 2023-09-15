@@ -536,13 +536,18 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 	// free buffer
 	copyOfEntries = null;
 
+	let original_doc_last_index_offset = 0;
 	while(text.length > 0)
 	{
 		let loopHasRemovedSometing = false;
-
 		// remove starting newlines
 		while(text.startsWith('\n'))
+		{
+			let prev_length = text.length;
 			text = text.substring(1);
+			let cur_length = prev_length - text.length;
+			original_doc_last_index_offset += cur_length;
+		}
 
 		for (const [key, value] of entries) {
 			let regexesArray = value.regexes;
@@ -601,6 +606,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					start_index = match.index;
 					end_index = match.index + match[0].length;
 					to_replace = text.substring(start_index, end_index)
+					original_doc_last_index_offset += to_replace.length;
 					
 					/**********************************************************************
 					 to remove the pattern from the buffered text
@@ -765,7 +771,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					}
 					end_index = index;
 					to_replace = text.substring(start_index, end_index)
-	
+					original_doc_last_index_offset += to_replace.length;
 	
 					/**********************************************************************
 					then, check whether to push to array or not
@@ -789,8 +795,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					// to make way for next regex to detect pattern
 					// to not make the regex detect duplicate pattern
 	
-					original_doc_text = document.getText();
-					original_doc_start = original_doc_text.indexOf(to_replace);
+					original_doc_start = original_doc_last_index_offset - to_replace.length;
 					original_doc_end = original_doc_start + to_replace.length;
 					start = document.positionAt(original_doc_start);
 					end = document.positionAt(original_doc_end);
@@ -976,6 +981,18 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					index = match.index + match[0].length -1;
 					char = text.charAt(index);
 	
+					// Purpose: to match til newline or end of document
+					// Cases: after `;` symbol. It has white spaces behind
+					// for global vairable handling, global variable can be tricky
+					// my regex matches until `;`, and i dont wanna match it til newline
+					// what if it's the last line of document and it doesn't have newlines after that
+					// thus, the best is, use code to handle to match til newline or end of document
+					while(char!="\n" && index<=text.length)
+					{
+						index++;
+						char=text.charAt(index);
+					}
+
 					// this ugly nested is to handle "\\n" detection
 					// kekeke
 					// basically, if detects "\\n", means not real newline
@@ -1008,6 +1025,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					// i guess substring 2nd argument is not included?.. like python slice()
 					// i dk...
 					to_replace = text.substring(start_index, end_index + 1)
+					original_doc_last_index_offset += to_replace.length;
 	
 					/**********************************************************************
 					then, check whether to push to array or not
@@ -1018,8 +1036,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					/**********************************************************************
 					Given the pattern, get the original document position
 					***********************************************************************/
-					original_doc_text = document.getText();
-					original_doc_start = original_doc_text.indexOf(to_replace);
+					original_doc_start = original_doc_last_index_offset - to_replace.length;
 					original_doc_end = original_doc_start + to_replace.length;
 					start = document.positionAt(original_doc_start);
 					end = document.positionAt(original_doc_end);
@@ -1097,11 +1114,14 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 		// remove the line until the next encoutner of newline
 		let newlineIndex = text.indexOf('\n');
 		let to_replace = text.substring(0, newlineIndex);
+		original_doc_last_index_offset += to_replace.length;
 		console.log('REMOVE : ' + to_replace);
 		// cannot do like text = text.replace(to_replace, '');
 		// because to_replace will be `''`, and, in the text buffer, it is `\n`
 		// have to put newlineIndex + 1, else, it will always be 0 and always start at beginning of text
-		text = text.substring(newlineIndex+1);
+		// udpate: i think above assumption is not valid anymore,
+		// above the loop i ady handled text.startWith("\n")
+		text = text.substring(newlineIndex);
 		
 	}
 	for(let array of listOfSymbolsArr)

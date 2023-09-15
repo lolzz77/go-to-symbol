@@ -72,7 +72,7 @@
                 "operation" : "",
                 "opening" : ["", ""],
                 "after" : ["define"],
-                "ignoreCommentedCode" : true
+                "ignoreCommentedCode" : false
             }
         ]
     },
@@ -145,7 +145,7 @@
     "global" : {
         "regexes" : [
             {
-                "comment1" : "This is for global vairbale that is an array, thus, it has depth.",
+                "comment1" : "This is for global vairbale that is an array, thus, it has depth. Note: These global variable, can omit the `;` at the end.",
                 "comment2" : "1st group matches return type. Then compulsory whitespace. Then variable name. Then optional white space. Then optional whitespace. Then anything until `=` or newline. Then match `=`. Then optional whitespace. Then `{`",
                 "regex" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*[^=\\n]*=\\s*\\{", "g"],
                 "operation" : "depth",
