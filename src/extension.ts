@@ -10,7 +10,7 @@ import * as func from './function';
  not sure about struct n enum
 
  2. new feature - add line number
- 
+
  3. for "ignorecommentedcode", it will run the regex for the `whole` document first
  only then it able to run the next regex
  So, if `#define` is in function
@@ -162,7 +162,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const newSelection = new vscode.Selection(range.start, range.start);
 			editor.selection = newSelection;
 			// Reveal the range in the editor
-			editor.revealRange(range);
+			editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
 		}
 	});
 
