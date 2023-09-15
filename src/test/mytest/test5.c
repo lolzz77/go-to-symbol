@@ -39,22 +39,5 @@ int ME3[MAX*2];
 #endif /* PS_TYPE_NAND */
 
 
-    // "guard": {
-    //     "comment1": "",
-    //     "whole": [
-    //         "(#if|#elif)\\s*([^def|defined])([^\\n]+)\\n",
-    //         "g"
-    //     ],
-    //     "operation": "",
-    //     "opening": [
-    //         "",
-    //         ""
-    //     ],
-    //     "after": [
-    //         " ", "("
-    //     ],
-    //     "ignoreCommentedCode": true
+#if ( defined(A) && defined(B) )
 
-    /*
-        test
-    */

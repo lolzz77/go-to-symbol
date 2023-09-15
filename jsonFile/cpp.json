@@ -83,7 +83,7 @@
                 "regex": ["(#ifdef|#ifndef)\\s+([a-zA-Z0-9_*]+)([^\\n]*)\\n", "g"],
                 "operation": "",
                 "opening": ["", ""],
-                "after": ["ifdef"],
+                "after": ["def"],
                 "ignoreCommentedCode": true
             },
             {
