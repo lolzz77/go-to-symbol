@@ -79,7 +79,7 @@
     "guard": {
         "regexes" : [
             {
-                "comment1": "Match #ifdef|#ifndef words. 1st group match #ifdef|#ifndef. Then whitespace. Then the macro name. Then anything but newline. Then newline. Note: These regexes might not able to detect if this macro happened to put at end of document, without a newline at the end.",
+                "comment1": "Match #ifdef|#ifndef words. 1st group match #ifdef|#ifndef. Then whitespace. Then the macro name. Then anything but newline. Then newline. Note: These regexes might not able to detect if this macro happened to put at end of document, without a newline at the end. Solution: We can modify the buffered text, put `newline` at the end of document",
                 "regex": ["(#ifdef|#ifndef)\\s+([a-zA-Z0-9_*]+)([^\\n]*)\\n", "g"],
                 "operation": "",
                 "opening": ["", ""],
