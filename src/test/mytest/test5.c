@@ -19,6 +19,25 @@ errno = run_test(5);
 #else
 #endif
 
+#ifdef TEST
+#ifdef TEST2
+#if defined(A) || defined(B)
+#define NUM   (2048)
+#else
+#define NUM   (1024)
+#endif
+#define MAX   (512)
+#define NUM   (128)
+#define NUM   (64)
+#pragma DATA(ME, "RAM");
+int ME[MAX];
+#pragma DATA(ME2, "RAM");
+int ME2[MAX];
+#pragma DATA(ME3, "RAM");
+int ME3[MAX*2];
+#endif
+#endif /* PS_TYPE_NAND */
+
 
     // "guard": {
     //     "comment1": "",
