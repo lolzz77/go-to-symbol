@@ -273,6 +273,8 @@ typedef enum me2
 } me2_t;
 /*
 ***************/
+static int test() {intx;}
+
 static int read_line (char* file_to_open)
 {
     #define TEST TEST

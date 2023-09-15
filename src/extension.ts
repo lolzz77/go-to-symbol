@@ -589,7 +589,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 	
 				// for checking whether the current index has found the 1st character or not
 				let hasFountFirstChar = false;
-				let str = match.toString();
+				let str = match[0].toString();
 				let sub = '';
 				let index = 0;
 				let closest_index = 0;
