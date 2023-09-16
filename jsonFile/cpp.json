@@ -1,4 +1,26 @@
 {
+    "comment" : {
+        "regexes" : [
+            {
+                "comment" : ["detects multiline `/**/` comments."],
+                "regex" : ["\\s*\/\\*[^*]*\\*+(?:[^\/*][^*]*\\*+)*\/", "g"],
+                "symbolNameIndex" : 0,
+                "operation" : "remove",
+                "opening" : ["", ""],
+                "ignoreCommentedCode" : false
+            },
+            {
+                "comment" : ["detects `//`. This will match til newline, despite in the comment has `\n`, it still can match. Note: to escape `/`(forward slash), you only need one `backslash`, not two"],
+                "regex" : ["\\s*\/\/.*", "g"],
+                "symbolNameIndex" : 0,
+                "operation" : "remove",
+                "opening" : ["", ""],
+                "ignoreCommentedCode" : false,
+                "comment2" : "History - means old regex, not using it anymore, but just put here for memories. Detects both `//` and multiline `/**/` comments. however, this detects '//' first. This can cause problem when there's `//` inside `/**/`, then it will detects `//` isnide of it first",
+                "history" : ["\\/\\/.*|\\/\\*[^*]*\\*+(?:[^\\/*][^*]*\\*+)*\\/\\n", "g"]
+            }
+        ]
+    },
     "function" : {
         "regexes" : [
             {
@@ -144,57 +166,71 @@
     },
     "guard": {
         "regexes" : [
+
             {
-                "comment1": "Match #ifdef|#ifndef words. 1st group match #ifdef|#ifndef. Then whitespace. Then the macro name. Then anything but newline. Then newline. Note: These regexes might not able to detect if this macro happened to put at end of document, without a newline at the end. Solution: We can modify the buffered text, put `newline` at the end of document",
-                "regex": ["(#ifdef|#ifndef)\\s+([a-zA-Z0-9_*]+)([^\\n]*)\\n", "g"],
+                "comment": ["Sample: #ifdef WORD",
+                "Sample: #ifndef WORD"],
+                "regex": ["(#ifdef|#ifndef)\\s+([a-zA-Z0-9_*]+)", "g"],
                 "symbolNameIndex" : 2,
                 "operation": "",
                 "opening": ["", ""],
                 "comment2" : "dont put true, it will probably cause problem",
-                "ignoreCommentedCode": true
+                "ignoreCommentedCode": false
             },
             {
-                "comment": ["Sample: #if defined(WORD)",
-                            "#if !defined(WORD)",
-                            "#if (defined(WORD))",
-                            "#if defined WORD"],
-                "regex": ["(#elif|#if\\s+([^defined]*)\\s*defined)\\s*[^\\(]+\\((([^\\)]+))\\)", "g"],
-                "symbolNameIndex" : 3,
+                "comment": ["Sample: #if defined(WORD)"],
+                "regex": ["((?:#elif|#if)\\s+defined)\\s*\\(\\s*([a-zA-Z0-9_*]+)\\s*\\)", "g"],
+                "symbolNameIndex" : 2,
                 "operation": "",
                 "opening": ["", ""],
                 "comment2" : "dont put true, it will probably cause problem",
-                "ignoreCommentedCode": true
+                "ignoreCommentedCode": false
             },
             {
-                "comment1": "match define that didnt use () depth",
-                "regex": ["(#if)\\s+([^defined]*)\\s*([^\\n]+)\\n", "g"],
-                "symbolNameIndex" : 3,
+                "comment": ["Sample: #if !defined(WORD)",
+                            "Sample: #if (defined(WORD))"],
+                            "regex": ["((?:#elif|#if)\\s+[^defined]+\\s*defined)\\s*\\(\\s*([a-zA-Z0-9_*]+)\\s*\\)", "g"],
+                "symbolNameIndex" : 2,
                 "operation": "",
                 "opening": ["", ""],
                 "comment2" : "dont put true, it will probably cause problem",
-                "ignoreCommentedCode": true
-            }
-        ]
-    },
-    "comment" : {
-        "regexes" : [
-            {
-                "comment" : ["detects multiline `/**/` comments."],
-                "regex" : ["\\s*\/\\*[^*]*\\*+(?:[^\/*][^*]*\\*+)*\/", "g"],
-                "symbolNameIndex" : 0,
-                "operation" : "remove",
-                "opening" : ["", ""],
-                "ignoreCommentedCode" : false
+                "ignoreCommentedCode": false
             },
             {
-                "comment" : ["detects `//`. This will match til newline, despite in the comment has `\n`, it still can match. Note: to escape `/`(forward slash), you only need one `backslash`, not two"],
-                "regex" : ["\\s*\/\/.*", "g"],
-                "symbolNameIndex" : 0,
-                "operation" : "remove",
-                "opening" : ["", ""],
-                "ignoreCommentedCode" : false,
-                "comment2" : "History - means old regex, not using it anymore, but just put here for memories. Detects both `//` and multiline `/**/` comments. however, this detects '//' first. This can cause problem when there's `//` inside `/**/`, then it will detects `//` isnide of it first",
-                "history" : ["\\/\\/.*|\\/\\*[^*]*\\*+(?:[^\\/*][^*]*\\*+)*\\/\\n", "g"]
+                "comment": ["Sample: #if defined WORD"],
+                "regex": ["((?:#elif|#if)\\s+defined)\\s+([a-zA-Z0-9_*]+)", "g"],
+                "symbolNameIndex" : 2,
+                "operation": "",
+                "opening": ["", ""],
+                "comment2" : "dont put true, it will probably cause problem",
+                "ignoreCommentedCode": false
+            },
+            {
+                "comment": ["Sample: #if !defined WORD"],
+                "regex": ["((?:#elif|#if)\\s+[^defined]+\\s*defined)\\s+([a-zA-Z0-9_*]+)", "g"],
+                "symbolNameIndex" : 2,
+                "operation": "",
+                "opening": ["", ""],
+                "comment2" : "dont put true, it will probably cause problem",
+                "ignoreCommentedCode": false
+            },
+            {
+                "comment": ["Sample: #if WORD"],
+                "regex": ["(#if|#elif)\\s+([a-zA-Z0-9_*\\(\\)]+)", "g"],
+                "symbolNameIndex" : 1,
+                "operation": "",
+                "opening": ["", ""],
+                "comment2" : "dont put true, it will probably cause problem",
+                "ignoreCommentedCode": false
+            },
+            {
+                "comment": ["Sample: #else"],
+                "regex": ["(#else)", "g"],
+                "symbolNameIndex" : 1,
+                "operation": "",
+                "opening": ["", ""],
+                "comment2" : "dont put true, it will probably cause problem",
+                "ignoreCommentedCode": false
             }
         ]
     },

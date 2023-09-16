@@ -15,6 +15,11 @@
 #ifndef TEST
 #endif
 
+// chat GPT says this is wrong
+// cannot include parenthesis for this
+// #ifndef (TEST)
+// #endif
+
 #if (ME == VALUE)
 errno = run_test(5);
 #endif
@@ -94,8 +99,29 @@ errno = run_test(5);
 #if defined( A ) && ! defined( B )
 #endif
 
+#if defined (A) && ! defined( B )
+#endif
+
 #if defined A && defined B
 #endif
 
 #if defined A && defined (B)
 #endif
+
+#if (defined A) && defined (B)
+#endif
+
+
+/*
+ keyword to stop for doing range
+ 1. #elif
+ 2. #else
+ 3. #endif
+ 
+ do not stop if
+ 1. #if
+ 2. #ifdef
+ 3. #ifndef
+ are not even number
+
+*/

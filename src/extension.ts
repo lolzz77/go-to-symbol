@@ -1185,12 +1185,12 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					// since they are `remove`, just add in array, dont care
 					matchedPatternIndexArr.push({startIndex:start_index, endIndex:end_index})
 					// that's it for 'remove' operation, no need add into symbol list array
-					break;
+					continue;
 				}
 				// this is for '#ifdef', i want it to highlight how big is the guard range
 				else if(operation == 'range')
 				{
-					
+
 				}
 
 
