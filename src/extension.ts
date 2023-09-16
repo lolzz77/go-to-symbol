@@ -392,6 +392,7 @@ class SymbolTreeItem extends vscode.TreeItem {
 		public readonly label: string,
 		// whether they collapse or not, hold `CTRL`, hover over TreeItemCollapsibleState to see more
 		public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+		public readonly lineNumber?: number|null,
 		public readonly range?: vscode.Range|null,
 		children?: SymbolTreeItem[],
 		// public readonly id?: string,
@@ -1131,6 +1132,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 			{
 				let symbolNameIndex = regexEntries.symbolNameIndex;
 				let symbol_name = match[symbolNameIndex];
+				let lineNumber = 0;
 				let operation = regexEntries.operation;
 				let ignoreCommentedCode = regexEntries.ignoreCommentedCode;
 				let start_index = 0;
@@ -1350,8 +1352,8 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				// get the line number base don the original document
 				let temp_symbol_name = symbol_name;
 				// have to + 1, the number it shows is decreased by 1, i dk why
-				let line = editor.document.lineAt(start).lineNumber + 1;
-				symbol_name = line + ': ' + temp_symbol_name; 
+				lineNumber = editor.document.lineAt(start).lineNumber + 1;
+				symbol_name = lineNumber + ': ' + temp_symbol_name; 
 	
 	
 				/**********************************************************************
@@ -1367,20 +1369,39 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					listOfSymbolsArr[parentSymbolIndex].children[0].dispose();
 					listOfSymbolsArr[parentSymbolIndex].children = [];
 				}
+
+				let hasDuplicate =false;
+				for(const symbolTreeInterface of listOfSymbolsArr)
+				{
+					for(const child of symbolTreeInterface.children)
+					{
+						// cannot compare range == child.range
+						// cos the range is the object
+						// if you compare 2 objects together, even tho their value is same
+						// they are still different object
+						if(	symbol_name == child.label && 
+							lineNumber == child.lineNumber )
+							{
+								hasDuplicate = true;
+								break;
+							}
+					}
+				}
+				if(hasDuplicate)
+					continue;
 				// Push new children to the object at the index
 				listOfSymbolsArr[parentSymbolIndex].children.push(new SymbolTreeItem(
 					symbol_name, 
 					vscode.TreeItemCollapsibleState.None, 
+					lineNumber,
 					range));
-
 			}
-			
-
 		}
 	}
+
 	for(let array of listOfSymbolsArr)
 	{
-		treeArr.push(new SymbolTreeItem(array.parent, vscode.TreeItemCollapsibleState.Expanded, null, array.children));
+		treeArr.push(new SymbolTreeItem(array.parent, vscode.TreeItemCollapsibleState.Expanded, null, null, array.children));
 	}
 	// free buffer
 	entries = null;
