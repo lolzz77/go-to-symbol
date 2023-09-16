@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as func from './function';
+import { removeAllListeners } from 'process';
 /*
  problem
  1. for global variable
@@ -29,6 +30,11 @@ interface symbolTreeInterface {
 	// the list of symbols for the file
 	// their chidlren. Eg: 'main()', 'read_line()'
 	children: SymbolTreeItem[];
+}
+
+interface RangeInterface {
+	startIndex:number;
+	endIndex:number;
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -1095,55 +1101,41 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 
 	// free buffer
 	// copyOfEntries = null;
-	let original_doc_last_index_offset = 0;
-	// proceed to ignoreCommentedCode==false handling
-	while(text.length > 0)
-	{
-		let loopHasRemovedSometing = false;
-		// remove starting newlines
-		while(text.startsWith('\n'))
+	let matchedPatternIndexArr:RangeInterface[] = [];
+	for (const [key, value] of entries) {
+		let regexesArray = value.regexes;
+		for(const regexEntries of regexesArray)
 		{
-			let prev_length = text.length;
-			text = text.substring(1);
-			let cur_length = prev_length - text.length;
-			original_doc_last_index_offset += cur_length;
-		}
-
-		for (const [key, value] of entries) {
-			let regexesArray = value.regexes;
-			for(const regexEntries of regexesArray)
+			// for debugging only, so i can inspect what example the regex will match
+			let sample = regexEntries.comment;
+			let regexStr = regexEntries.regex[0];
+			let flag = regexEntries.regex[1];
+			let regex = new RegExp(regexStr, flag);
+			// fail safe check, if no regex, skip
+			if(regexStr == '')
+				continue;
+			/**
+			 * Note:
+			 * match will be an array
+			 * Depending on how you define the `group` in your regex, 
+			 * (grou is defined by wrapping regex in `()` symbol)
+			 * Then, it will has array for each of these groups
+			 * 1st index is always the whole regex
+			 * 2nd index is the grouping
+			 * Thus, you can extract symbol name by getting the array index
+			 * Provided you defined the group regex correctly
+			 */
+			let match;
+			let symbolType:string = key;
+			while(match = regex.exec(text))
 			{
-				let regexStr = regexEntries.regex[0];
-				let flag = regexEntries.regex[1];
-				let regex = new RegExp(regexStr, flag);
-				// fail safe check, if no regex, skip
-				if(regexStr == '')
-					continue;
-				/**
-				 * Note:
-				 * match will be an array
-				 * Depending on how you define the `group` in your regex, 
-				 * (grou is defined by wrapping regex in `()` symbol)
-				 * Then, it will has array for each of these groups
-				 * 1st index is always the whole regex
-				 * 2nd index is the grouping
-				 * Thus, you can extract symbol name by getting the array index
-				 * Provided you defined the group regex correctly
-				 */
-				let match = regex.exec(text);
-				let symbolType:string = key;
-				if(!match)
-					continue;
-				if(match.index!=0)
-					continue;
-				
 				let symbolNameIndex = regexEntries.symbolNameIndex;
 				let symbol_name = match[symbolNameIndex];
 				let operation = regexEntries.operation;
+				let ignoreCommentedCode = regexEntries.ignoreCommentedCode;
 				let start_index = 0;
 				let end_index = 0;
 				let to_replace = '';
-				let keys = Object.keys(regexEntries);
 				let function_opening = regexEntries.opening[0];
 				let function_closing = regexEntries.opening[1];
 				let range = null;
@@ -1159,6 +1151,24 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				let original_doc_end = 0;
 				let start = null; // rename to smethg better, this is for start = document.positionAt(original_doc_start)
 				let end = null;
+				let hasMatched = false;
+	
+				for(const RangeInterface of matchedPatternIndexArr)
+				{
+					let currentMatchedStartIndex = match.index;
+					let currentMatchedEndIndex = match.index + match[0].length;
+					let existedStartIndex = RangeInterface.startIndex;
+					let existedEndIndex = RangeInterface.endIndex;
+					if(	currentMatchedStartIndex >= existedStartIndex && 
+						currentMatchedEndIndex <= existedEndIndex)
+					{
+						hasMatched = true;
+						break;
+					}
+				}
+	
+				if(hasMatched && ignoreCommentedCode==false)
+					continue;
 	
 				if (operation == 'remove')
 				{
@@ -1166,17 +1176,13 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					 to get whole pattern start & end index
 					***********************************************************************/
 					start_index = match.index;
-					end_index = match.index + match[0].length;
-					to_replace = text.substring(start_index, end_index)
-					original_doc_last_index_offset += to_replace.length;
-					
-					/**********************************************************************
-					 to remove the pattern from the buffered text
-					***********************************************************************/
-					text = text.replace(to_replace, '');
-					regex.lastIndex = 0;
-					loopHasRemovedSometing = true;
-					// that's it for 'remove' operation, no need add into array
+					end_index = start_index + match[0].length;
+					to_replace = text.substring(start_index, end_index);
+					// for `remove` operation, just add into array
+					// no need check whether they clash with other index
+					// since they are `remove`, just add in array, dont care
+					matchedPatternIndexArr.push({startIndex:start_index, endIndex:end_index})
+					// that's it for 'remove' operation, no need add into symbol list array
 					break;
 				}
 				/**********************************************************************
@@ -1234,7 +1240,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					start_index = match.index;
 					end_index = index;
 					to_replace = text.substring(start_index, end_index)
-					original_doc_last_index_offset += to_replace.length;
+					matchedPatternIndexArr.push({startIndex:start_index, endIndex:end_index});
 	
 					/**********************************************************************
 					Given the pattern, get the original document position
@@ -1244,21 +1250,11 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					// to make way for next regex to detect pattern
 					// to not make the regex detect duplicate pattern
 	
-					original_doc_start = original_doc_last_index_offset - to_replace.length;
+					original_doc_start =  start_index;
 					original_doc_end = original_doc_start + to_replace.length;
 					start = document.positionAt(original_doc_start);
 					end = document.positionAt(original_doc_end);
 					range = new vscode.Range(start, end);
-	
-					/**********************************************************************
-					remove the text from buffered text
-					***********************************************************************/
-					// remove the content that matched in the text buffer
-					// to make way for next regex
-					text = text.replace(to_replace, '');
-					// you have to reset its lastIndex,
-					// else, the next regex wont able to find the next pattern cos the 'text'
-					// buffer has been modified
 	
 					/**********************************************************************
 					setup symbol name
@@ -1267,17 +1263,15 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					// if not match alphabets, set it to anonymous
 	
 					// or, if the name is same as symbol type, also set it to anonymous
-					if(!symbol_name.match(/[a-z]/i) || symbol_name == symbolType)
-					{
+					if(symbol_name == '')
 						symbol_name = 'anonymous'
-					}
 				}
 				else
 				{
 					/**********************************************************************
 					to get the whole pattern
 					***********************************************************************/
-
+	
 					/**********************************************************************
 					loop forwards
 					***********************************************************************/
@@ -1300,7 +1294,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 						index++;
 						char=text.charAt(index);
 					}
-
+	
 					// this ugly nested is to handle "\\n" detection
 					// kekeke
 					// basically, if detects "\\n", means not real newline
@@ -1330,16 +1324,16 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					// save end_index
 					start_index = match.index;
 					end_index = index;
+					matchedPatternIndexArr.push({startIndex:start_index, endIndex:end_index});
 					// get the whole pattern
 					// i guess substring 2nd argument is not included?.. like python slice()
 					// i dk...
 					to_replace = text.substring(start_index, end_index + 1)
-					original_doc_last_index_offset += to_replace.length;
 	
 					/**********************************************************************
 					Given the pattern, get the original document position
 					***********************************************************************/
-					original_doc_start = original_doc_last_index_offset - to_replace.length;
+					original_doc_start = start_index;
 					original_doc_end = original_doc_start + to_replace.length;
 					start = document.positionAt(original_doc_start);
 					end = document.positionAt(original_doc_end);
@@ -1375,35 +1369,11 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					symbol_name, 
 					vscode.TreeItemCollapsibleState.None, 
 					range));
-	
-				loopHasRemovedSometing = true;
-				// break from loop
-				// this is to make sure the regex starts all over again
-				// eg: i want it to scan function regex first, before scanning for function prototype regex
-				break;
-			}
-			break;
-		}
 
-		if(loopHasRemovedSometing == true)
-			continue;
-		// this is to handle if regex didn't remove any text
-		// then, it means the text is start with something that no regex matches
-		// or got regex matches, but is not at start of the text (my algorithm works the way it should matches text start at beginning of text)
-		// and i have to remove it
-		// else, will stuck in loop endlessly
-		// remove the line until the next encoutner of newline
-		let newlineIndex = text.indexOf('\n');
-		let to_replace = text.substring(0, newlineIndex);
-		original_doc_last_index_offset += to_replace.length;
-		console.log('REMOVE : ' + to_replace);
-		// cannot do like text = text.replace(to_replace, '');
-		// because to_replace will be `''`, and, in the text buffer, it is `\n`
-		// have to put newlineIndex + 1, else, it will always be 0 and always start at beginning of text
-		// udpate: i think above assumption is not valid anymore,
-		// above the loop i ady handled text.startWith("\n")
-		text = text.substring(newlineIndex);
-		
+			}
+			
+
+		}
 	}
 	for(let array of listOfSymbolsArr)
 	{
