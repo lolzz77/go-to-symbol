@@ -1,14 +1,19 @@
 #if defined(WORD)
+#endif
 #if !defined TEST
+#endif
 // #if ! defined(TEST) // chatGPT says this is wrong, it includes a space between ! and defined
 #if ((defined(WORD)))
+#endif
 #ifdef WORD
 #elif defined(WORD)
 #elif !defined(WORD)
 #elif ! defined(WORD)
+#endif
 // #elif defined WORD // chatGPT says this is wrong, it should have parenthesis around condition
 // #if (defined WORD) // This line is missing the defined operator inside the parentheses. It should be #if defined(WORD).
 #ifndef TEST
+#endif
 
 #if (ME == VALUE)
 errno = run_test(5);
@@ -87,4 +92,10 @@ errno = run_test(5);
 #endif
 
 #if defined( A ) && ! defined( B )
+#endif
+
+#if defined A && defined B
+#endif
+
+#if defined A && defined (B)
 #endif

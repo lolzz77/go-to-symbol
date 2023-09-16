@@ -150,14 +150,19 @@
                 "symbolNameIndex" : 2,
                 "operation": "",
                 "opening": ["", ""],
+                "comment2" : "dont put true, it will probably cause problem",
                 "ignoreCommentedCode": true
             },
             {
-                "comment1": "match define that uses () depth. 1st group match #if|#elif. Then whitespace. Then anything as long as not `defined`, cos sometime they put `!` in between. Then optional whitespace. Then anything except `(` and newline. Then `(`. TODO: Need fix the symbol naming",
-                "regex": ["(#elif|#if)\\s+([^defined]*)\\s*([^\\(\\n]+)\\(([^\\)]+)\\)", "g"],
+                "comment": ["Sample: #if defined(WORD)",
+                            "#if !defined(WORD)",
+                            "#if (defined(WORD))",
+                            "#if defined WORD"],
+                "regex": ["(#elif|#if\\s+([^defined]*)\\s*defined)\\s*[^\\(]+\\((([^\\)]+))\\)", "g"],
                 "symbolNameIndex" : 3,
                 "operation": "",
                 "opening": ["", ""],
+                "comment2" : "dont put true, it will probably cause problem",
                 "ignoreCommentedCode": true
             },
             {
@@ -166,6 +171,7 @@
                 "symbolNameIndex" : 3,
                 "operation": "",
                 "opening": ["", ""],
+                "comment2" : "dont put true, it will probably cause problem",
                 "ignoreCommentedCode": true
             }
         ]

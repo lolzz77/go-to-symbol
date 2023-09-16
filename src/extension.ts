@@ -1187,6 +1187,14 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					// that's it for 'remove' operation, no need add into symbol list array
 					break;
 				}
+				// this is for '#ifdef', i want it to highlight how big is the guard range
+				else if(operation == 'range')
+				{
+					
+				}
+
+
+
 				/**********************************************************************
 				 * below is handling for operation that has 'depth' and no depth
 				 * some of them has similarity and thus i pull them out
@@ -1389,8 +1397,19 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				}
 				if(hasDuplicate)
 					continue;
+				// to insert in ascending order
+				// i dk how to sort so...
+				let indexToInsert = 0;
+				for(const [index,child] of listOfSymbolsArr[parentSymbolIndex].children.entries())
+				{
+					if(!child.lineNumber)
+						continue;
+					if(lineNumber<child.lineNumber)
+						break;
+					indexToInsert = index+1;
+				}
 				// Push new children to the object at the index
-				listOfSymbolsArr[parentSymbolIndex].children.push(new SymbolTreeItem(
+				listOfSymbolsArr[parentSymbolIndex].children.splice(indexToInsert, 0, new SymbolTreeItem(
 					symbol_name, 
 					vscode.TreeItemCollapsibleState.None, 
 					lineNumber,
