@@ -180,6 +180,8 @@ int x = 5;
 
 #define LOAD_DSP_IMAGE_TO_RAM                "load_dsp_image_to_ram"
 #define LOG_LOAD_DSP_IMAGE_TO_RAM            "\tprintf(\"MEE %s:%d " LOAD_DSP_IMAGE_TO_RAM " next\\r\\n\", __FUNCTION__, __LINE__);\n"
+#define LOG_LOAD_DSP_IMAGE_TO_RAM            LOAD_DSP_IMAGE_TO_RAM "\tprintf(\"MEE %s:%d "
+#define LOG_LOAD_DSP_IMAGE_TO_RAM            LOAD_DSP_IMAGE_TO_RAM "\tprintf(\"MEE %s:%d "  " next\\r\\n\", __FUNCTION__, __LINE__);\n"
 
 /*  test_powercut function */
 #define TEST                "TEST"
@@ -220,12 +222,27 @@ int x = 5;
     "\tme_force_failure = BTN_NONE_PRESSED;\n"\
     "\tdelay_msec(2000);\n"\
 "}\n"
+#define LOG_RELFS_TRANSACTION_EXEC            "\ttest_powercut();\n" \
+                                                "hello"
+#define LOG_RELFS_TRANSACTION_EXEC            "\ttest_powercut();\n" \
+                                                TEST
 #define TEST2                "TEST2"
+
 #define TEST3                TEST2 \
                              TEST1 \
                              "test"
+
+#define TEST3                TEST2 "test"\
+                             TEST1 \
+                             "test"
+
+#define TEST3                TEST2 TEST TEST TEST\
+                             TEST1 \
+                             "test"
+
 #define TEST4                4
 #define TEST5                5
+#define TEST6
 
 #ifdef MEME
 #define NIAMA 5

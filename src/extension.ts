@@ -1282,24 +1282,31 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					// That is, my regex macthed til \n, but the index will point to the next char of the \n
 					index = match.index + match[0].length -1;
 					char = text.charAt(index);
-	
+					let prev_char = text.charAt(index - 1); // previous char of the current index
+					
+					let quoteNumber = 0;
 					// Purpose: to match til newline or end of document
-					// Cases: after `;` symbol. It has white spaces behind
-					// for global vairable handling, global variable can be tricky
-					// my regex matches until `;`, and i dont wanna match it til newline
-					// what if it's the last line of document and it doesn't have newlines after that
-					// thus, the best is, use code to handle to match til newline or end of document
-					while(char!="\n" && index<=text.length)
+					// This is for making sure the pattern will detect newline \\n,
+					// That, is not withint double quote ""
+					// So, make sure your regex matches until newline
+					// In order to break the loop, ensure the char is newline
+					// and, the quoteNumber is even number
+					// That way, im sure the newline, is not within double quote
+					while((char!="\n" || (quoteNumber%2!=0)) && index<=text.length)
 					{
+						// there are cases detecting `\"` withint double qutoe
+						// this `\"` shoudl not increase the quoteNumber
+						if(char=='"' && prev_char!='\\')
+							quoteNumber++;
 						index++;
 						char=text.charAt(index);
+						prev_char=text.charAt(index-1);
 					}
 	
 					// this ugly nested is to handle "\\n" detection
 					// kekeke
 					// basically, if detects "\\n", means not real newline
 					// only when detect "\n", is real newline
-					let prev_char = text.charAt(index - 1); // previous char of the current index
 					if(prev_char == "\\")
 					{
 						index ++;
@@ -1325,6 +1332,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					start_index = match.index;
 					end_index = index;
 					matchedPatternIndexArr.push({startIndex:start_index, endIndex:end_index});
+					regex.lastIndex = end_index;
 					// get the whole pattern
 					// i guess substring 2nd argument is not included?.. like python slice()
 					// i dk...
@@ -1338,11 +1346,6 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					start = document.positionAt(original_doc_start);
 					end = document.positionAt(original_doc_end);
 					range = new vscode.Range(start, end);
-	
-					/**********************************************************************
-					remove the text from buffered text
-					***********************************************************************/
-					text = text.replace(to_replace, '');
 				}
 				// get the line number base don the original document
 				let temp_symbol_name = symbol_name;

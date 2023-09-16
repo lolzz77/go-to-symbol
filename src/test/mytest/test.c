@@ -58,6 +58,7 @@
 
 #define LOAD_DSP_IMAGE_TO_RAM                "load_dsp_image_to_ram"
 #define LOG_LOAD_DSP_IMAGE_TO_RAM            "\tprintf(\"MEE %s:%d " LOAD_DSP_IMAGE_TO_RAM " next\\r\\n\", __FUNCTION__, __LINE__);\n"
+#define LOG_LOAD_DSP_IMAGE_TO_RAM            "\tprintf(\"MEE %s:%d " LOAD_DSP_IMAGE_TO_RAM " next\\r\n\", __FUNCTION__, __LINE__);\n"
 
 /*  test_powercut function */
 #define TEST                "TEST"

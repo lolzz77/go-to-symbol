@@ -114,9 +114,27 @@
     "macro" : {
         "regexes" : [
             {
-                "comment" : ["Sample : #define MACRO x-2"],
-                "comment1" : "I will make sure to put last newline in the text.",
-                "regex" : ["(#define)\\s+([a-zA-Z0-9_*]+)\\s+([^\\n]+)\\n", "g"],
+                "comment" : ["Sample: #define MACRO TEST \"HELLO\""],
+                "regex" : ["(#define)\\s+([a-zA-Z0-9_*]+)\\s+([^\\n|\"]+\\s*)\"", "g"],
+                "symbolNameIndex" : 2,
+                "operation" : "",
+                "opening" : ["", ""],
+                "ignoreCommentedCode" : true
+            },
+            {
+                "comment" : ["Sample : #define MACRO x-2",
+                "Sample: #define MACRO "],
+                "comment1" : "I will make sure to put last newline in the text. Note: The `#define MACRO `. After the macro name, it can be null also. Thus, for the 3rd group matching, put it as zero or more",
+                "regex" : ["(#define)\\s+([a-zA-Z0-9_*]+)\\s*([a-zA-Z0-9_*]*)\\s*\\n", "g"],
+                "symbolNameIndex" : 2,
+                "operation" : "",
+                "opening" : ["", ""],
+                "ignoreCommentedCode" : true
+            },
+            {
+                "comment" : ["Sample : #define MACRO VALUE1 VALUE2 VALUE3 \\",
+                            "Sample: #define MACRO\\"],
+                "regex" : ["(#define)\\s+([a-zA-Z0-9_*]+)\\s*([^\\\\\\n])*\\s*\\\\\\n", "g"],
                 "symbolNameIndex" : 2,
                 "operation" : "",
                 "opening" : ["", ""],
