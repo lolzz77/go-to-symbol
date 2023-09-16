@@ -4,7 +4,7 @@
             {
                 "comment6" : "Sample: int main () {",
                 "comment7" : "Have to put `^` to indicate start of string. My algorithm will made sure every pattern begins start of string. After matching them, will remove matched string from the text. If you dont put this `^`, it will match pattern at non-starting index. Thus, for sample like `static int main(){`, this regex will still match. Which by right I have another regex to match that.",
-                "regex" : ["^\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*(\\([^\\)]+\\))\\s*[^\\{]*\\{","g"],
+                "regex" : ["^\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*(\\([^\\)]+\\))\\s*[^\\n]*\\{","g"],
                 "comment4" : "The regex matched will result in array. Based on number of groups you defined in your regex, this number tells my code which array index I should take. This is intended to print out the symbol name. Index 0 is always the whole regex. Index 1 starts your 1st group matching.",
                 "symbolNameIndex" : 2,
                 "comment2" : "Can be null. This operation is to tell my code how should i handle it. Currently has 'depth', 'remove', ''. depth - i will perform depth search, will use 'opening' key. 'remove' - will perform operation to remove it from buffered text, will not print on the tree list. '' - will fall into else case",
@@ -19,7 +19,7 @@
             },
             {
                 "comment6" : "Sample: static int main () {",
-                "regex" : ["^\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*(\\([^\\)]+\\))\\s*[^\\{]*\\{", "g"],
+                "regex" : ["^\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*(\\([^\\)]+\\))\\s*[^\\n]*\\{", "g"],
                 "comment4" : "The regex matched will result in array. Based on number of groups you defined in your regex, this number tells my code which array index I should take. This is intended to print out the symbol name.",
                 "symbolNameIndex" : 3,
                 "operation" : "depth",
@@ -28,7 +28,7 @@
             },
             {
                 "comment6" : "Sample: static unsigned int main () {",
-                "regex" : ["^\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*(\\([^\\)]+\\))\\s*[^\\{]*\\{", "g"],
+                "regex" : ["^\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*(\\([^\\)]+\\))\\s*[^\\n]*\\{", "g"],
                 "comment4" : "The regex matched will result in array. Based on number of groups you defined in your regex, this number tells my code which array index I should take. This is intended to print out the symbol name.",
                 "symbolNameIndex" : 4,
                 "operation" : "depth",
@@ -177,7 +177,7 @@
         "regexes" : [
             {
                 "comment1" : "Sample: int VariableName[] = { [1,2], [3,4] }",
-                "regex" : ["^\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*\\([[^\\]*]\\])\\s*=\\s*\\{", "g"],
+                "regex" : ["^\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*(\\[[^\\]]*\\])\\s*=\\s*\\{", "g"],
                 "symbolNameIndex" : 2,
                 "operation" : "depth",
                 "opening" : ["{", "}"],
@@ -185,7 +185,7 @@
             },
             {
                 "comment1" : "Sample: static int VariableName[] = { [1,2], [3,4] }",
-                "regex" : ["^\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*\\([[^\\]*]\\])\\s*=\\s*\\{", "g"],
+                "regex" : ["^\\s*([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*(\\[[^\\]]*\\])\\s*=\\s*\\{", "g"],
                 "symbolNameIndex" : 3,
                 "operation" : "depth",
                 "opening" : ["{", "}"],

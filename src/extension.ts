@@ -476,6 +476,9 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 
 	const document = editor.document;
 	var text = document.getText();
+	// add newline at the end of document
+	// some of my regex will only stop when detects newline
+	text = text + '\n';
 
 	// next, push all the regexes to an array
 	// so that, if the current active document doesnt have that regex,
@@ -1378,8 +1381,8 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				// this is to make sure the regex starts all over again
 				// eg: i want it to scan function regex first, before scanning for function prototype regex
 				break;
-
 			}
+			break;
 		}
 
 		if(loopHasRemovedSometing == true)
