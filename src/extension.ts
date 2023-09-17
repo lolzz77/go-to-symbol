@@ -1103,6 +1103,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 	// free buffer
 	// copyOfEntries = null;
 	let matchedPatternIndexArr:RangeInterface[] = [];
+	let matchedCommentIndexArr:RangeInterface[] = [];
 	for (const [key, value] of entries) {
 		let regexesArray = value.regexes;
 		for(const regexEntries of regexesArray)
@@ -1168,6 +1169,19 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 						break;
 					}
 				}
+				for(const RangeInterface of matchedCommentIndexArr)
+				{
+					let currentMatchedStartIndex = match.index;
+					let currentMatchedEndIndex = match.index + match[0].length;
+					let existedStartIndex = RangeInterface.startIndex;
+					let existedEndIndex = RangeInterface.endIndex;
+					if(	currentMatchedStartIndex >= existedStartIndex && 
+						currentMatchedEndIndex <= existedEndIndex)
+					{
+						hasMatched = true;
+						break;
+					}
+				}
 	
 				if(hasMatched && ignoreCommentedCode==false)
 					continue;
@@ -1183,7 +1197,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					// for `remove` operation, just add into array
 					// no need check whether they clash with other index
 					// since they are `remove`, just add in array, dont care
-					matchedPatternIndexArr.push({startIndex:start_index, endIndex:end_index})
+					matchedCommentIndexArr.push({startIndex:start_index, endIndex:end_index})
 					// that's it for 'remove' operation, no need add into symbol list array
 					continue;
 				}
@@ -1346,9 +1360,9 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					/**********************************************************************
 					Now, find the `range`
 					***********************************************************************/
-					let startPointString = text.substring(start_index);
-					let toBreak = false;
-					while(toBreak==false)
+					let arr = ['#elif', '#else', '#endif', "#if", "#ifdef", "#ifndef"];
+					let closest_index = 0;
+					while(true)
 					{
 						/*
 							keyword to stop for doing range
@@ -1362,63 +1376,66 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 							3. #ifndef
 							are not even number
 						*/
-						let arr = ['#elif', '#else', '#endif', "#if", "#ifdef", "#ifndef"];
-						let closest_index = 0;
-						let previous_closest_index = closest_index;
+						let current_closest_index = 0;
 						let closest_index_string = '';
 						for(const str of arr)
 						{
-							if(closest_index==0)
-							{
-								closest_index=startPointString.indexOf(str);
-								closest_index_string = str;
-								previous_closest_index = closest_index;
-								continue;
-							}
-							if(str=='#if')
-							{
-								let canBreak=false;
-								let temp_regex = /#if(?=\s)/g;
-								let temp_match = temp_regex.exec(startPointString);
-								if(!temp_match)
-									continue;
-								closest_index = Math.min(closest_index, temp_match.index);
-								if(closest_index < previous_closest_index)
-									closest_index_string = str;
-								// while(canBreak==false)
-								// {
-								// 	closest_index = Math.min(closest_index, startPointString.indexOf(str));
-								// 	let next_char = startPointString.charAt(closest_index+1);
-								// 	if(next_char!=' ')
-								// 	{
-								// 		let sub_startPointString = 
-								// 		continue;
-								// 	}
-								// 	canBreak=true;
-								// }
-
-							}
+							let temp_regex_str = '';
+							if(str=='#elif' || str=='#if' || str=='ifdef' || str=='#ifndef')
+								temp_regex_str = str + '(?=\\s)'
 							else
+								temp_regex_str = str
+							let temp_regex = new RegExp(temp_regex_str, 'g');
+							let temp_match = null;
+							let is_within_comment = false;
+							while(true)
 							{
-								closest_index = Math.min(closest_index, startPointString.indexOf(str));
-								if(closest_index < previous_closest_index)
-									closest_index_string = str;
+								temp_match = temp_regex.exec(text);
+								if(!temp_match)
+									break;
+								if(temp_match.index<=start_index)
+									continue;
+								for(const RangeInterface of matchedCommentIndexArr)
+								{
+									let currentMatchedStartIndex = temp_match.index;
+									let currentMatchedEndIndex = temp_match.index + temp_match[0].length;
+									let existedStartIndex = RangeInterface.startIndex;
+									let existedEndIndex = RangeInterface.endIndex;
+									if(	currentMatchedStartIndex >= existedStartIndex && 
+										currentMatchedEndIndex <= existedEndIndex)
+									{
+										is_within_comment = true;
+										break;
+									}
+								}
+								if(is_within_comment)
+									continue;
+								current_closest_index=temp_match.index;
+								break;
 							}
+							if(closest_index==0)
+								closest_index=current_closest_index;
+							closest_index = Math.min(closest_index, current_closest_index);
+							if(closest_index_string=='')
+								closest_index_string = str;
+							else if(current_closest_index < closest_index)
+								closest_index_string = str;
 						}
 						if	(closest_index_string=='#elif' ||
 							closest_index_string=='#else' ||
 							closest_index_string=='#endif')
 							{
-								toBreak=true;
+								break;
 							}
 								
 					}
-					// end_index=
+					if(closest_index==0)
+						closest_index=end_index;
 					/**********************************************************************
 					Given the pattern, get the original document position
 					***********************************************************************/
 					original_doc_start = start_index;
-					original_doc_end = original_doc_start + to_replace.length;
+					original_doc_end = closest_index;
 					start = document.positionAt(original_doc_start);
 					end = document.positionAt(original_doc_end);
 					range = new vscode.Range(start, end);
