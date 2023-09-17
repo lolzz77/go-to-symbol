@@ -279,7 +279,8 @@
             },
             {
                 "comment" : ["Sample: static int VariableName;"],
-                "regex" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*;", "g"],
+                "comment1" : "it is today i learnt that, \\s will also match newline. The best way is [ \\t]+",
+                "regex" : ["([a-zA-Z0-9_*]+)[ \\t]+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*;", "g"],
                 "symbolNameIndex" : 3,
                 "operation" : "",
                 "opening" : ["", ""],
