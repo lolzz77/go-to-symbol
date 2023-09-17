@@ -304,7 +304,7 @@
             },
             {
                 "comment" : ["Sample: int VariableName = 5;"],
-                "regex" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*=\\s*([^;]*);", "g"],
+                "regex" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*=\\s*([^;|\\n]*);", "g"],
                 "symbolNameIndex" : 2,
                 "operation" : "",
                 "opening" : ["", ""],
