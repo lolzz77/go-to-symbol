@@ -52,6 +52,11 @@ errno = run_test(5);
         #pragma DATA(ME3, "RAM");
         int ME3[MAX*2];
     #elif ME
+        #ifndef ME
+            int x;
+        #else
+            int x;
+        #endif
         int x;
     #elif defined ME3
         int x;

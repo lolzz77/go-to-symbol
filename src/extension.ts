@@ -1362,7 +1362,10 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					***********************************************************************/
 					let arr = ['#elif', '#else', '#endif', "#if", "#ifdef", "#ifndef"];
 					let closest_index = 0;
-					while(true)
+					let previous_closest_index = closest_index;
+					let temp_start_index = start_index;
+					let guard_depth = 1; // start at 1, your regex 100% confirm has matched 1 opening
+					while(guard_depth!=0)
 					{
 						/*
 							keyword to stop for doing range
@@ -1377,7 +1380,10 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 							are not even number
 						*/
 						let current_closest_index = 0;
-						let closest_index_string = '';
+						if(start_index > closest_index)
+							temp_start_index = start_index;
+						else
+							temp_start_index = closest_index;
 						for(const str of arr)
 						{
 							let temp_regex_str = '';
@@ -1393,7 +1399,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 								temp_match = temp_regex.exec(text);
 								if(!temp_match)
 									break;
-								if(temp_match.index<=start_index)
+								if(temp_match.index<=temp_start_index)
 									continue;
 								for(const RangeInterface of matchedCommentIndexArr)
 								{
@@ -1413,20 +1419,30 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 								current_closest_index=temp_match.index;
 								break;
 							}
-							if(closest_index==0)
+							if(closest_index==0 || closest_index==temp_start_index)
 								closest_index=current_closest_index;
+							if(current_closest_index==0)
+								current_closest_index=closest_index;
 							closest_index = Math.min(closest_index, current_closest_index);
-							if(closest_index_string=='')
-								closest_index_string = str;
-							else if(current_closest_index < closest_index)
-								closest_index_string = str;
+							previous_closest_index = closest_index;
 						}
-						if	(closest_index_string=='#elif' ||
-							closest_index_string=='#else' ||
-							closest_index_string=='#endif')
-							{
-								break;
-							}
+						let substring = text.substring(closest_index);
+						let temp_temp_regex = /([^(\s*|\n)]+)/; // match anything, except whitespace, or newline
+						let temp_temp_match = temp_temp_regex.exec(substring);
+						// hopefully this wont happen
+						if(!temp_temp_match)
+							continue;
+						let keyword = temp_temp_match[1];
+						if(keyword=='#endif')
+							guard_depth--;
+						else if	((keyword=='#elif'||keyword=='#else'||keyword=='#endif') 
+							&& guard_depth==1)
+								guard_depth--;
+						else if((keyword=='#elif'||keyword=='#else'||keyword=='#endif') 
+							&& guard_depth!=1)
+							continue;
+						else
+							guard_depth++;
 								
 					}
 					if(closest_index==0)
