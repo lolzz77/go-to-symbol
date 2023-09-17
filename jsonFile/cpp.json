@@ -263,7 +263,8 @@
         "regexes" : [
             {
                 "comment" : ["Sample: static int VariableName[] = { [1,2], [3,4] }"],
-                "regex" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*(\\[[^\\]]*\\])\\s*=\\s*\\{", "g"],
+                "comment1" : "it is today i learnt that, \\s will also match newline. The best way is [ \\t]+",
+                "regex" : ["([a-zA-Z0-9_*]+)[ \\t]+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*(\\[[^\\]]*\\])\\s*=\\s*\\{", "g"],
                 "symbolNameIndex" : 3,
                 "operation" : "depth",
                 "opening" : ["{", "}"],
@@ -271,7 +272,7 @@
             },
             {
                 "comment" : ["Sample: int VariableName[] = { [1,2], [3,4] }"],
-                "regex" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*(\\[[^\\]]*\\])\\s*=\\s*\\{", "g"],
+                "regex" : ["([a-zA-Z0-9_*]+)[ \\t]+([a-zA-Z0-9_*]+)\\s*(\\[[^\\]]*\\])\\s*=\\s*\\{", "g"],
                 "symbolNameIndex" : 2,
                 "operation" : "depth",
                 "opening" : ["{", "}"],
@@ -279,7 +280,6 @@
             },
             {
                 "comment" : ["Sample: static int VariableName;"],
-                "comment1" : "it is today i learnt that, \\s will also match newline. The best way is [ \\t]+",
                 "regex" : ["([a-zA-Z0-9_*]+)[ \\t]+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*;", "g"],
                 "symbolNameIndex" : 3,
                 "operation" : "",
@@ -289,7 +289,7 @@
             {
                 "comment" : ["Sample: int VariableName;"],
                 "comment2" : "this regex has some flaw. Last part, it says match til you see `;` and `}`. If saw `}` first, then it will exit. Then it will match `;`. However, in some cases, a global variable may be an array, and inside the global variable, it conatins `}`. Then, after `}`, may contain other things, only then last part is `;`. However, good thing is that it wont stuck in a loop. Solution: I create antoher global regex above of this.",
-                "regex" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*;", "g"],
+                "regex" : ["([a-zA-Z0-9_*]+)[ \\t]+([a-zA-Z0-9_*]+)\\s*;", "g"],
                 "symbolNameIndex" : 2,
                 "operation" : "",
                 "opening" : ["", ""],
@@ -297,7 +297,7 @@
             },
             {
                 "comment" : ["Sample: static int VariableName = 5;"],
-                "regex" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*=\\s*([^;]*);", "g"],
+                "regex" : ["([a-zA-Z0-9_*]+)[ \\t]+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*=\\s*([^;]*);", "g"],
                 "symbolNameIndex" : 3,
                 "operation" : "",
                 "opening" : ["", ""],
@@ -305,7 +305,7 @@
             },
             {
                 "comment" : ["Sample: int VariableName = 5;"],
-                "regex" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s*=\\s*([^;|\\n]*);", "g"],
+                "regex" : ["([a-zA-Z0-9_*]+)[ \\t]+([a-zA-Z0-9_*]+)\\s*=\\s*([^;|\\n]*);", "g"],
                 "symbolNameIndex" : 2,
                 "operation" : "",
                 "opening" : ["", ""],
