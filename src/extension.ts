@@ -1176,7 +1176,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					let existedStartIndex = RangeInterface.startIndex;
 					let existedEndIndex = RangeInterface.endIndex;
 					if(	currentMatchedStartIndex >= existedStartIndex && 
-						currentMatchedEndIndex <= existedEndIndex)
+						currentMatchedStartIndex <= existedEndIndex)
 					{
 						hasMatched = true;
 						break;
