@@ -1187,12 +1187,6 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					// that's it for 'remove' operation, no need add into symbol list array
 					continue;
 				}
-				// this is for '#ifdef', i want it to highlight how big is the guard range
-				else if(operation == 'range')
-				{
-
-				}
-
 
 
 				/**********************************************************************
@@ -1204,7 +1198,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				 * thus will be separated by 'if operation == depth' and 'else'
 				 **********************************************************************/
 	
-				if( operation == 'depth')
+				else if( operation == 'depth')
 				{
 					/**********************************************************************
 					find the whole function body, using depth method
@@ -1275,6 +1269,159 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					// or, if the name is same as symbol type, also set it to anonymous
 					if(symbol_name == '')
 						symbol_name = 'anonymous'
+				}
+				// this is for '#ifdef', i want it to highlight how big is the guard range
+				else if(operation == 'range')
+				{
+					/**********************************************************************
+					to get the whole pattern
+					***********************************************************************/
+	
+					/**********************************************************************
+					loop forwards
+					***********************************************************************/
+					// match until the newline, or until end of document
+					// if detected '\\n, newline that is preceded with another '\', then dont stop,
+					// continue, until match '\n' that has no '\' precede
+					// -1, cos the current index is pointing to the next char of what my regex has matched.
+					// That is, my regex macthed til \n, but the index will point to the next char of the \n
+					index = match.index + match[0].length -1;
+					char = text.charAt(index);
+					let prev_char = text.charAt(index - 1); // previous char of the current index
+					
+					let quoteNumber = 0;
+					// Purpose: to match til newline or end of document
+					// This is for making sure the pattern will detect newline \\n,
+					// That, is not withint double quote ""
+					// So, make sure your regex matches until newline
+					// In order to break the loop, ensure the char is newline
+					// and, the quoteNumber is even number
+					// That way, im sure the newline, is not within double quote
+					while((char!="\n" || (quoteNumber%2!=0)) && index<=text.length)
+					{
+						// there are cases detecting `\"` withint double qutoe
+						// this `\"` shoudl not increase the quoteNumber
+						if(char=='"' && prev_char!='\\')
+							quoteNumber++;
+						index++;
+						char=text.charAt(index);
+						prev_char=text.charAt(index-1);
+					}
+	
+					// this ugly nested is to handle "\\n" detection
+					// kekeke
+					// basically, if detects "\\n", means not real newline
+					// only when detect "\n", is real newline
+					if(prev_char == "\\")
+					{
+						index ++;
+						char = text.charAt(index);
+						prev_char = text.charAt(index - 1);
+						while(char != "\n" && index <= text.length)
+						{
+							index++;
+							char = text.charAt(index);
+							prev_char = text.charAt(index - 1);
+							if(char == "\n")
+							{
+								if(prev_char == "\\")
+								{
+									index++;
+									char = text.charAt(index);
+								}
+							}
+	
+						}
+					}
+					// save end_index
+					start_index = match.index;
+					end_index = index;
+					matchedPatternIndexArr.push({startIndex:start_index, endIndex:end_index});
+					regex.lastIndex = end_index;
+					// get the whole pattern
+					// i guess substring 2nd argument is not included?.. like python slice()
+					// i dk...
+					to_replace = text.substring(start_index, end_index + 1)
+	
+					/**********************************************************************
+					Now, find the `range`
+					***********************************************************************/
+					let startPointString = text.substring(start_index);
+					let toBreak = false;
+					while(toBreak==false)
+					{
+						/*
+							keyword to stop for doing range
+							1. #elif
+							2. #else
+							3. #endif
+							
+							do not stop if
+							1. #if
+							2. #ifdef
+							3. #ifndef
+							are not even number
+						*/
+						let arr = ['#elif', '#else', '#endif', "#if", "#ifdef", "#ifndef"];
+						let closest_index = 0;
+						let previous_closest_index = closest_index;
+						let closest_index_string = '';
+						for(const str of arr)
+						{
+							if(closest_index==0)
+							{
+								closest_index=startPointString.indexOf(str);
+								closest_index_string = str;
+								previous_closest_index = closest_index;
+								continue;
+							}
+							if(str=='#if')
+							{
+								let canBreak=false;
+								let temp_regex = /#if(?=\s)/g;
+								let temp_match = temp_regex.exec(startPointString);
+								if(!temp_match)
+									continue;
+								closest_index = Math.min(closest_index, temp_match.index);
+								if(closest_index < previous_closest_index)
+									closest_index_string = str;
+								// while(canBreak==false)
+								// {
+								// 	closest_index = Math.min(closest_index, startPointString.indexOf(str));
+								// 	let next_char = startPointString.charAt(closest_index+1);
+								// 	if(next_char!=' ')
+								// 	{
+								// 		let sub_startPointString = 
+								// 		continue;
+								// 	}
+								// 	canBreak=true;
+								// }
+
+							}
+							else
+							{
+								closest_index = Math.min(closest_index, startPointString.indexOf(str));
+								if(closest_index < previous_closest_index)
+									closest_index_string = str;
+							}
+						}
+						if	(closest_index_string=='#elif' ||
+							closest_index_string=='#else' ||
+							closest_index_string=='#endif')
+							{
+								toBreak=true;
+							}
+								
+					}
+					// end_index=
+					/**********************************************************************
+					Given the pattern, get the original document position
+					***********************************************************************/
+					original_doc_start = start_index;
+					original_doc_end = original_doc_start + to_replace.length;
+					start = document.positionAt(original_doc_start);
+					end = document.positionAt(original_doc_end);
+					range = new vscode.Range(start, end);
 				}
 				else
 				{

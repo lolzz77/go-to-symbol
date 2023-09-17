@@ -172,7 +172,7 @@
                 "Sample: #ifndef WORD"],
                 "regex": ["(#ifdef|#ifndef)\\s+([a-zA-Z0-9_*]+)", "g"],
                 "symbolNameIndex" : 2,
-                "operation": "",
+                "operation": "range",
                 "opening": ["", ""],
                 "comment2" : "dont put true, it will probably cause problem",
                 "ignoreCommentedCode": false
@@ -181,7 +181,7 @@
                 "comment": ["Sample: #if defined(WORD)"],
                 "regex": ["((?:#elif|#if)\\s+defined)\\s*\\(\\s*([a-zA-Z0-9_*]+)\\s*\\)", "g"],
                 "symbolNameIndex" : 2,
-                "operation": "",
+                "operation": "range",
                 "opening": ["", ""],
                 "comment2" : "dont put true, it will probably cause problem",
                 "ignoreCommentedCode": false
@@ -191,7 +191,7 @@
                             "Sample: #if (defined(WORD))"],
                             "regex": ["((?:#elif|#if)\\s+[^defined]+\\s*defined)\\s*\\(\\s*([a-zA-Z0-9_*]+)\\s*\\)", "g"],
                 "symbolNameIndex" : 2,
-                "operation": "",
+                "operation": "range",
                 "opening": ["", ""],
                 "comment2" : "dont put true, it will probably cause problem",
                 "ignoreCommentedCode": false
@@ -200,7 +200,7 @@
                 "comment": ["Sample: #if defined WORD"],
                 "regex": ["((?:#elif|#if)\\s+defined)\\s+([a-zA-Z0-9_*]+)", "g"],
                 "symbolNameIndex" : 2,
-                "operation": "",
+                "operation": "range",
                 "opening": ["", ""],
                 "comment2" : "dont put true, it will probably cause problem",
                 "ignoreCommentedCode": false
@@ -209,7 +209,7 @@
                 "comment": ["Sample: #if !defined WORD"],
                 "regex": ["((?:#elif|#if)\\s+[^defined]+\\s*defined)\\s+([a-zA-Z0-9_*]+)", "g"],
                 "symbolNameIndex" : 2,
-                "operation": "",
+                "operation": "range",
                 "opening": ["", ""],
                 "comment2" : "dont put true, it will probably cause problem",
                 "ignoreCommentedCode": false
@@ -218,7 +218,7 @@
                 "comment": ["Sample: #if WORD"],
                 "regex": ["(#if|#elif)\\s+([a-zA-Z0-9_*\\(\\)]+)", "g"],
                 "symbolNameIndex" : 1,
-                "operation": "",
+                "operation": "range",
                 "opening": ["", ""],
                 "comment2" : "dont put true, it will probably cause problem",
                 "ignoreCommentedCode": false
@@ -227,7 +227,7 @@
                 "comment": ["Sample: #else"],
                 "regex": ["(#else)", "g"],
                 "symbolNameIndex" : 1,
-                "operation": "",
+                "operation": "range",
                 "opening": ["", ""],
                 "comment2" : "dont put true, it will probably cause problem",
                 "ignoreCommentedCode": false
