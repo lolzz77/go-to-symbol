@@ -1401,6 +1401,8 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 									break;
 								if(temp_match.index<=temp_start_index)
 									continue;
+								// check if it's commented line,
+								// if it is, skip
 								for(const RangeInterface of matchedCommentIndexArr)
 								{
 									let currentMatchedStartIndex = temp_match.index;
@@ -1429,9 +1431,12 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 						let substring = text.substring(closest_index);
 						let temp_temp_regex = /([^(\s*|\n)]+)/; // match anything, except whitespace, or newline
 						let temp_temp_match = temp_temp_regex.exec(substring);
-						// hopefully this wont happen
+						// hopefully this null checking wont be true
 						if(!temp_temp_match)
 							continue;
+						// these ugly if, else if, is to ensure that, dont just decrement guard_depth if
+						// the current keyword is `#else`, if there is another `#ifdef` detected,
+						// then only decrement the guard_depth if detects `#endif`
 						let keyword = temp_temp_match[1];
 						if(keyword=='#endif')
 							guard_depth--;
