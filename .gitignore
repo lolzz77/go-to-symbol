@@ -5,3 +5,6 @@ node_modules
 
 # vscode generated extension file
 *.vsix
+
+# my own temporary.c source file for testing
+temp*.*
