@@ -668,15 +668,6 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				else if(operation == 'range')
 				{
 					/**********************************************************************
-					It is possible that, there are multiple `defined` in the matching
-					extract each of their symbol
-					Most of them have `defined` word, but some of them dont
-					They confirm use comparison symbol `&&` `||`
-					***********************************************************************/
-
-
-
-					/**********************************************************************
 					to get the whole pattern
 					***********************************************************************/
 	
@@ -749,6 +740,59 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					// i forgot why i need +1... i rmb after +1, the `to_replace` will match til newline
 					to_replace = text.substring(start_index, end_index + 1)
 	
+					/**********************************************************************
+					It is possible that, there are multiple `defined` in the matching
+					extract each of their symbol
+					Most of them have `defined` word, but some of them dont
+					They confirm use comparison symbol `&&` `||`
+					My lazy technique, use `to_replace`, replace all `&& `||` `defined` to comma
+					***********************************************************************/
+					let temp_to_replace = to_replace.substring(match[1].length);
+					let hasMultipleSymbol = false;
+					while(temp_to_replace!=undefined &&
+						(temp_to_replace.includes("&&")||temp_to_replace.includes("||")))
+					{
+						hasMultipleSymbol = true;
+						// dont put this on the parent `while`
+						// If not, `#if defined WORD` will also come here.
+						while(temp_to_replace.includes("defined"))
+							temp_to_replace = temp_to_replace.replace("defined", ',');
+						temp_to_replace = temp_to_replace.replace("&&", ',');
+						temp_to_replace = temp_to_replace.replace("||", ',');
+						symbol_name=temp_to_replace;
+					}
+					// remove all the unecessary symbols
+					if(hasMultipleSymbol)
+					{
+						while(symbol_name.includes(' '))
+							symbol_name=symbol_name.replace(' ', '');
+						while(symbol_name.includes('(')) // eg: defined(WORD)
+							symbol_name=symbol_name.replace('(', '');
+						while(symbol_name.includes(')')) // eg: defined(WORD)
+							symbol_name=symbol_name.replace(')', '');
+						while(symbol_name.includes(',,')) // double comma
+							symbol_name=symbol_name.replace(',,', ',');
+						while(symbol_name.includes('\n'))
+							symbol_name=symbol_name.replace('\n', '');
+						// this `!` is left by `!defined(WORD)
+						// make it to `!WORD`
+						// Note: dont do while string.includes('!')
+						// it will cause this case `#if x!=2`, the '!' to be removed
+						// the '!' is not part of `!defined`, and should not be removed
+						while(symbol_name.includes('!,'))
+							symbol_name=symbol_name.replace('!,', '!');
+						// Below 2 code intention is to replace `,` with `, `
+						// that is, with whitespace
+						// but i cannot do while string.includes(',')
+						// it will stuck in loop
+						while(symbol_name.includes(','))
+							symbol_name=symbol_name.replace(',', '@');
+						while(symbol_name.includes('@'))
+							symbol_name=symbol_name.replace('@', ', ');
+					}
+
+
+
 					/**********************************************************************
 					Now, find the `range`
 					***********************************************************************/
