@@ -217,7 +217,7 @@
             },
             {
                 "comment": ["Sample: #if WORD"],
-                "regex": ["(#if|#elif)\\s+((?<!defined)[a-zA-Z0-9_*\\(\\=\\s*)]+)\\n", "g"],
+                "regex": ["(#if|#elif)\\s+((?<!defined)[a-zA-Z0-9_*\\(\\)&|=\\s*]+)\\n", "g"],
                 "symbolNameIndex" : 2,
                 "operation": "range",
                 "opening": ["", ""],

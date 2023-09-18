@@ -668,6 +668,15 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				else if(operation == 'range')
 				{
 					/**********************************************************************
+					It is possible that, there are multiple `defined` in the matching
+					extract each of their symbol
+					Most of them have `defined` word, but some of them dont
+					They confirm use comparison symbol `&&` `||`
+					***********************************************************************/
+
+
+
+					/**********************************************************************
 					to get the whole pattern
 					***********************************************************************/
 	
