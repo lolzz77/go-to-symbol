@@ -730,11 +730,14 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					// save end_index
 					start_index = match.index;
 					end_index = index;
-					matchedPatternIndexArr.push({startIndex:start_index, endIndex:end_index});
+					// since below `to_replace` i put +1, here need to put as well
+					// else, it will match same pattern twice
+					matchedPatternIndexArr.push({startIndex:start_index, endIndex:end_index+1});
 					regex.lastIndex = end_index;
 					// get the whole pattern
 					// i guess substring 2nd argument is not included?.. like python slice()
 					// i dk...
+					// i forgot why i need +1... i rmb after +1, the `to_replace` will match til newline
 					to_replace = text.substring(start_index, end_index + 1)
 	
 					/**********************************************************************
