@@ -668,15 +668,6 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				else if(operation == 'range')
 				{
 					/**********************************************************************
-					It is possible that, there are multiple `defined` in the matching
-					extract each of their symbol
-					Most of them have `defined` word, but some of them dont
-					They confirm use comparison symbol `&&` `||`
-					***********************************************************************/
-
-
-
-					/**********************************************************************
 					to get the whole pattern
 					***********************************************************************/
 	
@@ -749,6 +740,63 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					// i forgot why i need +1... i rmb after +1, the `to_replace` will match til newline
 					to_replace = text.substring(start_index, end_index + 1)
 	
+					/**********************************************************************
+					This ugly code is to extract multiple symbol names should there have any
+					eg: #if defined(A) && defined(B)
+					***********************************************************************/
+					/**********************************************************************
+					It is possible that, there are multiple `defined` in the matching
+					extract each of their symbol
+					Most of them have `defined` word, but some of them dont
+					They confirm use comparison symbol `&&` `||`
+					***********************************************************************/
+					let multiple_symbol_arr = [];
+					// im taking string start from match[2], thus, starting index is match[1].length
+					let multiple_symbol_start_index = 0;
+					let multiple_symbol_end_index = multiple_symbol_start_index;
+					let multiple_symbol_whole_match = to_replace;
+					while(multiple_symbol_whole_match!=undefined && 
+						(multiple_symbol_whole_match.includes("&&") || multiple_symbol_whole_match.includes("||")))
+					{
+						multiple_symbol_start_index = multiple_symbol_end_index;
+						if(multiple_symbol_whole_match.includes("&&"))
+						{
+							// index will stop at before the symbol. +2 to eliminate the symbol
+							multiple_symbol_end_index += multiple_symbol_whole_match.indexOf("&&") + 2;
+							multiple_symbol_whole_match=multiple_symbol_whole_match.substring(multiple_symbol_end_index);
+						}
+						if(multiple_symbol_whole_match.includes("||"))
+						{
+							multiple_symbol_end_index += multiple_symbol_whole_match.indexOf("||") + 2;
+							multiple_symbol_whole_match=multiple_symbol_whole_match.substring(multiple_symbol_end_index);
+						}
+						while(multiple_symbol_whole_match.startsWith(" "))
+						{
+							multiple_symbol_whole_match = multiple_symbol_whole_match.substring(1);
+							multiple_symbol_end_index++;
+						}
+						if(multiple_symbol_whole_match.startsWith("defined"))
+						{
+							multiple_symbol_whole_match = multiple_symbol_whole_match.substring(7);
+							multiple_symbol_end_index+=7;
+						}
+						multiple_symbol_arr.push(to_replace.substring(multiple_symbol_start_index, multiple_symbol_end_index));
+					}
+					if(multiple_symbol_arr.length!=0)
+					{
+						// the last element is confirm newline, strip it
+						// so, push end_index, until str.length-1
+						multiple_symbol_arr.push(to_replace.substring(multiple_symbol_end_index, to_replace.length-1));
+						for(const [index,str] of multiple_symbol_arr.entries())
+						{
+							// the 1st elment of array already captured on the regex
+							if(index==0)
+								continue;
+							symbol_name += ', ' + str;
+						}
+					}
+
+
 					/**********************************************************************
 					Now, find the `range`
 					***********************************************************************/
