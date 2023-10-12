@@ -167,7 +167,6 @@
     },
     "guard": {
         "regexes" : [
-
             {
                 "comment": ["Sample: #ifdef WORD",
                 "Sample: #ifndef WORD"],
@@ -175,7 +174,6 @@
                 "symbolNameIndex" : 2,
                 "operation": "range",
                 "opening": ["", ""],
-                "comment2" : "dont put true, it will probably cause problem",
                 "ignoreCommentedCode": false
             },
             {
@@ -184,7 +182,6 @@
                 "symbolNameIndex" : 2,
                 "operation": "range",
                 "opening": ["", ""],
-                "comment2" : "dont put true, it will probably cause problem",
                 "ignoreCommentedCode": false
             },
             {
@@ -194,7 +191,6 @@
                 "symbolNameIndex" : 2,
                 "operation": "range",
                 "opening": ["", ""],
-                "comment2" : "dont put true, it will probably cause problem",
                 "ignoreCommentedCode": false
             },
             {
@@ -203,7 +199,6 @@
                 "symbolNameIndex" : 2,
                 "operation": "range",
                 "opening": ["", ""],
-                "comment2" : "dont put true, it will probably cause problem",
                 "ignoreCommentedCode": false
             },
             {
@@ -212,16 +207,14 @@
                 "symbolNameIndex" : 2,
                 "operation": "range",
                 "opening": ["", ""],
-                "comment2" : "dont put true, it will probably cause problem",
                 "ignoreCommentedCode": false
             },
             {
                 "comment": ["Sample: #if WORD"],
-                "regex": ["(#if|#elif)\\s+((?<!defined)[a-zA-Z0-9_*\\(\\)&|=\\s*]+)\\n", "g"],
+                "regex": ["(#if|#elif)\\s+((?<!defined)[a-zA-Z0-9_*\\(\\)&|=\\t*]+)\\n", "g"],
                 "symbolNameIndex" : 2,
                 "operation": "range",
                 "opening": ["", ""],
-                "comment2" : "dont put true, it will probably cause problem",
                 "ignoreCommentedCode": false
             },
             {
@@ -230,7 +223,6 @@
                 "symbolNameIndex" : 1,
                 "operation": "range",
                 "opening": ["", ""],
-                "comment2" : "dont put true, it will probably cause problem",
                 "ignoreCommentedCode": false
             }
         ]

@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as func from './function';
+import { privateEncrypt } from 'crypto';
 /*
  problem
  1. for global variable
@@ -534,7 +535,8 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				let original_doc_end = 0;
 				let start = null; // rename to smethg better, this is for start = document.positionAt(original_doc_start)
 				let end = null;
-				let hasMatched = false;
+				let patternHasMatched = false;
+				let commentHasMatched = false;
 	
 				for(const RangeInterface of matchedPatternIndexArr)
 				{
@@ -545,7 +547,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					if(	currentMatchedStartIndex >= existedStartIndex && 
 						currentMatchedEndIndex <= existedEndIndex)
 					{
-						hasMatched = true;
+						patternHasMatched = true;
 						break;
 					}
 				}
@@ -558,14 +560,22 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					if(	currentMatchedStartIndex >= existedStartIndex && 
 						currentMatchedEndIndex <= existedEndIndex)
 					{
-						hasMatched = true;
+						commentHasMatched = true;
 						break;
 					}
 				}
 	
-				if(hasMatched && ignoreCommentedCode==false)
+				if((patternHasMatched||commentHasMatched) &&
+					ignoreCommentedCode==false)
 					continue;
 	
+				// temporary
+				// i want 'guard' regex to able to scan guards in function body
+				// but if it is commented code, dont proceed
+				// else, will stuck in loop
+				if(symbolType == 'guard' && commentHasMatched && ignoreCommentedCode)
+					continue;
+
 				if (operation == 'remove')
 				{
 					/**********************************************************************
