@@ -174,7 +174,7 @@
                 "symbolNameIndex" : 2,
                 "operation": "range",
                 "opening": ["", ""],
-                "ignoreCommentedCode": false
+                "ignoreCommentedCode": true
             },
             {
                 "comment": ["Sample: #if defined(WORD)"],
@@ -182,7 +182,7 @@
                 "symbolNameIndex" : 2,
                 "operation": "range",
                 "opening": ["", ""],
-                "ignoreCommentedCode": false
+                "ignoreCommentedCode": true
             },
             {
                 "comment": ["Sample: #if !defined(WORD)",
@@ -191,7 +191,7 @@
                 "symbolNameIndex" : 2,
                 "operation": "range",
                 "opening": ["", ""],
-                "ignoreCommentedCode": false
+                "ignoreCommentedCode": true
             },
             {
                 "comment": ["Sample: #if defined WORD"],
@@ -199,7 +199,7 @@
                 "symbolNameIndex" : 2,
                 "operation": "range",
                 "opening": ["", ""],
-                "ignoreCommentedCode": false
+                "ignoreCommentedCode": true
             },
             {
                 "comment": ["Sample: #if !defined WORD"],
@@ -207,7 +207,7 @@
                 "symbolNameIndex" : 2,
                 "operation": "range",
                 "opening": ["", ""],
-                "ignoreCommentedCode": false
+                "ignoreCommentedCode": true
             },
             {
                 "comment": ["Sample: #if WORD"],
@@ -215,7 +215,7 @@
                 "symbolNameIndex" : 2,
                 "operation": "range",
                 "opening": ["", ""],
-                "ignoreCommentedCode": false
+                "ignoreCommentedCode": true
             },
             {
                 "comment": ["Sample: #else"],
@@ -223,7 +223,7 @@
                 "symbolNameIndex" : 1,
                 "operation": "range",
                 "opening": ["", ""],
-                "ignoreCommentedCode": false
+                "ignoreCommentedCode": true
             }
         ]
     },
