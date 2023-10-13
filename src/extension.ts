@@ -567,16 +567,26 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 						break;
 					}
 				}
-	
+				
+				/* 	have to put symbolType!='comment'
+					else, case like
+					
+					//a
+					//b
+
+					the `//b` will be skipped
+					due to `//a` has the end index that same with start index of `//b`
+				*/
 				if((patternHasMatched||commentHasMatched) &&
-					ignoreCommentedCode==false)
+					ignoreCommentedCode==false &&
+					symbolType!='comment')
 					continue;
 	
 				// temporary
 				// i want 'guard' regex to able to scan guards in function body
 				// but if it is commented code, dont proceed
 				// else, will stuck in loop
-				if(symbolType == 'guard' && commentHasMatched && ignoreCommentedCode)
+				if(symbolType=='guard' && commentHasMatched && ignoreCommentedCode)
 					continue;
 
 				if (operation == 'remove')
