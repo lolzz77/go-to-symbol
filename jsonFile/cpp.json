@@ -187,7 +187,7 @@
             {
                 "comment": ["Sample: #if !defined(WORD)",
                             "Sample: #if (defined(WORD))"],
-                            "regex": ["((?:#elif|#if)\\s+[^defined]+\\s*defined)\\s*\\(\\s*([a-zA-Z0-9_*]+)\\s*\\)", "g"],
+                            "regex": ["((?:#elif|#if)\\s+[!\\( ]+\\s*defined)\\s*\\(\\s*([a-zA-Z0-9_*]+)\\s*\\)", "g"],
                 "symbolNameIndex" : 2,
                 "operation": "range",
                 "opening": ["", ""],
@@ -210,8 +210,10 @@
                 "ignoreCommentedCode": true
             },
             {
-                "comment": ["Sample: #if WORD"],
-                "regex": ["(#if|#elif)\\s+((?<!defined)[a-zA-Z0-9_*\\(\\)&|=\\t*]+)\\n", "g"],
+                "comment": ["Sample: #if WORD",
+                            "Sample: #if (WORD||WORD2)"],
+                "comment1" : "for some reason, putting `\\t` inside group `[]` doesnt work. Put ` ` the literally whitespace works. And, if you put `\\s`, it will match whitespace, and newline.",
+                "regex": ["(#if|#elif)\\s+((?<!defined)[a-zA-Z0-9_*\\(\\)&|= ]+)\\n", "g"],
                 "symbolNameIndex" : 2,
                 "operation": "range",
                 "opening": ["", ""],

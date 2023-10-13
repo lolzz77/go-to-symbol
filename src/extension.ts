@@ -753,6 +753,32 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					// save end_index
 					start_index = match.index;
 					end_index = index;
+
+					// scan matched pattern 1 more time
+					// the 1st time it scanned are based on matched regex start and end index
+					// my algorithm will further expend the range after match
+					// ensure the whole symbol names, body are matched
+					// then add the start & end index into array
+					// thus, what my regex matched will be short-handed
+					// thus, scan 1 more time here
+					patternHasMatched = false;
+					for(const RangeInterface of matchedPatternIndexArr)
+					{
+						let currentMatchedStartIndex = start_index;
+						let currentMatchedEndIndex = index;
+						let existedStartIndex = RangeInterface.startIndex;
+						let existedEndIndex = RangeInterface.endIndex;
+						if(	currentMatchedStartIndex >= existedStartIndex && 
+							currentMatchedEndIndex <= existedEndIndex)
+						{
+							patternHasMatched = true;
+							break;
+						}
+					}
+
+					if (patternHasMatched)
+						continue;
+
 					// since below `to_replace` i put +1, here need to put as well
 					// else, it will match same pattern twice
 					matchedPatternIndexArr.push({startIndex:start_index, endIndex:end_index+1});
