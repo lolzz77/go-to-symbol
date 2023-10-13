@@ -557,8 +557,11 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					let currentMatchedEndIndex = match.index + match[0].length;
 					let existedStartIndex = RangeInterface.startIndex;
 					let existedEndIndex = RangeInterface.endIndex;
-					if(	currentMatchedStartIndex >= existedStartIndex && 
-						currentMatchedEndIndex <= existedEndIndex)
+					// for commented pattern matching
+					// only match the currentMatchedStartIndex
+					// detect whether this start index is within range of existing start index
+					if(	currentMatchedStartIndex >= existedStartIndex &&
+						currentMatchedStartIndex <= existedEndIndex)
 					{
 						commentHasMatched = true;
 						break;
@@ -988,6 +991,9 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					end = document.positionAt(original_doc_end);
 					range = new vscode.Range(start, end);
 				}
+				// remove asterik, if have
+				while(symbol_name.includes('*'))
+					symbol_name=symbol_name.replace('*', '');
 				// get the line number base don the original document
 				let temp_symbol_name = symbol_name;
 				// have to + 1, the number it shows is decreased by 1, i dk why
