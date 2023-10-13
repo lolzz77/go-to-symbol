@@ -839,8 +839,10 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 						while(symbol_name.includes('@'))
 							symbol_name=symbol_name.replace('@', ', ');
 					}
-
-
+					
+					// remove opening & closing parenthesis, if have
+					if(symbol_name.startsWith('(') && symbol_name.endsWith(')'))
+						symbol_name = symbol_name.substring(1, symbol_name.length-1)
 
 					/**********************************************************************
 					Now, find the `range`
