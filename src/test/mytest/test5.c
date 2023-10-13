@@ -116,6 +116,10 @@ errno = run_test(5);
 #if (defined A) && defined (B)
 #endif
 
+#if (defined A) && defined (B)
+#elif A || defined(B)
+#endif
+
 
 /*
  keyword to stop for doing range
