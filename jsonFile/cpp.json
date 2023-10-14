@@ -60,8 +60,19 @@
     "class" : {
         "regexes" : [
             {
-                "comment" : [""],
-                "regex" : ["class\\s+\\w+\\s*\\{", "gm"],
+                "comment" : ["Sample: void ClassName::ClassName()",
+                            "Sample: void ClassName::~ClassName()"],
+                "regex" : ["([a-zA-Z0-9_*]+)\\s*([a-zA-Z0-9_*]+)\\s*::\\s*([a-zA-Z0-9_*~]+)\\s*\\(([^\\)]*)\\)\\s*\\{", "g"],
+                "symbolNameIndex" : 3,
+                "operation" : "depth",
+                "opening" : ["{", "}"],
+                "ignoreCommentedCode" : false
+            },
+            {
+                "comment" : ["Sample: ClassName::ClassName()",
+                            "Sample: ClassName::~ClassName()"],
+                "regex" : ["([a-zA-Z0-9_*]+)\\s*::\\s*([a-zA-Z0-9_*~]+)\\s*\\(([^\\)]*)\\)\\s*\\{", "g"],
+                "symbolNameIndex" : 2,
                 "operation" : "depth",
                 "opening" : ["{", "}"],
                 "ignoreCommentedCode" : false
