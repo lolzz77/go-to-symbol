@@ -776,7 +776,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 						}
 					}
 
-					if (patternHasMatched)
+					if (patternHasMatched && ignoreCommentedCode==false)
 						continue;
 
 					// since below `to_replace` i put +1, here need to put as well
