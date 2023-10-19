@@ -849,6 +849,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					***********************************************************************/
 					let arr = ['#elif', '#else', '#endif', "#if", "#ifdef", "#ifndef"];
 					let closest_index = 0;
+					// dont remove this, intelli-sense has mistaken this as unused
 					let previous_closest_index = closest_index;
 					let temp_start_index = start_index;
 					let guard_depth = 1; // start at 1, your regex 100% confirm has matched 1 opening
@@ -939,6 +940,37 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					}
 					if(closest_index==0)
 						closest_index=end_index;
+					// now closest_index is on the next line,
+					// check if the current line is equal to #endif, if it is, then include this line
+					// else, exclude this line
+					while(true)
+					{
+						let keyword = '#endif';
+						let temp_closest_index = closest_index;
+						let is_endif = true;
+						for (const c of keyword)
+						{
+							char = text.charAt(temp_closest_index++);
+							if ( char != c )
+							{
+								// means the next char is not '#endif'
+								// exclude the current line
+								is_endif = false;
+								break;
+							}
+						}
+						if(is_endif)
+						{
+							// means the next chat is `#endif`
+							// include the current char
+							closest_index = temp_closest_index;
+						}
+						else
+						{
+							closest_index--;
+						}
+						break;
+					}
 					/**********************************************************************
 					Given the pattern, get the original document position
 					***********************************************************************/
@@ -1010,6 +1042,15 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 	
 						}
 					}
+					// decrease 1, because now end_index is pointing to newline
+					// newline == next line, it will highlight the next line
+					char = text.charAt(index);
+					while(char == "\n")
+					{
+						index--;
+						char = text.charAt(index);
+					}
+
 					// save end_index
 					start_index = match.index;
 					end_index = index;
