@@ -114,12 +114,12 @@ export function activate(context: vscode.ExtensionContext) {
 		const selectedItemCollapsibleState = selectedItems[0].collapsibleState;
 		const selectedLabel = selectedItems[0].label;
 		const backgroundDecorationType = vscode.window.createTextEditorDecorationType({
-			// the last element is the opacity
-			backgroundColor: settingObj.backgroundColor, // grey
+			backgroundColor: settingObj.backgroundColor,
+			isWholeLine: true,
 			// this opacity appleis to the text instead of the background color
 			// opacity: '0',
 			// this can be seen on minimap, the small block colors
-			overviewRulerColor: settingObj.overviewRulerColor, // green
+			overviewRulerColor: settingObj.overviewRulerColor,
 			// to show the block color on the right
 			overviewRulerLane: vscode.OverviewRulerLane.Full,
 			// minimapColor: 'red' // this color will be used in the minimap
