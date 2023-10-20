@@ -26,7 +26,7 @@
             {
                 "comment6" : "Regex has to be from longest to shortest. Eg: regex to match `static int main()` and `int main()`. Run the regex that matches `static int main()` first.",
                 "comment" : ["Sample: static unsigned int main () {"],
-                "regex" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+((?!(if|while|for)\\s*)[a-zA-Z0-9_*]+)\\s*(\\([^\\)]+\\))\\s*[^\\n]*\\{", "g"],
+                "regex" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+((?!(if|while|for)\\s*)[a-zA-Z0-9_*]+)\\s*(\\([^\\)]*\\))\\s*[^\\n]*\\{", "g"],
                 "comment4" : "The regex matched will result in array. Based on number of groups you defined in your regex, this number tells my code which array index I should take. This is intended to print out the symbol name. Index 0 is always the whole regex. Index 1 starts your 1st group matching.",
                 "symbolNameIndex" : 4,
                 "comment2" : "Can be null. This operation is to tell my code how should i handle it. Currently has 'depth', 'remove', ''. depth - i will perform depth search, will use 'opening' key. 'remove' - will perform operation to remove it from buffered text, will not print on the tree list. '' - will fall into else case",
@@ -41,7 +41,7 @@
             },
             {
                 "comment" : ["Sample: static int main () {"],
-                "regex" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+((?!(if|while|for)\\s*)[a-zA-Z0-9_*]+)\\s*(\\([^\\)]+\\))\\s*[^\\n]*\\{", "g"],
+                "regex" : ["([a-zA-Z0-9_*]+)\\s+([a-zA-Z0-9_*]+)\\s+((?!(if|while|for)\\s*)[a-zA-Z0-9_*]+)\\s*(\\([^\\)]*\\))\\s*[^\\n]*\\{", "g"],
                 "symbolNameIndex" : 3,
                 "operation" : "depth",
                 "opening" : ["{", "}"],
@@ -49,7 +49,7 @@
             },
             {
                 "comment" : ["Sample: int main () {"],
-                "regex" : ["([a-zA-Z0-9_*]+)\\s+((?!(if|while|for)\\s*)[a-zA-Z0-9_*]+)\\s*(\\([^\\)]+\\))\\s*[^\\n]*\\{","g"],
+                "regex" : ["([a-zA-Z0-9_*]+)\\s+((?!(if|while|for)\\s*)[a-zA-Z0-9_*]+)\\s*(\\([^\\)]*\\))\\s*[^\\n]*\\{","g"],
                 "symbolNameIndex" : 2,
                 "operation" : "depth",
                 "opening" : ["{", "}"],
