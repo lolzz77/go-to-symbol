@@ -161,7 +161,7 @@
                 "comment1" : "Note: Dont matchnewline at the end. if after the macro has comment. Then this macro will not be matched",
                 "comment2" : "Update: fixed with putting `[/ ]`",
                 "comment3" : "Have to put newline, else, it will cause problem where my code algorithm matches 2 lines of define",
-                "regex" : ["(#define)\\s+([a-zA-Z0-9_*]+)\\s*([a-zA-Z0-9_*/ ]*)\\n", "g"],
+                "regex" : ["(#define)\\s+([a-zA-Z0-9_*]+)\\s*([a-zA-Z0-9_*/\\(\\)'<>&|\" ]*)\\n", "g"],
                 "symbolNameIndex" : 2,
                 "operation" : "",
                 "opening" : ["", ""],
