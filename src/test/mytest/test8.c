@@ -1,0 +1,2 @@
+#endif
+const char* abc[] = {""};
