@@ -751,10 +751,15 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 	
 						}
 					}
+
 					// save end_index
 					start_index = match.index;
 					// since below `to_replace` i put +1, here need to put as well
 					// else, it will match same pattern twice
+					// if u didnt put + 1, due to the above loop, it is ponting to
+					// 1 char previous of what ur loop condition checking is
+					// eg: while char == "\n"
+					// after this loop, ur char will be 1 position before the "\n"
 					end_index = index + 1;
 
 					// scan matched pattern 1 more time
@@ -993,6 +998,16 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 						}
 						break;
 					}
+
+					// because i change to highlight the whole line
+					// thus, i need to make sure the range does not accidentally cover the next line
+					char = text.charAt(closest_index);
+					while(char=="\n" || char==" ")
+					{
+						closest_index--;
+						char = text.charAt(closest_index);
+					}
+
 					/**********************************************************************
 					Given the pattern, get the original document position
 					***********************************************************************/
