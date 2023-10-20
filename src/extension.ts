@@ -880,8 +880,17 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					let previous_closest_index = closest_index;
 					let temp_start_index = start_index;
 					let guard_depth = 1; // start at 1, your regex 100% confirm has matched 1 opening
+					let skip_guard_depth = false;
 					while(guard_depth!=0)
 					{
+						// fail-safe mechanism
+						if(guard_depth>1000)
+						{
+							skip_guard_depth = true;
+							break;
+						}
+
+
 						/*
 							keyword to stop for doing range
 							1. #elif
@@ -965,6 +974,9 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 							guard_depth++;
 								
 					}
+					if(skip_guard_depth)
+						continue;
+
 					if(closest_index==0)
 						closest_index=end_index;
 					// now closest_index is on the next line,
