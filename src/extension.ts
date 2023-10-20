@@ -536,6 +536,7 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 				let start = null; // rename to smethg better, this is for start = document.positionAt(original_doc_start)
 				let end = null;
 				let patternHasMatched = false;
+				let exactPatternHasMatched = false;
 				let commentHasMatched = false;
 	
 				for(const RangeInterface of matchedPatternIndexArr)
@@ -752,7 +753,9 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					}
 					// save end_index
 					start_index = match.index;
-					end_index = index;
+					// since below `to_replace` i put +1, here need to put as well
+					// else, it will match same pattern twice
+					end_index = index + 1;
 
 					// scan matched pattern 1 more time
 					// the 1st time it scanned are based on matched regex start and end index
@@ -762,26 +765,45 @@ function getSymbols(editor:vscode.TextEditor):SymbolTreeItem[] {
 					// thus, what my regex matched will be short-handed
 					// thus, scan 1 more time here
 					patternHasMatched = false;
+					exactPatternHasMatched = false;
 					for(const RangeInterface of matchedPatternIndexArr)
 					{
 						let currentMatchedStartIndex = start_index;
-						let currentMatchedEndIndex = index;
+						let currentMatchedEndIndex = end_index;
 						let existedStartIndex = RangeInterface.startIndex;
 						let existedEndIndex = RangeInterface.endIndex;
 						if(	currentMatchedStartIndex >= existedStartIndex && 
 							currentMatchedEndIndex <= existedEndIndex)
 						{
+							// to handle cases like having exact pattern matched
+							// eg: start_index & end_index are exactly the same
+							if(currentMatchedStartIndex == existedStartIndex &&
+								currentMatchedEndIndex == existedEndIndex)
+								{
+									exactPatternHasMatched = true;
+									break;
+								}
 							patternHasMatched = true;
-							break;
 						}
 					}
 
 					if (patternHasMatched && ignoreCommentedCode==false)
 						continue;
+					// to handle cases like having exact pattern matched
+					// eg: start_index & end_index are exactly the same
+					// above `if` will not be true because it checks for `ignoreCommentedCode`
+					if (exactPatternHasMatched)
+						continue;
 
-					// since below `to_replace` i put +1, here need to put as well
-					// else, it will match same pattern twice
-					matchedPatternIndexArr.push({startIndex:start_index, endIndex:end_index+1});
+					// cannot put end_index+1 here
+					// if you have 2 same start_index & end_index range
+					// 1st encounter, end_index is 17
+					// this line, will push end_index+1 into array
+					// 2nd encounter, endindex is 17
+					// above checks, what pushed is end_index = 18, thus, it proceed to add end_index = 17 into array
+					// then, at this line that tells the system to add end_index + 1 into the array
+					// thus, causing duplicate inserts
+					matchedPatternIndexArr.push({startIndex:start_index, endIndex:end_index});
 					regex.lastIndex = end_index;
 					// get the whole pattern
 					// i guess substring 2nd argument is not included?.. like python slice()
