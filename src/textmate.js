@@ -57,6 +57,7 @@ registry.loadGrammar('source.c').then(grammar => {
     rl.on('close', () => {
         // tokenize line
         let ruleStack = vsctm.INITIAL;
+        let curly_bracket_next = false;
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             const lineTokens = grammar.tokenizeLine(line, ruleStack);
@@ -68,7 +69,14 @@ registry.loadGrammar('source.c').then(grammar => {
                 {
                     if(z < token.scopes.length)
                     {
-                        // scopes source.c, meta.function.c, meta.function.definition.parameters.c, entity.name.function.c
+                        if(token.scopes[z] == 'punctuation.section.block.begin.bracket.curly.c' && curly_bracket_next)
+                        {
+                            curly_bracket_next = false;
+                            console.log(`line ${i+1} - token from ${token.startIndex} to ${token.endIndex} ` +
+                                        `(${line.substring(token.startIndex, token.endIndex)}) ` +
+                                        `with scopes ${token.scopes.join(', ')}`
+                            );
+                        }
                         if(token.scopes[z] == 'meta.function.c')
                             one = true;
                         if(token.scopes[z] == 'meta.function.definition.parameters.c')
@@ -80,7 +88,8 @@ registry.loadGrammar('source.c').then(grammar => {
                     {
                         if(one && two && three)
                         {
-                            console.log(` - token from ${token.startIndex} to ${token.endIndex} ` +
+                            curly_bracket_next = true;
+                            console.log(`line ${i+1} - token from ${token.startIndex} to ${token.endIndex} ` +
                                         `(${line.substring(token.startIndex, token.endIndex)}) ` +
                                         `with scopes ${token.scopes.join(', ')}`
                             );
