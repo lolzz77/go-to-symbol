@@ -1,6 +1,12 @@
 import * as vscode from 'vscode';
 import * as func from './function';
 import { privateEncrypt } from 'crypto';
+// import * as vsctm from 'vscode-textmate'
+const fs = require('fs');
+const path = require('path');
+const vsctm = require('vscode-textmate');
+const oniguruma = require('vscode-oniguruma');
+
 /*
  problem
  1. for global variable
@@ -83,6 +89,71 @@ export function activate(context: vscode.ExtensionContext) {
 	// you have to use `{}` when pushing into this array
 	goToSymbolArr.push({parent:filePath, children:symbolTreeItem});
 
+
+		/**
+		 * Utility to read a file as a promise
+		 */
+		function readFile(path:string) {
+			// console.log(process.cwd());
+			// console.log(path);
+			return new Promise((resolve, reject) => {
+				fs.readFile(path, (error:any, data:any) => error ? reject(error) : resolve(data));
+			})
+		}
+
+		const wasmBin = fs.readFileSync(path.join(__dirname, './../node_modules/vscode-oniguruma/release/onig.wasm')).buffer;
+		const vscodeOnigurumaLib = oniguruma.loadWASM(wasmBin).then(() => {
+			return {
+				createOnigScanner(patterns:any) { return new oniguruma.OnigScanner(patterns); },
+				createOnigString(s:any) { return new oniguruma.OnigString(s); }
+			};
+		});
+
+		// Create a registry that can create a grammar from a scope name.
+		const registry = new vsctm.Registry({
+			onigLib: vscodeOnigurumaLib,
+			loadGrammar: async (scopeName:any) => {
+				if (scopeName === 'source.c') {
+					// https://github.com/textmate/javascript.tmbundle/blob/master/Syntaxes/JavaScript.plist
+					// have to use path.join(), else, it will complain no such file or directory
+					return readFile(path.join(__dirname, './../jsonFile/c.tmLanguage.json')).then((data:any) => 
+					{
+						// console.log(data); 
+						// console.log(data.toString());
+						// console.log(path.join(__dirname, './../jsonFile/c.tmLanguage.json'));
+						const rawGrammar = vsctm.parseRawGrammar(data.toString(), path.join(__dirname, './../jsonFile/c.tmLanguage.json'))
+						// vsctm.addGrammar(rawGrammar);
+					})
+				}
+				console.log(`Unknown scope name: ${scopeName}`);
+				return null;
+			}
+		});
+
+		// registry.addGrammar()
+
+		// Load the JavaScript grammar and any other grammars included by it async.
+		registry.loadGrammar('source.c').then((grammar:any) => {
+			const text = [
+				`function sayHello(name) {`,
+				`\treturn "Hello, " + name;`,
+				`}`
+			];
+			let ruleStack = vsctm.INITIAL;
+			for (let i = 0; i < text.length; i++) {
+				const line = text[i];
+				const lineTokens = grammar.tokenizeLine(line, ruleStack);
+				console.log(`\nTokenizing line: ${line}`);
+				for (let j = 0; j < lineTokens.tokens.length; j++) {
+					const token = lineTokens.tokens[j];
+					console.log(` - token from ${token.startIndex} to ${token.endIndex} ` +
+					`(${line.substring(token.startIndex, token.endIndex)}) ` +
+					`with scopes ${token.scopes.join(', ')}`
+					);
+				}
+				ruleStack = lineTokens.ruleStack;
+			}
+		});
 
 	// by putting this code, no need to trigger 'activate', it will auto load
 	vscode.window.registerTreeDataProvider(
@@ -244,6 +315,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	let disposable2 = vscode.commands.registerCommand('go-to-symbol.showPath', () => {
 		func.showFilePath();
+
 	});
 
 	// detect if you selected other editors (eg: different files)

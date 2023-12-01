@@ -18,6 +18,13 @@
 			"preLaunchTask": "${defaultBuildTask}"
 		},
 		{
+			"name": "Textmate",
+			"type": "node",
+			"request": "launch",
+            "program": "${workspaceFolder}/src/textmate.js",
+            "console": "integratedTerminal",
+		},
+		{
 			"name": "Extension Tests",
 			"type": "extensionHost",
 			"request": "launch",
