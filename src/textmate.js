@@ -54,20 +54,19 @@ registry.loadGrammar('source.c').then(grammar => {
         lines.push(line);
     });
     
+    // tokenize line
     rl.on('close', () => {
-        // tokenize line
         let ruleStack = vsctm.INITIAL;
         let curly_bracket_next = false;
         let pending_end_bracket = false;
-        let print_line = false;
         let curly_bracket_count = 0;
         let pending_is_prototype_or_function = false;
 
-        let token_start_index = 0;
-        let token_end_index = 0;
-        let token_scopes = '';
-        let token_line = 0;
-        let token_line_substr = '';
+        let prev_token_start_index = 0;
+        let prev_token_end_index = 0;
+        let prev_token_scopes = '';
+        let prev_token_line = 0;
+        let prev_token_line_substr = '';
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
@@ -120,17 +119,20 @@ registry.loadGrammar('source.c').then(grammar => {
                                 curly_bracket_next = false;
                                 break;
                             }
-                            // is not a prototype, is a function definition, find the function
+                            // is not a prototype, is a function definition, print the function
                             else if(token.scopes[z] == 'punctuation.section.block.begin.bracket.curly.c' 
                                     && curly_bracket_next)
                             {
                                 pending_is_prototype_or_function = false;
-                                console.log(`line ${token_line} - token from ${token_start_index} to ${token_end_index} ` +
-                                            `(${token_line_substr}) ` +
-                                            `with scopes ${token_scopes}`
+                                console.log(`line ${prev_token_line} - token from ${prev_token_start_index} to ${prev_token_end_index} ` +
+                                            `(${prev_token_line_substr}) ` +
+                                            `with scopes ${prev_token_scopes}`
                                 );
                             }
                         }
+                        /****
+                         * end
+                         */
 
                         /***
                          * Handle printing opening/ending curly bracket of the function
@@ -161,6 +163,9 @@ registry.loadGrammar('source.c').then(grammar => {
                                         `with scopes ${token.scopes.join(', ')}`
                             );
                         }
+                        /****
+                         * End
+                         */
 
                         /****
                          * Handling for printing function name
@@ -171,22 +176,25 @@ registry.loadGrammar('source.c').then(grammar => {
                             two = true;
                         if(token.scopes[z] == 'entity.name.function.c')
                             three = true;
+                        /****
+                         * end
+                         */
 
                     }
                     else
                     {
+                        // the next thing to do is, check whether this is function prototype or not
                         if(one && two && three)
                         {
                             pending_is_prototype_or_function = true;
-                            token_start_index = token.startIndex;
-                            token_end_index = token.endIndex;
-                            token_scopes = token.scopes.join(', ');
-                            token_line = i+1;
-                            token_line_substr = line.substring(token.startIndex, token.endIndex);
-
                             curly_bracket_next = true;
 
-
+                            // jot donw the details of this line, to decide to print later or not
+                            prev_token_start_index = token.startIndex;
+                            prev_token_end_index = token.endIndex;
+                            prev_token_scopes = token.scopes.join(', ');
+                            prev_token_line = i+1;
+                            prev_token_line_substr = line.substring(token.startIndex, token.endIndex);
                         }
                     }
                 }
