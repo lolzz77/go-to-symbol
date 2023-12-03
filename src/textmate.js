@@ -6,6 +6,14 @@ const readline = require('readline');
 
 
 
+// Param to control what test you wanna do
+const param = ['source.c', './test/mytest/test2.c'];
+// const param = ['source.cpp', './test/mytest/test7.cpp'];
+
+
+
+
+
 /**
  * Utility to read a file as a promise
  */
@@ -31,18 +39,22 @@ const registry = new vsctm.Registry({
             // https://github.com/textmate/javascript.tmbundle/blob/master/Syntaxes/JavaScript.plist
             return readFile(path.join(__dirname, './../jsonFile/c.tmLanguage.json')).then((data) => vsctm.parseRawGrammar(data.toString(), path.join(__dirname, './../jsonFile/c.tmLanguage.json')))
         }
+        if (scopeName === 'source.cpp') {
+            // https://github.com/textmate/javascript.tmbundle/blob/master/Syntaxes/JavaScript.plist
+            return readFile(path.join(__dirname, './../jsonFile/cpp.tmLanguage.json')).then((data) => vsctm.parseRawGrammar(data.toString(), path.join(__dirname, './../jsonFile/c.tmLanguage.json')))
+        }
         console.log(`Unknown scope name: ${scopeName}`);
         return null;
     }
 });
 
 // Load the JavaScript grammar and any other grammars included by it async.
-registry.loadGrammar('source.c').then(grammar => {
+registry.loadGrammar(param[0]).then(grammar => {
     let lines = [];
 
     // Read file that you want to tokenize
     // Separate them by newline, and push into list
-    const fileStream = fs.createReadStream(path.join(__dirname, './test/mytest/test2.c'));
+    const fileStream = fs.createReadStream(path.join(__dirname, param[1]));
     
     const rl = readline.createInterface({
         input: fileStream,
