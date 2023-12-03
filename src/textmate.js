@@ -7,6 +7,7 @@ const readline = require('readline');
 
 
 // Param to control what test you wanna do
+// const param = ['source.c', './test/mytest/test5.c'];
 const param = ['source.c', './test/mytest/test2.c'];
 // const param = ['source.cpp', './test/mytest/test7.cpp'];
 
@@ -92,6 +93,15 @@ registry.loadGrammar(param[0]).then(grammar => {
                 let one, two, three, four = false;
                 for(let z = 0; z < token.scopes.length + 1; z ++)
                 {
+                    /******************************************
+                     * Original functino to print all tokens
+                     **************************************************/
+                    // const token = lineTokens.tokens[j];
+                    // console.log(` - token from ${token.startIndex} to ${token.endIndex} ` +
+                    //   `(${line.substring(token.startIndex, token.endIndex)}) ` +
+                    //   `with scopes ${token.scopes.join(', ')}`
+                    // );
+
                     /***************************************************************
                     * this is to check the line, what scopes are they
                     ****************************************************************/
@@ -117,98 +127,98 @@ registry.loadGrammar(param[0]).then(grammar => {
                    * 
                    */ 
                   
-                    if(z < token.scopes.length)
-                    {
-                        /****
-                         * Handling for not to print if it is function prototype
-                         */
-                        if(pending_is_prototype_or_function)
-                        {
-                            // means is a prototpe, dont print
-                            if(token.scopes[z] == 'punctuation.terminator.statement.c')
-                            {
-                                pending_is_prototype_or_function = false;
-                                curly_bracket_next = false;
-                                break;
-                            }
-                            // is not a prototype, is a function definition, print the function
-                            else if(token.scopes[z] == 'punctuation.section.block.begin.bracket.curly.c' 
-                                    && curly_bracket_next)
-                            {
-                                pending_is_prototype_or_function = false;
-                                console.log(`line ${prev_token_line} - token from ${prev_token_start_index} to ${prev_token_end_index} ` +
-                                            `(${prev_token_line_substr}) ` +
-                                            `with scopes ${prev_token_scopes}`
-                                );
-                            }
-                        }
-                        /****
-                         * end
-                         */
+                    // if(z < token.scopes.length)
+                    // {
+                    //     /****
+                    //      * Handling for not to print if it is function prototype
+                    //      */
+                    //     if(pending_is_prototype_or_function)
+                    //     {
+                    //         // means is a prototpe, dont print
+                    //         if(token.scopes[z] == 'punctuation.terminator.statement.c')
+                    //         {
+                    //             pending_is_prototype_or_function = false;
+                    //             curly_bracket_next = false;
+                    //             break;
+                    //         }
+                    //         // is not a prototype, is a function definition, print the function
+                    //         else if(token.scopes[z] == 'punctuation.section.block.begin.bracket.curly.c' 
+                    //                 && curly_bracket_next)
+                    //         {
+                    //             pending_is_prototype_or_function = false;
+                    //             console.log(`line ${prev_token_line} - token from ${prev_token_start_index} to ${prev_token_end_index} ` +
+                    //                         `(${prev_token_line_substr}) ` +
+                    //                         `with scopes ${prev_token_scopes}`
+                    //             );
+                    //         }
+                    //     }
+                    //     /****
+                    //      * end
+                    //      */
 
-                        /***
-                         * Handle printing opening/ending curly bracket of the function
-                         */
-                        if(token.scopes[z] == 'punctuation.section.block.begin.bracket.curly.c')
-                            curly_bracket_count++;
-                        else if(token.scopes[z] == 'punctuation.section.block.end.bracket.curly.c')
-                            curly_bracket_count--;
+                    //     /***
+                    //      * Handle printing opening/ending curly bracket of the function
+                    //      */
+                    //     if(token.scopes[z] == 'punctuation.section.block.begin.bracket.curly.c')
+                    //         curly_bracket_count++;
+                    //     else if(token.scopes[z] == 'punctuation.section.block.end.bracket.curly.c')
+                    //         curly_bracket_count--;
 
-                        if(token.scopes[z] == 'punctuation.section.block.begin.bracket.curly.c' 
-                            && curly_bracket_next)
-                        {
-                            curly_bracket_next = false;
-                            pending_end_bracket = true;
-                            console.log(`line ${i+1} - token from ${token.startIndex} to ${token.endIndex} ` +
-                                        `(${line.substring(token.startIndex, token.endIndex)}) ` +
-                                        `with scopes ${token.scopes.join(', ')}`
-                            );
-                        }
-                        if(token.scopes[z] == 'punctuation.section.block.end.bracket.curly.c' 
-                            && pending_end_bracket
-                            && (curly_bracket_count==0)
-                        )
-                        {
-                            pending_end_bracket = false;
-                            console.log(`line ${i+1} - token from ${token.startIndex} to ${token.endIndex} ` +
-                                        `(${line.substring(token.startIndex, token.endIndex)}) ` +
-                                        `with scopes ${token.scopes.join(', ')}`
-                            );
-                        }
-                        /****
-                         * End
-                         */
+                    //     if(token.scopes[z] == 'punctuation.section.block.begin.bracket.curly.c' 
+                    //         && curly_bracket_next)
+                    //     {
+                    //         curly_bracket_next = false;
+                    //         pending_end_bracket = true;
+                    //         console.log(`line ${i+1} - token from ${token.startIndex} to ${token.endIndex} ` +
+                    //                     `(${line.substring(token.startIndex, token.endIndex)}) ` +
+                    //                     `with scopes ${token.scopes.join(', ')}`
+                    //         );
+                    //     }
+                    //     if(token.scopes[z] == 'punctuation.section.block.end.bracket.curly.c' 
+                    //         && pending_end_bracket
+                    //         && (curly_bracket_count==0)
+                    //     )
+                    //     {
+                    //         pending_end_bracket = false;
+                    //         console.log(`line ${i+1} - token from ${token.startIndex} to ${token.endIndex} ` +
+                    //                     `(${line.substring(token.startIndex, token.endIndex)}) ` +
+                    //                     `with scopes ${token.scopes.join(', ')}`
+                    //         );
+                    //     }
+                    //     /****
+                    //      * End
+                    //      */
 
-                        /****
-                         * Handling for printing function name
-                         */
-                        if(token.scopes[z] == 'meta.function.c')
-                            one = true;
-                        if(token.scopes[z] == 'meta.function.definition.parameters.c')
-                            two = true;
-                        if(token.scopes[z] == 'entity.name.function.c')
-                            three = true;
-                        /****
-                         * end
-                         */
+                    //     /****
+                    //      * Handling for printing function name
+                    //      */
+                    //     if(token.scopes[z] == 'meta.function.c')
+                    //         one = true;
+                    //     if(token.scopes[z] == 'meta.function.definition.parameters.c')
+                    //         two = true;
+                    //     if(token.scopes[z] == 'entity.name.function.c')
+                    //         three = true;
+                    //     /****
+                    //      * end
+                    //      */
 
-                    }
-                    else
-                    {
-                        // the next thing to do is, check whether this is function prototype or not
-                        if(one && two && three)
-                        {
-                            pending_is_prototype_or_function = true;
-                            curly_bracket_next = true;
+                    // }
+                    // else
+                    // {
+                    //     // the next thing to do is, check whether this is function prototype or not
+                    //     if(one && two && three)
+                    //     {
+                    //         pending_is_prototype_or_function = true;
+                    //         curly_bracket_next = true;
 
-                            // jot donw the details of this line, to decide to print later or not
-                            prev_token_start_index = token.startIndex;
-                            prev_token_end_index = token.endIndex;
-                            prev_token_scopes = token.scopes.join(', ');
-                            prev_token_line = i+1;
-                            prev_token_line_substr = line.substring(token.startIndex, token.endIndex);
-                        }
-                    }
+                    //         // jot donw the details of this line, to decide to print later or not
+                    //         prev_token_start_index = token.startIndex;
+                    //         prev_token_end_index = token.endIndex;
+                    //         prev_token_scopes = token.scopes.join(', ');
+                    //         prev_token_line = i+1;
+                    //         prev_token_line_substr = line.substring(token.startIndex, token.endIndex);
+                    //     }
+                    // }
                 }
             }
             ruleStack = lineTokens.ruleStack;
