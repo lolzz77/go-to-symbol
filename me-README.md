@@ -2,6 +2,8 @@
 1. Run `npm install`
 2. Run `npm run watch`
 3. Press `F5`
+4. If you get pop up saying error, debug anyway?
+5. Try reload vscode & Press F5 again
 
 # What
 
