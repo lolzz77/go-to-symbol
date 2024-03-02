@@ -1,3 +1,8 @@
+# How to Build
+1. Run `npm install`
+2. Run `npm run watch`
+3. Press `F5`
+
 # What
 
 1. this extension will find the JSON file
