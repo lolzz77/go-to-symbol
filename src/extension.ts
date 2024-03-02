@@ -388,7 +388,9 @@ class SymbolTreeItem extends vscode.TreeItem {
 	children: SymbolTreeItem[]|undefined;
 
 	constructor(
-		// this is the string that appear on the tree list
+		// this is the string that appear on the tree list,
+		// to decide whether this is used to display the string,
+		// is by passing which variable into the `super` there
 		public readonly label: string,
 		// whether they collapse or not, hold `CTRL`, hover over TreeItemCollapsibleState to see more
 		public readonly collapsibleState: vscode.TreeItemCollapsibleState,
@@ -399,6 +401,8 @@ class SymbolTreeItem extends vscode.TreeItem {
 		// public readonly command?: vscode.Command,
 		// public readonly iconPath: string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon;
 	) {
+		// use intellisense to hover over `suepr` and see, 
+		// the 1st param is the string that will be appearing on the tree
 		super(label, collapsibleState);
 		this.children = children;
 	}
