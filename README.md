@@ -1,5 +1,18 @@
 # Go-to-Symbol
 
+# What
+Provide a list of symbols found in the current active editor
+
+![text](https://raw.githubusercontent.com/lolzz77/go-to-symbol/main/resources/readme/1.png)
+
+It will:
+1. Provide list of symbols, depending on how many you provide in /jsonFile/(language).json
+- ![Alt text](https://raw.githubusercontent.com/lolzz77/go-to-symbol/main/resources/readme/2.png)
+2. Highlight the whole symbol background
+- ![Alt text](https://raw.githubusercontent.com/lolzz77/go-to-symbol/main/resources/readme/3.png)
+3. Highlight the reange in minimap
+- ![Alt text](https://raw.githubusercontent.com/lolzz77/go-to-symbol/main/resources/readme/4.png)
+
 # Info
 1. Currently supported language
 - C
@@ -16,19 +29,6 @@
 3. If it doesn't support the langauge, you can write up your own (language).json file.
 4. You can refer existing (language).json on how to write that.
 5. It will create (language).json with empty content in the path shows by the command `Go to symbol: show path`
-
-# What
-Provide a list of symbols found in the current active editor
-
-![text](https://raw.githubusercontent.com/lolzz77/go-to-symbol/main/resources/readme/1.png)
-
-It will:
-1. Provide list of symbols, depending on how many you provide in /jsonFile/(language).json
-- ![Alt text](https://raw.githubusercontent.com/lolzz77/go-to-symbol/main/resources/readme/2.png)
-2. Highlight the whole symbol background
-- ![Alt text](https://raw.githubusercontent.com/lolzz77/go-to-symbol/main/resources/readme/3.png)
-3. Highlight the reange in minimap
-- ![Alt text](https://raw.githubusercontent.com/lolzz77/go-to-symbol/main/resources/readme/4.png)
 
 # How to
 1. Just install the extension.
