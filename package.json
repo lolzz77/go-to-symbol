@@ -16,6 +16,7 @@
   ],
   "activationEvents": [],
   "main": "./out/extension.js",
+  "icon": "resources/extension-icon.png",
   "contributes": {
     "commands": [
       {
@@ -36,7 +37,7 @@
         {
           "id": "goToSymbolSidebar",
           "title": "Go To Symbol",
-          "icon": "resources/google.webp"
+          "icon": "resources/activity-bar-icon-dark-mode.webp"
         }
       ]
     },
