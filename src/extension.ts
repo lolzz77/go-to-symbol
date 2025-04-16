@@ -194,7 +194,7 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	// to refresh tree only, only the current active editor's tree
-	let disposable3 = vscode.commands.registerCommand('go-to-symbol.refreshTree', () => {
+	let disposable2 = vscode.commands.registerCommand('go-to-symbol.refreshTree', () => {
 		// re-create again, incase the setting file is deleted
 		let settingPath = func.getJSONPath('setting');
 		func.createAndWriteFile(settingPath, 'setting');
@@ -242,8 +242,13 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 
-	let disposable2 = vscode.commands.registerCommand('go-to-symbol.showPath', () => {
-		func.showFilePath();
+	let disposable3 = vscode.commands.registerCommand('go-to-symbol.openJSONFile', () => {
+		let language = func.getCurrentActiveEditorLanguage();		
+		func.openJSONFile(language);
+	});
+
+	let disposable4 = vscode.commands.registerCommand('go-to-symbol.openSettingJSONFile', () => {
+		func.openJSONFile('setting');
 	});
 
 	// detect if you selected other editors (eg: different files)
@@ -311,6 +316,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disposable1);
 	context.subscriptions.push(disposable2);
 	context.subscriptions.push(disposable3);
+	context.subscriptions.push(disposable4);
 }
 
 // this function will be triggered when you disable your extension
@@ -372,6 +378,10 @@ class TreeDataProvider implements vscode.TreeDataProvider<SymbolTreeItem> {
 		this._onDidChangeTreeData.fire();
 	}
 
+	dispose(): void {
+		this.data = null as any
+	}
+
 }
 
 // this class holds the detail of list of symbols that regex matches
@@ -429,7 +439,7 @@ class SymbolTreeItem extends vscode.TreeItem {
 			for (const child of this.children) {
 				child.dispose();
 			}
-			this.children = [];
+			this.children = null as any;
 		}
 	}
 }

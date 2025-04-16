@@ -18,9 +18,11 @@ It will:
 - C
 - CPP
 2. Commands
-- `Go to symbol: show path`
-- To show the path that the extension will write & read (language).json file at.
+- `Go to symbol: open JSON file`
+- To open the JSON file that the extension will read & write regex.
 - The setting.json for the extension will also be in this location.
+- `Go to symbol: Open Setting JSON file`
+- To open the setting JSON file
 - `Go to symbol: refresh tree`
 - Clear the array, and re-extract the symbols in the current active editor
 - `Go to symbol: reset`
@@ -28,7 +30,7 @@ It will:
 - Will not re-extract the symbols, users have to run `Go to symbol: refresh tree` in order to re-trigger the extension to extract the symbols.
 3. If it doesn't support the langauge, you can write up your own (language).json file.
 4. You can refer existing (language).json on how to write that.
-5. It will create (language).json with empty content in the path shows by the command `Go to symbol: show path`
+5. It will create (language).json with empty content in the path shows by the command `Go to symbol: open JSON file`
 
 # How to
 1. Just install the extension.
@@ -39,7 +41,7 @@ It will:
 2. The JSON file contains regex to extract the symbols
 3. After enabling the extension, it will copy the JSON file to `vscode.env.appRoot + '/go-to-symbol/'` directory
 4. This directory varies depending on where vscode is installed.
-5. To know where the location on your vscode, run the command `Go to symbol: show path`
+5. To know where the location on your vscode, run the command `Go to symbol: open JSON file`
 - ![Alt text](https://raw.githubusercontent.com/lolzz77/go-to-symbol/main/resources/readme/9.png)
 6. So, you can modify the regex in that folder.
 7. And, if you modified the JSON file in the repo, you have to delete the JSON file that the extension shows you in Step 5.

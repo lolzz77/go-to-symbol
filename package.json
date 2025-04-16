@@ -28,8 +28,12 @@
         "title": "Go to Symbols: refresh tree"
       },
       {
-        "command": "go-to-symbol.showPath",
-        "title": "Go to Symbols: show path"
+        "command": "go-to-symbol.openJSONFile",
+        "title": "Go to Symbols: Open JSON File"
+      },
+      {
+        "command": "go-to-symbol.openSettingJSONFile",
+        "title": "Go to Symbols: Open Setting JSON File"
       }
     ],
     "viewsContainers": {
@@ -45,7 +49,8 @@
       "goToSymbolSidebar": [
         {
           "id": "goToSymbolView",
-          "name": "Tree View"
+          "name": "Tree View",
+          "icon": "resources/activity-bar-icon-dark-mode.webp"
         }
       ]
     }

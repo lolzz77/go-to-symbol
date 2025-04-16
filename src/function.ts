@@ -47,13 +47,17 @@ export function getJSONPath(language: string|null): string {
 	// if language passed in is null, then set it to 'default.json'
 	if(language == null)
 		language = 'default'
+
 	return vscode.env.appRoot + '/go-to-symbol/' + language + '.json';
 }
 
-// to display file path
-export function showFilePath(): any {
-	let message = vscode.env.appRoot + '/go-to-symbol/';
-	vscode.window.showInformationMessage('Path: ' + message);
+// to open JSON file
+export async function openJSONFile(language:string) {
+	let JSONPath = getJSONPath(language);
+
+	// Open the file in the editor
+	const document = await vscode.workspace.openTextDocument(JSONPath);
+	await vscode.window.showTextDocument(document);
 }
 
 // to create file, then write the JSON content into it
