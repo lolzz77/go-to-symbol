@@ -42,7 +42,6 @@ It will:
 3. After enabling the extension, it will copy the JSON file to `vscode.env.appRoot + '/go-to-symbol/'` directory
 4. This directory varies depending on where vscode is installed.
 5. To know where the location on your vscode, run the command `Go to symbol: open JSON file`
-- ![Alt text](https://raw.githubusercontent.com/lolzz77/go-to-symbol/main/resources/readme/9.png)
 6. So, you can modify the regex in that folder.
 7. And, if you modified the JSON file in the repo, you have to delete the JSON file that the extension shows you in Step 5.
 8. Because, the path that shown in Step 5, is the regex that the extension will read.
